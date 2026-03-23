@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Programming [4: Visualization] — 학습 정리</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --surface3: #1e2d45;
+    --border: #1f2f4a;
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --accent3: #34d399;
+    --accent4: #fb923c;
+    --accent5: #f472b6;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #4a5568;
+    --font-body: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    --font-code: 'Menlo', 'Courier New', monospace;
+    --font-head: 'Impact', 'Arial Narrow', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:15px; line-height:1.7; }
+
+  .hero {
+    background:linear-gradient(135deg,#0a0e1a 0%,#0f1929 50%,#0d1f35 100%);
+    border-bottom:1px solid var(--border);
+    padding:50px 40px 42px;
+    position:relative; overflow:hidden;
+  }
+  .hero::before {
+    content:''; position:absolute; top:-80px; right:-80px;
+    width:400px; height:400px;
+    background:radial-gradient(circle,rgba(56,189,248,.08) 0%,transparent 70%);
+  }
+  .hero-badge {
+    display:inline-block;
+    background:rgba(56,189,248,.1); border:1px solid rgba(56,189,248,.3);
+    color:var(--accent); font-size:11px; letter-spacing:2px;
+    text-transform:uppercase; padding:4px 12px; border-radius:20px; margin-bottom:16px;
+  }
+  .hero h1 { font-family:var(--font-head); font-size:46px; letter-spacing:2px; color:#fff; line-height:1.1; margin-bottom:8px; }
+  .hero h1 span { color:var(--accent); }
+  .hero-sub { color:var(--text-dim); font-size:14px; }
+
+  .wrapper { display:flex; min-height:calc(100vh - 160px); }
+
+  /* TOC */
+  .toc {
+    width:252px; flex-shrink:0; background:var(--surface);
+    border-right:1px solid var(--border);
+    position:sticky; top:0; height:100vh; overflow-y:auto; padding:28px 0;
+  }
+  .toc-title { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--text-muted); padding:0 22px 14px; border-bottom:1px solid var(--border); margin-bottom:6px; }
+  .toc a { display:flex; align-items:center; gap:10px; padding:9px 22px; color:var(--text-dim); text-decoration:none; font-size:13px; transition:all .2s; border-left:2px solid transparent; }
+  .toc a:hover { color:var(--accent); background:rgba(56,189,248,.05); border-left-color:var(--accent); }
+  .toc-num { font-family:var(--font-head); font-size:11px; color:var(--text-muted); min-width:22px; }
+
+  .main { flex:1; padding:36px 40px; max-width:1100px; }
+
+  .section { margin-bottom:56px; scroll-margin-top:28px; }
+  .section-header { display:flex; align-items:baseline; gap:14px; margin-bottom:22px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+  .section-num { font-family:var(--font-head); font-size:34px; color:var(--accent); opacity:.4; line-height:1; }
+  .section-title { font-size:21px; font-weight:700; color:#fff; }
+  .section-title span { color:var(--accent); }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px; margin-bottom:18px; }
+  .card-title { font-size:12px; font-weight:700; color:var(--accent); letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; }
+
+  .code-block {
+    background:#070c14; border:1px solid #1a2535; border-radius:8px;
+    padding:16px 18px; font-family:var(--font-code); font-size:12.5px;
+    line-height:1.8; overflow-x:auto; white-space:pre;
+  }
+  .kw{color:#c084fc} .fn{color:#fde68a} .st{color:#86efac} .nm{color:#fb7185}
+  .cm{color:#64748b;font-style:italic} .id{color:#93c5fd} .plain{color:#94a3b8}
+
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; }
+
+  .svg-wrap { background:#111827; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .svg-label { font-size:11px; color:var(--text-muted); text-align:center; margin-top:6px; }
+
+  .bullet-list { list-style:none; }
+  .bullet-list li { padding:5px 0 5px 16px; position:relative; color:var(--text-dim); font-size:14px; }
+  .bullet-list li::before { content:'▸'; position:absolute; left:0; color:var(--accent); font-size:11px; top:8px; }
+  .bullet-list li strong { color:var(--text); }
+
+  .hbox { background:rgba(56,189,248,.06); border:1px solid rgba(56,189,248,.2); border-radius:8px; padding:12px 16px; margin:10px 0; font-size:13px; color:var(--text-dim); }
+  .hbox code { font-family:var(--font-code); color:var(--accent); background:rgba(56,189,248,.1); padding:1px 5px; border-radius:3px; font-size:11.5px; }
+
+  code { font-family:var(--font-code); font-size:12px; background:rgba(56,189,248,.1); color:var(--accent); padding:1px 5px; border-radius:3px; }
+
+  .compare-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .compare-table th { background:var(--surface3); color:var(--accent); padding:11px 14px; text-align:left; font-weight:700; border-bottom:2px solid var(--border); letter-spacing:.5px; }
+  .compare-table th:first-child { color:var(--text-dim); }
+  .compare-table th.sns-h { color:var(--accent3); }
+  .compare-table td { padding:10px 14px; border-bottom:1px solid var(--border); color:var(--text-dim); }
+  .compare-table td:first-child { color:var(--text); font-weight:600; font-size:12px; }
+  .compare-table tr:last-child td { border-bottom:none; }
+
+  .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:24px; }
+  .summary-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px; position:relative; overflow:hidden; }
+  .summary-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .summary-card.mpl::before { background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+  .summary-card.sns::before { background:linear-gradient(90deg,var(--accent3),var(--accent4)); }
+  .summary-card-title { font-family:var(--font-head); font-size:22px; letter-spacing:2px; margin-bottom:12px; }
+  .summary-card.mpl .summary-card-title { color:var(--accent); }
+  .summary-card.sns .summary-card-title { color:var(--accent3); }
+
+  .plot-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .ls-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  .ls-item { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:9px 12px; display:flex; align-items:center; gap:10px; font-size:12px; }
+  .ls-name { font-family:var(--font-code); color:var(--accent); min-width:76px; }
+
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  @media(max-width:860px){
+    .toc{display:none}
+    .two-col,.plot-grid,.summary-grid{grid-template-columns:1fr}
+    .ls-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">Data Programming · 0011445001 · Jangho Lee</div>
+  <h1>[4] <span>Visualization</span></h1>
+  <div class="hero-sub">Incheon National University · Computer Science Engineering · 35 slides</div>
+</div>
+
+<div class="wrapper">
+<nav class="toc">
+  <div class="toc-title">목차</div>
+  <a href="#s01"><span class="toc-num">01</span>Matplotlib 소개</a>
+  <a href="#s02"><span class="toc-num">02</span>plot() — 기본 선 그래프</a>
+  <a href="#s03"><span class="toc-num">03</span>plot() — 꾸미기</a>
+  <a href="#s04"><span class="toc-num">04</span>subplot()</a>
+  <a href="#s05"><span class="toc-num">05</span>scatter()</a>
+  <a href="#s06"><span class="toc-num">06</span>bar() / hist()</a>
+  <a href="#s07"><span class="toc-num">07</span>Figure 해부도</a>
+  <a href="#s08"><span class="toc-num">08</span>Seaborn 소개</a>
+  <a href="#s09"><span class="toc-num">09</span>Seaborn 그래프</a>
+  <a href="#s10"><span class="toc-num">10</span>Summary</a>
+</nav>
+
+<main class="main">
+
+<!-- ══ 01 MATPLOTLIB 소개 ══ -->
+<section class="section" id="s01">
+  <div class="section-header">
+    <div class="section-num">01</div>
+    <div class="section-title"><span>Matplotlib</span> 소개</div>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <div class="card-title">What is Matplotlib?</div>
+        <ul class="bullet-list">
+          <li>Python의 포괄적인 <strong>시각화 라이브러리</strong></li>
+          <li><strong>정적·애니메이션·인터랙티브</strong> 시각화 생성 가능</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Why use Matplotlib?</div>
+        <ul class="bullet-list">
+          <li><strong>오픈소스</strong> — 라이선스 비용 없음</li>
+          <li>다양한 종류의 <strong>그래프 표현</strong> 지원</li>
+          <li>Python 스크립트, IPython 셸, <strong>Jupyter Notebook</strong> 호환</li>
+          <li>MATLAB과 유사한 함수 컬렉션 포함</li>
+        </ul>
+      </div>
+      <div class="hbox">
+        기본 import: <code>import matplotlib.pyplot as plt</code><br>
+        함께 사용: <code>import numpy as np</code>
+      </div>
+    </div>
+    <div>
+      <div class="svg-wrap">
+        <!-- SVG: sin/cos intro graph -->
+        <svg viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+          <defs>
+            <linearGradient id="gBg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#111827"/>
+              <stop offset="100%" stop-color="#0d1525"/>
+            </linearGradient>
+          </defs>
+          <rect width="340" height="240" fill="url(#gBg)"/>
+          <!-- grid -->
+          <g stroke="#1f2f4a" stroke-width="0.5">
+            <line x1="50" y1="30" x2="50" y2="200"/><line x1="50" y1="200" x2="320" y2="200"/>
+            <line x1="50" y1="72.5" x2="320" y2="72.5"/><line x1="50" y1="115" x2="320" y2="115"/>
+            <line x1="50" y1="157.5" x2="320" y2="157.5"/>
+            <line x1="117.5" y1="30" x2="117.5" y2="200"/>
+            <line x1="185" y1="30" x2="185" y2="200"/>
+            <line x1="252.5" y1="30" x2="252.5" y2="200"/>
+          </g>
+          <!-- axes -->
+          <line x1="50" y1="30" x2="50" y2="200" stroke="#38bdf8" stroke-width="1" opacity="0.4"/>
+          <line x1="50" y1="200" x2="320" y2="200" stroke="#38bdf8" stroke-width="1" opacity="0.4"/>
+          <!-- tick labels -->
+          <g fill="#94a3b8" font-family="Menlo,monospace" font-size="9" text-anchor="middle">
+            <text x="50" y="215">-6.3</text><text x="117.5" y="215">-3.1</text>
+            <text x="185" y="215">0</text><text x="252.5" y="215">3.1</text><text x="320" y="215">6.3</text>
+          </g>
+          <g fill="#94a3b8" font-family="Menlo,monospace" font-size="9" text-anchor="end">
+            <text x="44" y="34">1</text><text x="44" y="76">0.5</text>
+            <text x="44" y="119">0</text><text x="44" y="161">-0.5</text><text x="44" y="204">-1</text>
+          </g>
+          <!-- sin wave: polyline approximation, 60 pts from -2pi to 2pi -->
+          <polyline fill="none" stroke="#38bdf8" stroke-width="2"
+            points="50,115 54.5,90.3 59,68.2 63.4,51.3 67.9,41.2 72.4,39.1 76.9,45.5 81.3,59.5 85.8,79.5 90.3,103.0 94.8,127.0 99.2,149.1 103.7,166.8 108.2,177.9 112.7,181.1 117.1,176.0 121.6,163.3 126.1,144.2 130.6,120.8 135,95.5 139.5,70.7 143.9,49.0 148.4,32.6 152.9,23.5 157.4,23.0 161.8,31.4 166.3,47.9 170.8,71.0 175.3,98.3 179.7,126.9 184.2,154.0 188.7,176.8 193.2,192.5 197.6,199.3 202.1,196.9 206.6,185.7 211.1,166.7 215.5,141.6 220,112.5 224.5,82.0 228.9,52.5 233.4,27.0 237.9,8.4 242.4,0.0 246.8,2.5 251.3,15.4 255.8,37.3 260.3,66.0 264.7,98.8 269.2,131.9 273.7,161.8 278.2,185.3 282.6,199.7 287.1,203.8 291.6,197.8 296.1,182.6 300.5,159.8 305,131.8 309.5,101.2 314,70.5 318.4,42.3 320,33.4"/>
+          <!-- cos wave -->
+          <polyline fill="none" stroke="#fb923c" stroke-width="2"
+            points="50,31 54.5,31.8 59,34.3 63.4,38.4 67.9,44.0 72.4,50.9 76.9,59.0 81.3,68.0 85.8,77.5 90.3,87.3 94.8,97.0 99.2,106.2 103.7,114.5 108.2,121.6 112.7,127.4 117.1,131.5 121.6,133.9 126.1,134.5 130.6,133.5 135,131.0 139.5,127.3 143.9,122.8 148.4,117.8 152.9,112.8 157.4,108.2 161.8,104.3 166.3,101.5 170.8,100.0 175.3,100.0 179.7,101.5 184.2,104.3 188.7,108.2 193.2,112.8 197.6,117.8 202.1,122.8 206.6,127.3 211.1,131.0 215.5,133.5 220,134.5 224.5,133.9 228.9,131.5 233.4,127.4 237.9,121.6 242.4,114.5 246.8,106.2 251.3,97.0 255.8,87.3 260.3,77.5 264.7,68.0 269.2,59.0 273.7,50.9 278.2,44.0 282.6,38.4 287.1,34.3 291.6,31.8 296.1,31.0 300.5,31.8 305,34.3 309.5,38.4 314,44.0 318.4,50.9 320,53.4"/>
+          <!-- legend -->
+          <line x1="240" y1="42" x2="258" y2="42" stroke="#38bdf8" stroke-width="2"/>
+          <text x="262" y="46" fill="#94a3b8" font-size="10" font-family="Menlo,monospace">sin(x)</text>
+          <line x1="240" y1="58" x2="258" y2="58" stroke="#fb923c" stroke-width="2"/>
+          <text x="262" y="62" fill="#94a3b8" font-size="10" font-family="Menlo,monospace">cos(x)</text>
+        </svg>
+      </div>
+      <div class="svg-label">MATLAB 비교 예시 — sin/cos 그래프</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 02 PLOT() 기본 ══ -->
+<section class="section" id="s02">
+  <div class="section-header">
+    <div class="section-num">02</div>
+    <div class="section-title"><span>plot()</span> — 기본 선 그래프</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">matplotlib.pyplot.plot() — 점에서 점으로 선 그리기</div>
+    <div class="two-col">
+      <div>
+        <ul class="bullet-list" style="margin-bottom:12px">
+          <li>1번째 파라미터: <strong>x축 배열</strong></li>
+          <li>2번째 파라미터: <strong>y축 배열</strong></li>
+          <li>x축 생략 시 → y 배열 길이에 따라 <strong>기본값(0,1,2,…)</strong></li>
+        </ul>
+        <div class="code-block"><span class="id">xpoints</span> <span class="plain">=</span> <span class="id">np</span><span class="plain">.</span><span class="fn">array</span><span class="plain">([</span><span class="nm">0</span><span class="plain">, </span><span class="nm">6</span><span class="plain">])</span>
+<span class="id">ypoints</span> <span class="plain">=</span> <span class="id">np</span><span class="plain">.</span><span class="fn">array</span><span class="plain">([</span><span class="nm">0</span><span class="plain">, </span><span class="nm">250</span><span class="plain">])</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">plot</span><span class="plain">(</span><span class="id">xpoints</span><span class="plain">, </span><span class="id">ypoints</span><span class="plain">)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">show</span><span class="plain">()</span></div>
+      </div>
+      <div>
+        <div class="svg-wrap">
+          <svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+            <rect width="300" height="220" fill="#111827"/>
+            <g stroke="#1f2f4a" stroke-width="0.5">
+              <line x1="50" y1="15" x2="50" y2="180"/><line x1="50" y1="180" x2="285" y2="180"/>
+              <line x1="50" y1="48" x2="285" y2="48"/><line x1="50" y1="81" x2="285" y2="81"/>
+              <line x1="50" y1="114" x2="285" y2="114"/><line x1="50" y1="147" x2="285" y2="147"/>
+              <line x1="89.2" y1="15" x2="89.2" y2="180"/><line x1="128.3" y1="15" x2="128.3" y2="180"/>
+              <line x1="167.5" y1="15" x2="167.5" y2="180"/><line x1="206.7" y1="15" x2="206.7" y2="180"/>
+              <line x1="245.8" y1="15" x2="245.8" y2="180"/>
+            </g>
+            <line x1="50" y1="15" x2="50" y2="180" stroke="#38bdf8" stroke-width="1" opacity="0.4"/>
+            <line x1="50" y1="180" x2="285" y2="180" stroke="#38bdf8" stroke-width="1" opacity="0.4"/>
+            <g fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="middle">
+              <text x="50" y="195">0</text><text x="89.2" y="195">1</text><text x="128.3" y="195">2</text>
+              <text x="167.5" y="195">3</text><text x="206.7" y="195">4</text><text x="245.8" y="195">5</text><text x="285" y="195">6</text>
+            </g>
+            <g fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="end">
+              <text x="44" y="184">0</text><text x="44" y="151">50</text><text x="44" y="118">100</text>
+              <text x="44" y="85">150</text><text x="44" y="52">200</text><text x="44" y="19">250</text>
+            </g>
+            <!-- line: (0,0) → (6,250) -->
+            <line x1="50" y1="180" x2="285" y2="15" stroke="#38bdf8" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="svg-label">xpoints=[0,6], ypoints=[0,250]</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">다중 점 / y축만 지정</div>
+    <div class="two-col">
+      <div>
+        <div class="code-block"><span class="cm"># 다중 점 — x/y 개수 동일해야 함</span>
+<span class="id">xpoints</span> <span class="plain">=</span> <span class="id">np</span><span class="plain">.</span><span class="fn">array</span><span class="plain">([</span><span class="nm">1</span><span class="plain">,</span><span class="nm">2</span><span class="plain">,</span><span class="nm">6</span><span class="plain">,</span><span class="nm">8</span><span class="plain">])</span>
+<span class="id">ypoints</span> <span class="plain">=</span> <span class="id">np</span><span class="plain">.</span><span class="fn">array</span><span class="plain">([</span><span class="nm">3</span><span class="plain">,</span><span class="nm">8</span><span class="plain">,</span><span class="nm">1</span><span class="plain">,</span><span class="nm">10</span><span class="plain">])</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">plot</span><span class="plain">(</span><span class="id">xpoints</span><span class="plain">, </span><span class="id">ypoints</span><span class="plain">)</span>
+
+<span class="cm"># x 생략 — 인덱스(0~5)가 x축</span>
+<span class="id">ypoints</span> <span class="plain">=</span> <span class="id">np</span><span class="plain">.</span><span class="fn">array</span><span class="plain">([</span><span class="nm">3</span><span class="plain">,</span><span class="nm">8</span><span class="plain">,</span><span class="nm">1</span><span class="plain">,</span><span class="nm">10</span><span class="plain">,</span><span class="nm">5</span><span class="plain">,</span><span class="nm">7</span><span class="plain">])</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">plot</span><span class="plain">(</span><span class="id">ypoints</span><span class="plain">)</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div>
+          <div class="svg-wrap">
+            <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+              <rect width="300" height="160" fill="#111827"/>
+              <g stroke="#1f2f4a" stroke-width="0.5">
+                <line x1="46" y1="12" x2="46" y2="138"/><line x1="46" y1="138" x2="284" y2="138"/>
+                <line x1="46" y1="40" x2="284" y2="40"/><line x1="46" y1="68" x2="284" y2="68"/>
+                <line x1="46" y1="96" x2="284" y2="96"/><line x1="46" y1="124" x2="284" y2="124"/>
+                <line x1="104.7" y1="12" x2="104.7" y2="138"/>
+                <line x1="163.3" y1="12" x2="163.3" y2="138"/>
+                <line x1="222" y1="12" x2="222" y2="138"/>
+              </g>
+              <line x1="46" y1="12" x2="46" y2="138" stroke="#38bdf8" stroke-width="1" opacity="0.4"/>
+              <line x1="46" y1="138" x2="284" y2="138" stroke="#38bdf8" stroke-width="1" opacity="0.4"/>
+              <g fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="middle">
+                <text x="46" y="152">1</text><text x="104.7" y="152">2</text>
+                <text x="163.3" y="152">6</text><text x="284" y="152">8</text>
+              </g>
+              <g fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="end">
+                <text x="40" y="142">1</text><text x="40" y="99">4</text>
+                <text x="40" y="57">7</text><text x="40" y="16">10</text>
+              </g>
+              <!-- x:[1,2,6,8] y:[3,8,1,10] mapped to viewBox -->
+              <!-- x range 1-8=238px, y range 1-10=126px -->
+              <!-- x1=46+(0/7)*238=46, x2=46+(1/7)*238=80, x6=46+(5/7)*238=216, x8=284 -->
+              <!-- y3=138-(2/9)*126=110, y8=138-(7/9)*126=40, y1=138-(0/9)*126=138, y10=138-(9/9)*126=12 -->
+              <polyline fill="none" stroke="#38bdf8" stroke-width="2" points="46,110 80,40 216,138 284,12"/>
+            </svg>
+          </div>
+          <div class="svg-label">[1,2,6,8] / [3,8,1,10]</div>
+        </div>
+        <div>
+          <div class="svg-wrap">
+            <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+              <rect width="300" height="160" fill="#111827"/>
+              <g stroke="#1f2f4a" stroke-width="0.5">
+                <line x1="46" y1="12" x2="46" y2="138"/><line x1="46" y1="138" x2="284" y2="138"/>
+                <line x1="46" y1="40" x2="284" y2="40"/><line x1="46" y1="68" x2="284" y2="68"/>
+                <line x1="46" y1="96" x2="284" y2="96"/><line x1="46" y1="124" x2="284" y2="124"/>
+                <line x1="93.6" y1="12" x2="93.6" y2="138"/>
+                <line x1="141.2" y1="12" x2="141.2" y2="138"/>
+                <line x1="188.8" y1="12" x2="188.8" y2="138"/>
+                <line x1="236.4" y1="12" x2="236.4" y2="138"/>
+              </g>
+              <line x1="46" y1="12" x2="46" y2="138" stroke="#818cf8" stroke-width="1" opacity="0.4"/>
+              <line x1="46" y1="138" x2="284" y2="138" stroke="#818cf8" stroke-width="1" opacity="0.4"/>
+              <g fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="middle">
+                <text x="46" y="152">0</text><text x="93.6" y="152">1</text><text x="141.2" y="152">2</text>
+                <text x="188.8" y="152">3</text><text x="236.4" y="152">4</text><text x="284" y="152">5</text>
+              </g>
+              <g fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="end">
+                <text x="40" y="142">1</text><text x="40" y="99">4</text>
+                <text x="40" y="57">7</text><text x="40" y="16">10</text>
+              </g>
+              <!-- y:[3,8,1,10,5,7] x default 0-5 -->
+              <!-- x step = (284-46)/5 = 47.6 -->
+              <!-- y range 1-10, ph=126 -->
+              <!-- y3=138-(2/9)*126=110  y8=138-(7/9)*126=40  y1=138  y10=12  y5=138-(4/9)*126=82  y7=138-(6/9)*126=54 -->
+              <polyline fill="none" stroke="#818cf8" stroke-width="2" points="46,110 93.6,40 141.2,138 188.8,12 236.4,82 284,54"/>
+            </svg>
+          </div>
+          <div class="svg-label">y만 지정: [3,8,1,10,5,7]</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">marker — 각 점 강조 표시</div>
+    <div class="two-col">
+      <div>
+        <div class="hbox"><code>marker</code> 키워드 인자로 특정 마커 지정</div>
+        <div class="code-block"><span class="id">plt</span><span class="plain">.</span><span class="fn">plot</span><span class="plain">(</span><span class="id">xpoints</span><span class="plain">, </span><span class="id">ypoints</span><span class="plain">, </span><span class="st">'o'</span><span class="plain">)</span></div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:12px">
+          <tr style="background:#1e2d45">
+            <th style="padding:7px 10px;text-align:left;color:#94a3b8;border-bottom:1px solid #1f2f4a">marker</th>
+            <th style="padding:7px 10px;text-align:left;color:#94a3b8;border-bottom:1px solid #1f2f4a">설명</th>
+          </tr>
+          <tr><td style="padding:6px 10px;font-family:var(--font-code);color:#38bdf8;border-bottom:1px solid #1a2535">'.'</td><td style="padding:6px 10px;color:#94a3b8;border-bottom:1px solid #1a2535">point</td></tr>
+          <tr><td style="padding:6px 10px;font-family:var(--font-code);color:#38bdf8;border-bottom:1px solid #1a2535">'o'</td><td style="padding:6px 10px;color:#94a3b8;border-bottom:1px solid #1a2535">circle</td></tr>
+          <tr><td style="padding:6px 10px;font-family:var(--font-code);color:#38bdf8;border-bottom:1px solid #1a2535">'v'</td><td style="padding:6px 10px;color:#94a3b8;border-bottom:1px solid #1a2535">triangle_down</td></tr>
+          <tr><td style="padding:6px 10px;font-family:var(--font-code);color:#38bdf8;border-bottom:1px solid #1a2535">'^'</td><td style="padding:6px 10px;color:#94a3b8;border-bottom:1px solid #1a2535">triangle_up</td></tr>
+          <tr><td style="padding:6px 10px;font-family:var(--font-code);color:#38bdf8">'s'</td><td style="padding:6px 10px;color:#94a3b8">square</td></tr>
+        </table>
+      </div>
+      <div>
+        <div class="svg-wrap">
+          <svg viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+            <rect width="300" height="240" fill="#111827"/>
+            <g stroke="#1f2f4a" stroke-width="0.5">
+              <line x1="46" y1="16" x2="46" y2="198"/><line x1="46" y1="198" x2="284" y2="198"/>
+              <line x1="46" y1="52" x2="284" y2="52"/><line x1="46" y1="88" x2="284" y2="88"/>
+              <line x1="46" y1="124" x2="284" y2="124"/><line x1="46" y1="161" x2="284" y2="161"/>
+              <line x1="84.3" y1="16" x2="84.3" y2="198"/><line x1="122.6" y1="16" x2="122.6" y2="198"/>
+              <line x1="160.9" y1="16" x2="160.9" y2="198"/><line x1="199.1" y1="16" x2="199.1" y2="198"/>
+              <line x1="237.4" y1="16" x2="237.4" y2="198"/>
+            </g>
+            <line x1="46" y1="16" x2="46" y2="198" stroke="#38bdf8" stroke-width="1" opacity="0.4"/>
+            <line x1="46" y1="198" x2="284" y2="198" stroke="#38bdf8" stroke-width="1" opacity="0.4"/>
+            <g fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="middle">
+              <text x="46" y="213">1</text><text x="84.3" y="213">2</text><text x="122.6" y="213">3</text>
+              <text x="160.9" y="213">4</text><text x="199.1" y="213">5</text><text x="237.4" y="213">6</text><text x="284" y="213">8</text>
+            </g>
+            <g fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="end">
+              <text x="40" y="202">3</text><text x="40" y="162">5</text><text x="40" y="125">7</text>
+              <text x="40" y="88">9</text><text x="40" y="52">10</text><text x="40" y="20">11</text>
+            </g>
+            <!-- x:[1,8] y:[3,10] — scatter style with dotted line -->
+            <!-- x1=46, x8=284; y3=198, y10=16 -->
+            <line x1="46" y1="198" x2="284" y2="16" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.5"/>
+            <circle cx="46" cy="198" r="7" fill="#fb923c" stroke="#fff" stroke-width="1.5"/>
+            <circle cx="284" cy="16" r="7" fill="#fb923c" stroke="#fff" stroke-width="1.5"/>
+            <text x="160" y="230" fill="#94a3b8" font-size="10" font-family="Menlo,monospace" text-anchor="middle">marker='o' 예시</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 03 PLOT() 꾸미기 ══ -->
+<section class="section" id="s03">
+  <div class="section-header">
+    <div class="section-num">03</div>
+    <div class="section-title"><span>plot()</span> — 꾸미기 (linestyle, title, label)</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">linestyle / ls</div>
+    <div class="two-col">
+      <div>
+        <div class="code-block"><span class="id">plt</span><span class="plain">.</span><span class="fn">plot</span><span class="plain">(</span><span class="id">ypoints</span><span class="plain">, </span><span class="id">linestyle</span><span class="plain">=</span><span class="st">'dotted'</span><span class="plain">)</span></div>
+        <div class="ls-grid">
+          <div class="ls-item"><span class="ls-name">'solid'</span><span style="color:#94a3b8">━━━━</span></div>
+          <div class="ls-item"><span class="ls-name">'dotted'</span><span style="color:#94a3b8">· · · · ·</span></div>
+          <div class="ls-item"><span class="ls-name">'dashed'</span><span style="color:#94a3b8">- - - - -</span></div>
+          <div class="ls-item"><span class="ls-name">'dashdot'</span><span style="color:#94a3b8">-·-·-·-</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="svg-wrap">
+          <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+            <rect width="300" height="200" fill="#111827"/>
+            <g stroke="#1f2f4a" stroke-width="0.5">
+              <line x1="46" y1="14" x2="46" y2="168"/><line x1="46" y1="168" x2="280" y2="168"/>
+              <line x1="46" y1="44" x2="280" y2="44"/><line x1="46" y1="75" x2="280" y2="75"/>
+              <line x1="46" y1="106" x2="280" y2="106"/><line x1="46" y1="137" x2="280" y2="137"/>
+              <line x1="124.7" y1="14" x2="124.7" y2="168"/>
+              <line x1="203.3" y1="14" x2="203.3" y2="168"/>
+            </g>
+            <line x1="46" y1="14" x2="46" y2="168" stroke="#818cf8" stroke-width="1" opacity="0.4"/>
+            <line x1="46" y1="168" x2="280" y2="168" stroke="#818cf8" stroke-width="1" opacity="0.4"/>
+            <g fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="middle">
+              <text x="46" y="182">0.0</text><text x="124.7" y="182">1.0</text>
+              <text x="203.3" y="182">2.0</text><text x="280" y="182">3.0</text>
+            </g>
+            <g fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="end">
+              <text x="40" y="172">1</text><text x="40" y="141">4</text>
+              <text x="40" y="111">7</text><text x="40" y="48">10</text>
+            </g>
+            <!-- dotted line: y=[3,8,1,10] x=[0,1,2,3] -->
+            <!-- x: 46,124.7,203.3,280 y: 168,44(8→y=44 via 168-(7/9)*154=48),168,14 -->
+            <!-- y3=168-(2/9)*154=134, y8=168-(7/9)*154=48, y1=168, y10=14 -->
+            <polyline fill="none" stroke="#818cf8" stroke-width="2" stroke-dasharray="2,4"
+              points="46,134 124.7,48 203.3,168 280,14"/>
+          </svg>
+        </div>
+        <div class="svg-label">linestyle='dotted' — [3,8,1,10]</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">title() / xlabel() / ylabel() — Sports Watch Data</div>
+    <div class="two-col">
+      <div>
+        <div class="code-block"><span class="id">x</span> <span class="plain">= [</span><span class="nm">80</span><span class="plain">,</span><span class="nm">85</span><span class="plain">,</span><span class="nm">90</span><span class="plain">,</span><span class="nm">95</span><span class="plain">,</span><span class="nm">100</span><span class="plain">,</span><span class="nm">105</span><span class="plain">,</span><span class="nm">110</span><span class="plain">,</span><span class="nm">115</span><span class="plain">,</span><span class="nm">120</span><span class="plain">,</span><span class="nm">125</span><span class="plain">]</span>
+<span class="id">y</span> <span class="plain">= [</span><span class="nm">240</span><span class="plain">,</span><span class="nm">250</span><span class="plain">,</span><span class="nm">260</span><span class="plain">,</span><span class="nm">270</span><span class="plain">,</span><span class="nm">280</span><span class="plain">,</span><span class="nm">290</span><span class="plain">,</span><span class="nm">300</span><span class="plain">,</span><span class="nm">310</span><span class="plain">,</span><span class="nm">320</span><span class="plain">,</span><span class="nm">330</span><span class="plain">]</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">plot</span><span class="plain">(</span><span class="id">x</span><span class="plain">, </span><span class="id">y</span><span class="plain">)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">title</span><span class="plain">(</span><span class="st">"Sports Watch Data"</span><span class="plain">)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">xlabel</span><span class="plain">(</span><span class="st">"Average Pulse"</span><span class="plain">)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">ylabel</span><span class="plain">(</span><span class="st">"Calorie Burnage"</span><span class="plain">)</span></div>
+        <div class="hbox" style="margin-top:10px">
+          <strong>fontdict</strong>: <code>{'family':'serif','color':'blue','size':20}</code><br>
+          <strong>loc</strong>: <code>plt.title("...", loc='left')</code>
+        </div>
+      </div>
+      <div>
+        <div class="svg-wrap">
+          <svg viewBox="0 0 310 250" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+            <rect width="310" height="250" fill="#111827"/>
+            <text x="165" y="20" fill="#ffffff" font-size="12" font-family="Arial,sans-serif" font-weight="bold" text-anchor="middle">Sports Watch Data</text>
+            <g stroke="#1f2f4a" stroke-width="0.5">
+              <line x1="60" y1="30" x2="60" y2="198"/><line x1="60" y1="198" x2="292" y2="198"/>
+              <line x1="60" y1="64" x2="292" y2="64"/><line x1="60" y1="98" x2="292" y2="98"/>
+              <line x1="60" y1="132" x2="292" y2="132"/><line x1="60" y1="165" x2="292" y2="165"/>
+              <line x1="106.4" y1="30" x2="106.4" y2="198"/><line x1="152.8" y1="30" x2="152.8" y2="198"/>
+              <line x1="199.2" y1="30" x2="199.2" y2="198"/><line x1="245.6" y1="30" x2="245.6" y2="198"/>
+            </g>
+            <line x1="60" y1="30" x2="60" y2="198" stroke="#38bdf8" stroke-width="1" opacity="0.4"/>
+            <line x1="60" y1="198" x2="292" y2="198" stroke="#38bdf8" stroke-width="1" opacity="0.4"/>
+            <!-- x: 80~125, step 5, mapped to 60~292 (232px for 45 units) -->
+            <!-- 80→60, 125→292: scale=232/45=5.16px per unit -->
+            <!-- y: 240~330, mapped to 198~30 (168px for 90 units): scale=168/90=1.87 -->
+            <g fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="middle">
+              <text x="60" y="212">80</text><text x="106.4" y="212">90</text><text x="152.8" y="212">100</text>
+              <text x="199.2" y="212">110</text><text x="245.6" y="212">120</text><text x="292" y="212">125</text>
+            </g>
+            <g fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="end">
+              <text x="54" y="202">240</text><text x="54" y="168">260</text><text x="54" y="136">280</text>
+              <text x="54" y="101">300</text><text x="54" y="67">320</text><text x="54" y="34">330</text>
+            </g>
+            <!-- points: (80,240)→(60,198), (85,250)→(85.8,179.3), each +5.16x, -1.87y -->
+            <polyline fill="none" stroke="#38bdf8" stroke-width="2"
+              points="60,198 85.8,179.3 111.6,160.5 137.3,141.8 163.1,123.1 188.9,104.4 214.7,85.6 240.4,66.9 266.2,48.2 292,29.4"/>
+            <!-- xlabel -->
+            <text x="176" y="232" fill="#94a3b8" font-size="10" font-family="Arial,sans-serif" text-anchor="middle">Average Pulse</text>
+            <!-- ylabel rotated -->
+            <text x="14" y="120" fill="#94a3b8" font-size="10" font-family="Arial,sans-serif" text-anchor="middle" transform="rotate(-90,14,120)">Calorie Burnage</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 04 SUBPLOT ══ -->
+<section class="section" id="s04">
+  <div class="section-header">
+    <div class="section-num">04</div>
+    <div class="section-title"><span>subplot()</span> — 하나의 Figure에 여러 그래프</div>
+  </div>
+  <div class="card">
+    <div class="card-title">plt.subplot(nrows, ncols, index)</div>
+    <ul class="bullet-list" style="margin-bottom:14px">
+      <li><strong>nrows</strong>: 행 수 &nbsp;|&nbsp; <strong>ncols</strong>: 열 수 &nbsp;|&nbsp; <strong>index</strong>: 위치 (1부터 시작)</li>
+      <li><code>plt.suptitle()</code> 로 전체 Figure 제목 설정</li>
+    </ul>
+    <div class="two-col">
+      <div>
+        <div class="code-block"><span class="cm"># 1행 2열 (좌우)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">subplot</span><span class="plain">(</span><span class="nm">1</span><span class="plain">, </span><span class="nm">2</span><span class="plain">, </span><span class="nm">1</span><span class="plain">)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">plot</span><span class="plain">(</span><span class="id">x1</span><span class="plain">, </span><span class="id">y1</span><span class="plain">)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">subplot</span><span class="plain">(</span><span class="nm">1</span><span class="plain">, </span><span class="nm">2</span><span class="plain">, </span><span class="nm">2</span><span class="plain">)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">plot</span><span class="plain">(</span><span class="id">x2</span><span class="plain">, </span><span class="id">y2</span><span class="plain">)</span>
+
+<span class="cm"># 2행 1열 (위아래)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">subplot</span><span class="plain">(</span><span class="nm">2</span><span class="plain">, </span><span class="nm">1</span><span class="plain">, </span><span class="nm">1</span><span class="plain">)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">plot</span><span class="plain">(</span><span class="id">x1</span><span class="plain">, </span><span class="id">y1</span><span class="plain">)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">subplot</span><span class="plain">(</span><span class="nm">2</span><span class="plain">, </span><span class="nm">1</span><span class="plain">, </span><span class="nm">2</span><span class="plain">)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">plot</span><span class="plain">(</span><span class="id">x2</span><span class="plain">, </span><span class="id">y2</span><span class="plain">)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">suptitle</span><span class="plain">(</span><span class="st">"MY SHOP"</span><span class="plain">)</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <!-- 1x2 side by side -->
+        <div>
+          <div class="svg-wrap">
+            <svg viewBox="0 0 300 140" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0d1420">
+              <!-- left subplot -->
+              <rect x="2" y="2" width="142" height="136" fill="#111827" rx="3"/>
+              <g stroke="#1f2f4a" stroke-width="0.4">
+                <line x1="32" y1="14" x2="32" y2="118"/><line x1="32" y1="118" x2="136" y2="118"/>
+                <line x1="32" y1="40" x2="136" y2="40"/><line x1="32" y1="66" x2="136" y2="66"/><line x1="32" y1="92" x2="136" y2="92"/>
+                <line x1="66.7" y1="14" x2="66.7" y2="118"/><line x1="101.3" y1="14" x2="101.3" y2="118"/>
+              </g>
+              <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="middle">
+                <text x="32" y="128">0</text><text x="66.7" y="128">1</text><text x="101.3" y="128">2</text><text x="136" y="128">3</text>
+              </g>
+              <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="end">
+                <text x="28" y="122">3</text><text x="28" y="94">5</text><text x="28" y="68">7</text><text x="28" y="18">10</text>
+              </g>
+              <!-- y:[3,8,1,10] x:[0,1,2,3] mapped: x0=32,x3=136(104px/3=34.7); y3=118,y10=14(104px/7=14.9) -->
+              <polyline fill="none" stroke="#38bdf8" stroke-width="1.5" points="32,103 66.7,29 101.3,118 136,14"/>
+              <text x="84" y="10" fill="#94a3b8" font-size="8" font-family="Arial" text-anchor="middle">Plot 1</text>
+
+              <!-- right subplot -->
+              <rect x="156" y="2" width="142" height="136" fill="#111827" rx="3"/>
+              <g stroke="#1f2f4a" stroke-width="0.4">
+                <line x1="186" y1="14" x2="186" y2="118"/><line x1="186" y1="118" x2="290" y2="118"/>
+                <line x1="186" y1="66" x2="290" y2="66"/><line x1="186" y1="92" x2="290" y2="92"/>
+                <line x1="186" y1="40" x2="290" y2="40"/>
+                <line x1="220.7" y1="14" x2="220.7" y2="118"/><line x1="255.3" y1="14" x2="255.3" y2="118"/>
+              </g>
+              <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="middle">
+                <text x="186" y="128">0</text><text x="220.7" y="128">1</text><text x="255.3" y="128">2</text><text x="290" y="128">3</text>
+              </g>
+              <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="end">
+                <text x="182" y="122">10</text><text x="182" y="70">25</text><text x="182" y="18">40</text>
+              </g>
+              <!-- y:[10,20,30,40] x:[0,1,2,3]: y10=118,y40=14(104px/30=3.47) -->
+              <polyline fill="none" stroke="#34d399" stroke-width="1.5" points="186,118 220.7,83.3 255.3,48.7 290,14"/>
+              <text x="238" y="10" fill="#94a3b8" font-size="8" font-family="Arial" text-anchor="middle">Plot 2</text>
+            </svg>
+          </div>
+          <div class="svg-label">subplot(1,2,1) / subplot(1,2,2) — 좌우</div>
+        </div>
+        <!-- 2x1 top bottom -->
+        <div>
+          <div class="svg-wrap">
+            <svg viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0d1420">
+              <text x="150" y="14" fill="#e2e8f0" font-size="11" font-family="Impact,Arial Narrow" text-anchor="middle" letter-spacing="2">MY SHOP</text>
+              <!-- top -->
+              <rect x="2" y="18" width="296" height="100" fill="#111827" rx="3"/>
+              <g stroke="#1f2f4a" stroke-width="0.4">
+                <line x1="40" y1="26" x2="40" y2="108"/><line x1="40" y1="108" x2="290" y2="108"/>
+                <line x1="40" y1="49" x2="290" y2="49"/><line x1="40" y1="72" x2="290" y2="72"/><line x1="40" y1="95" x2="290" y2="95"/>
+                <line x1="123.3" y1="26" x2="123.3" y2="108"/>
+                <line x1="206.7" y1="26" x2="206.7" y2="108"/>
+              </g>
+              <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="middle">
+                <text x="40" y="118">0</text><text x="123.3" y="118">1</text><text x="206.7" y="118">2</text><text x="290" y="118">3</text>
+              </g>
+              <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="end">
+                <text x="36" y="112">3</text><text x="36" y="75">6</text><text x="36" y="30">10</text>
+              </g>
+              <polyline fill="none" stroke="#38bdf8" stroke-width="1.5" points="40,102 123.3,32 206.7,112 290,22"/>
+              <text x="165" y="24" fill="#94a3b8" font-size="8" font-family="Arial" text-anchor="middle">SALES</text>
+              <!-- bottom -->
+              <rect x="2" y="126" width="296" height="100" fill="#111827" rx="3"/>
+              <g stroke="#1f2f4a" stroke-width="0.4">
+                <line x1="40" y1="134" x2="40" y2="216"/><line x1="40" y1="216" x2="290" y2="216"/>
+                <line x1="40" y1="157" x2="290" y2="157"/><line x1="40" y1="180" x2="290" y2="180"/><line x1="40" y1="203" x2="290" y2="203"/>
+                <line x1="123.3" y1="134" x2="123.3" y2="216"/>
+                <line x1="206.7" y1="134" x2="206.7" y2="216"/>
+              </g>
+              <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="middle">
+                <text x="40" y="226">0</text><text x="123.3" y="226">1</text><text x="206.7" y="226">2</text><text x="290" y="226">3</text>
+              </g>
+              <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="end">
+                <text x="36" y="220">10</text><text x="36" y="183">25</text><text x="36" y="138">40</text>
+              </g>
+              <polyline fill="none" stroke="#34d399" stroke-width="1.5" points="40,216 123.3,189.3 206.7,162.7 290,136"/>
+              <text x="165" y="132" fill="#94a3b8" font-size="8" font-family="Arial" text-anchor="middle">INCOME</text>
+            </svg>
+          </div>
+          <div class="svg-label">subplot(2,1,1) / subplot(2,1,2) + suptitle — 위아래</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 05 SCATTER ══ -->
+<section class="section" id="s05">
+  <div class="section-header">
+    <div class="section-num">05</div>
+    <div class="section-title"><span>scatter()</span> — 산점도</div>
+  </div>
+  <div class="card">
+    <div class="card-title">matplotlib.pyplot.scatter()</div>
+    <div class="two-col">
+      <div>
+        <ul class="bullet-list" style="margin-bottom:12px">
+          <li>각 관측값에 점 표시</li>
+          <li><code>color</code> 또는 <code>c</code> 인자로 색상 지정</li>
+          <li><code>c=array</code>로 점마다 다른 색상 설정</li>
+        </ul>
+        <div class="code-block"><span class="id">x</span> <span class="plain">= [</span><span class="nm">5</span><span class="plain">,</span><span class="nm">7</span><span class="plain">,</span><span class="nm">8</span><span class="plain">,</span><span class="nm">7</span><span class="plain">,</span><span class="nm">2</span><span class="plain">,</span><span class="nm">17</span><span class="plain">,</span><span class="nm">2</span><span class="plain">,</span><span class="nm">9</span><span class="plain">,</span><span class="nm">4</span><span class="plain">,</span><span class="nm">11</span><span class="plain">,</span><span class="nm">12</span><span class="plain">,</span><span class="nm">9</span><span class="plain">,</span><span class="nm">6</span><span class="plain">]</span>
+<span class="id">y</span> <span class="plain">= [</span><span class="nm">99</span><span class="plain">,</span><span class="nm">86</span><span class="plain">,</span><span class="nm">87</span><span class="plain">,</span><span class="nm">88</span><span class="plain">,</span><span class="nm">111</span><span class="plain">,</span><span class="nm">86</span><span class="plain">,</span><span class="nm">103</span><span class="plain">,</span><span class="nm">87</span><span class="plain">,</span>
+     <span class="nm">94</span><span class="plain">,</span><span class="nm">78</span><span class="plain">,</span><span class="nm">77</span><span class="plain">,</span><span class="nm">85</span><span class="plain">,</span><span class="nm">86</span><span class="plain">]</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">scatter</span><span class="plain">(</span><span class="id">x</span><span class="plain">, </span><span class="id">y</span><span class="plain">)</span></div>
+        <div style="height:10px"></div>
+        <div class="code-block"><span class="cm"># 두 데이터셋 비교</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">scatter</span><span class="plain">(</span><span class="id">x1</span><span class="plain">, </span><span class="id">y1</span><span class="plain">)</span>  <span class="cm"># Day 1</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">scatter</span><span class="plain">(</span><span class="id">x2</span><span class="plain">, </span><span class="id">y2</span><span class="plain">)</span>  <span class="cm"># Day 2</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div>
+          <div class="svg-wrap">
+            <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+              <rect width="300" height="200" fill="#111827"/>
+              <g stroke="#1f2f4a" stroke-width="0.5">
+                <line x1="46" y1="14" x2="46" y2="172"/><line x1="46" y1="172" x2="282" y2="172"/>
+                <line x1="46" y1="46" x2="282" y2="46"/><line x1="46" y1="78" x2="282" y2="78"/>
+                <line x1="46" y1="110" x2="282" y2="110"/><line x1="46" y1="141" x2="282" y2="141"/>
+                <line x1="85" y1="14" x2="85" y2="172"/><line x1="124" y1="14" x2="124" y2="172"/>
+                <line x1="163" y1="14" x2="163" y2="172"/><line x1="202" y1="14" x2="202" y2="172"/><line x1="241" y1="14" x2="241" y2="172"/>
+              </g>
+              <line x1="46" y1="14" x2="46" y2="172" stroke="#38bdf8" stroke-width="1" opacity="0.3"/>
+              <line x1="46" y1="172" x2="282" y2="172" stroke="#38bdf8" stroke-width="1" opacity="0.3"/>
+              <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="middle">
+                <text x="46" y="186">2</text><text x="85" y="186">4</text><text x="124" y="186">6</text>
+                <text x="163" y="186">8</text><text x="202" y="186">10</text><text x="241" y="186">12</text><text x="282" y="186">16</text>
+              </g>
+              <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="end">
+                <text x="40" y="176">77</text><text x="40" y="142">88</text><text x="40" y="111">99</text><text x="40" y="48">111</text>
+              </g>
+              <!-- x range 2-17=282-46=236px/15 | y range 77-111=158-14=144px/34 -->
+              <!-- scale x: 236/15=15.7, y: 144/34=4.24 -->
+              <!-- x:5→46+(3/15)*236=93.2, x:7→46+(5/15)*236=124.7, x:8→46+(6/15)*236=140.4 -->
+              <!-- x:7→124.7, x:2→46+(0)*15.7=46, x:17→282, x:9→156, x:4→78.8, x:11→187.4, x:12→203.1, x:6→109.2 -->
+              <!-- y:99→172-(22/34)*144=79, y:86→172-(9/34)*144=133.9, y:87→172-(10/34)*144=129.6 -->
+              <!-- y:88→172-(11/34)*144=125.4, y:111→172-(34/34)*144=28, y:86→133.9, y:103→172-(26/34)*144=62.2 -->
+              <!-- y:94→172-(17/34)*144=100, y:78→172-(1/34)*144=167.8, y:77→172, y:85→172-(8/34)*144=138.2, y:86→133.9 -->
+              <circle cx="93.2" cy="79" r="4.5" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="124.7" cy="133.9" r="4.5" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="140.4" cy="129.6" r="4.5" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="124.7" cy="125.4" r="4.5" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="46" cy="28" r="4.5" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="282" cy="133.9" r="4.5" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="46" cy="62.2" r="4.5" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="156" cy="129.6" r="4.5" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="78.8" cy="100" r="4.5" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="187.4" cy="167.8" r="4.5" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="203.1" cy="172" r="4.5" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="156" cy="138.2" r="4.5" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="109.2" cy="133.9" r="4.5" fill="#38bdf8" opacity="0.85"/>
+            </svg>
+          </div>
+          <div class="svg-label">scatter — 단일 데이터셋</div>
+        </div>
+        <div>
+          <div class="svg-wrap">
+            <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+              <rect width="300" height="200" fill="#111827"/>
+              <g stroke="#1f2f4a" stroke-width="0.5">
+                <line x1="46" y1="14" x2="46" y2="172"/><line x1="46" y1="172" x2="282" y2="172"/>
+                <line x1="46" y1="46" x2="282" y2="46"/><line x1="46" y1="78" x2="282" y2="78"/>
+                <line x1="46" y1="110" x2="282" y2="110"/><line x1="46" y1="141" x2="282" y2="141"/>
+                <line x1="85" y1="14" x2="85" y2="172"/><line x1="124" y1="14" x2="124" y2="172"/>
+                <line x1="163" y1="14" x2="163" y2="172"/><line x1="202" y1="14" x2="202" y2="172"/><line x1="241" y1="14" x2="241" y2="172"/>
+              </g>
+              <line x1="46" y1="14" x2="46" y2="172" stroke="#38bdf8" stroke-width="1" opacity="0.3"/>
+              <line x1="46" y1="172" x2="282" y2="172" stroke="#38bdf8" stroke-width="1" opacity="0.3"/>
+              <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="middle">
+                <text x="46" y="186">2</text><text x="85" y="186">4</text><text x="124" y="186">6</text>
+                <text x="163" y="186">8</text><text x="202" y="186">10</text><text x="241" y="186">12</text><text x="282" y="186">16</text>
+              </g>
+              <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="end">
+                <text x="40" y="176">77</text><text x="40" y="142">88</text><text x="40" y="111">99</text><text x="40" y="48">111</text>
+              </g>
+              <!-- Day 1 blue -->
+              <circle cx="93.2" cy="79" r="4" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="124.7" cy="133.9" r="4" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="140.4" cy="129.6" r="4" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="124.7" cy="125.4" r="4" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="46" cy="28" r="4" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="282" cy="133.9" r="4" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="46" cy="62.2" r="4" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="156" cy="129.6" r="4" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="78.8" cy="100" r="4" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="187.4" cy="167.8" r="4" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="203.1" cy="172" r="4" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="156" cy="138.2" r="4" fill="#38bdf8" opacity="0.85"/>
+              <circle cx="109.2" cy="133.9" r="4" fill="#38bdf8" opacity="0.85"/>
+              <!-- Day 2 orange: x=[2,2,8,1,15,8,12,9,7,3,11,4,7,14,12] y=[100,105,84,105,90,99,90,95,94,100,79,112,91,80,85] -->
+              <!-- using same scale -->
+              <circle cx="46" cy="75.8" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="46" cy="54.6" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="140.4" cy="138.2" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="30.7" cy="54.6" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="251.3" cy="109.7" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="140.4" cy="109.7" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="203.1" cy="109.7" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="156" cy="121.1" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="124.7" cy="125.4" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="62.1" cy="75.8" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="187.4" cy="172" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="78.8" cy="21.2" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="124.7" cy="105.5" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="234.4" cy="163.6" r="4" fill="#fb923c" opacity="0.85"/>
+              <circle cx="203.1" cy="138.2" r="4" fill="#fb923c" opacity="0.85"/>
+              <!-- legend -->
+              <circle cx="58" cy="20" r="4" fill="#38bdf8"/>
+              <text x="66" y="24" fill="#94a3b8" font-size="9" font-family="Arial">Day 1</text>
+              <circle cx="100" cy="20" r="4" fill="#fb923c"/>
+              <text x="108" y="24" fill="#94a3b8" font-size="9" font-family="Arial">Day 2</text>
+            </svg>
+          </div>
+          <div class="svg-label">scatter — 두 데이터셋 비교</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 06 BAR / HIST ══ -->
+<section class="section" id="s06">
+  <div class="section-header">
+    <div class="section-num">06</div>
+    <div class="section-title"><span>bar()</span> / <span>hist()</span></div>
+  </div>
+  <div class="two-col">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">matplotlib.pyplot.bar() / barh()</div>
+      <ul class="bullet-list" style="margin-bottom:12px">
+        <li><strong>bar()</strong>: 수직 막대그래프</li>
+        <li><strong>barh()</strong>: 수평 막대그래프</li>
+      </ul>
+      <div class="code-block"><span class="id">x</span> <span class="plain">= [</span><span class="st">"A"</span><span class="plain">,</span><span class="st">"B"</span><span class="plain">,</span><span class="st">"C"</span><span class="plain">,</span><span class="st">"D"</span><span class="plain">]</span>
+<span class="id">y</span> <span class="plain">= [</span><span class="nm">3</span><span class="plain">, </span><span class="nm">8</span><span class="plain">, </span><span class="nm">1</span><span class="plain">, </span><span class="nm">10</span><span class="plain">]</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">bar</span><span class="plain">(</span><span class="id">x</span><span class="plain">, </span><span class="id">y</span><span class="plain">)</span></div>
+      <div style="height:12px"></div>
+      <div class="svg-wrap">
+        <svg viewBox="0 0 260 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+          <rect width="260" height="190" fill="#111827"/>
+          <g stroke="#1f2f4a" stroke-width="0.5">
+            <line x1="40" y1="14" x2="40" y2="158"/><line x1="40" y1="158" x2="248" y2="158"/>
+            <line x1="40" y1="34" x2="248" y2="34"/><line x1="40" y1="62" x2="248" y2="62"/>
+            <line x1="40" y1="90" x2="248" y2="90"/><line x1="40" y1="117" x2="248" y2="117"/><line x1="40" y1="145" x2="248" y2="145"/>
+          </g>
+          <line x1="40" y1="14" x2="40" y2="158" stroke="#38bdf8" stroke-width="1" opacity="0.3"/>
+          <line x1="40" y1="158" x2="248" y2="158" stroke="#38bdf8" stroke-width="1" opacity="0.3"/>
+          <!-- y ticks: 0,2,4,6,8,10 → 158,145,117,90,62,34 (144px/10=14.4) -->
+          <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="end">
+            <text x="35" y="162">0</text><text x="35" y="148">2</text><text x="35" y="121">4</text>
+            <text x="35" y="94">6</text><text x="35" y="67">8</text><text x="35" y="38">10</text>
+          </g>
+          <!-- 4 bars, pw=208, bw=52, gap=8 -->
+          <!-- A=3: height=3*14.4=43.2, B=8:115.2, C=1:14.4, D=10:144 -->
+          <rect x="50" y="114.8" width="36" height="43.2" fill="#38bdf8" opacity="0.85" rx="2"/>
+          <rect x="102" y="42.8" width="36" height="115.2" fill="#818cf8" opacity="0.85" rx="2"/>
+          <rect x="154" y="143.6" width="36" height="14.4" fill="#34d399" opacity="0.85" rx="2"/>
+          <rect x="206" y="14" width="36" height="144" fill="#fb923c" opacity="0.85" rx="2"/>
+          <g fill="#94a3b8" font-size="10" font-family="Menlo,monospace" text-anchor="middle">
+            <text x="68" y="175">A</text><text x="120" y="175">B</text>
+            <text x="172" y="175">C</text><text x="224" y="175">D</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">matplotlib.pyplot.hist()</div>
+      <ul class="bullet-list" style="margin-bottom:12px">
+        <li>숫자 배열로 <strong>히스토그램</strong> 생성</li>
+        <li>각 구간 내 관측값 수 표시</li>
+      </ul>
+      <div class="code-block"><span class="id">x</span> <span class="plain">=</span> <span class="id">np</span><span class="plain">.</span><span class="id">random</span><span class="plain">.</span><span class="fn">normal</span><span class="plain">(</span>
+  <span class="nm">170</span><span class="plain">, </span><span class="nm">10</span><span class="plain">, </span><span class="nm">250</span>
+<span class="plain">)</span>
+<span class="cm"># normal(mean, std, n)</span>
+<span class="id">plt</span><span class="plain">.</span><span class="fn">hist</span><span class="plain">(</span><span class="id">x</span><span class="plain">)</span></div>
+      <div style="height:12px"></div>
+      <div class="svg-wrap">
+        <svg viewBox="0 0 260 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+          <rect width="260" height="190" fill="#111827"/>
+          <g stroke="#1f2f4a" stroke-width="0.5">
+            <line x1="40" y1="14" x2="40" y2="158"/><line x1="40" y1="158" x2="248" y2="158"/>
+            <line x1="40" y1="38" x2="248" y2="38"/><line x1="40" y1="62" x2="248" y2="62"/>
+            <line x1="40" y1="86" x2="248" y2="86"/><line x1="40" y1="110" x2="248" y2="110"/>
+            <line x1="40" y1="134" x2="248" y2="134"/>
+          </g>
+          <line x1="40" y1="14" x2="40" y2="158" stroke="#38bdf8" stroke-width="1" opacity="0.3"/>
+          <line x1="40" y1="158" x2="248" y2="158" stroke="#38bdf8" stroke-width="1" opacity="0.3"/>
+          <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="end">
+            <text x="35" y="162">0</text><text x="35" y="137">10</text><text x="35" y="113">20</text>
+            <text x="35" y="89">30</text><text x="35" y="65">40</text><text x="35" y="41">50</text>
+          </g>
+          <!-- bins: 140,150,155,160,165,170,175,180,185,190 → 11 bars, pw=208 bw=18.9 -->
+          <!-- counts approx: 2,10,18,31,43,52,45,30,20,10,5 (normalized to 144px max=52) -->
+          <!-- scale: 144/52=2.77 per count -->
+          <rect x="40" y="152.5" width="18" height="5.5" fill="#38bdf8" opacity="0.8" stroke="#38bdf8" stroke-width="0.5" rx="1"/>
+          <rect x="58" y="130.3" width="18" height="27.7" fill="#38bdf8" opacity="0.8" stroke="#38bdf8" stroke-width="0.5" rx="1"/>
+          <rect x="76" y="108.1" width="18" height="49.9" fill="#38bdf8" opacity="0.8" stroke="#38bdf8" stroke-width="0.5" rx="1"/>
+          <rect x="94" y="72.1" width="18" height="85.9" fill="#38bdf8" opacity="0.8" stroke="#38bdf8" stroke-width="0.5" rx="1"/>
+          <rect x="112" y="39.9" width="18" height="118.1" fill="#38bdf8" opacity="0.8" stroke="#38bdf8" stroke-width="0.5" rx="1"/>
+          <rect x="130" y="14" width="18" height="144" fill="#38bdf8" opacity="0.8" stroke="#38bdf8" stroke-width="0.5" rx="1"/>
+          <rect x="148" y="33.3" width="18" height="124.7" fill="#38bdf8" opacity="0.75" stroke="#38bdf8" stroke-width="0.5" rx="1"/>
+          <rect x="166" y="74.9" width="18" height="83.1" fill="#38bdf8" opacity="0.75" stroke="#38bdf8" stroke-width="0.5" rx="1"/>
+          <rect x="184" y="102.6" width="18" height="55.4" fill="#38bdf8" opacity="0.7" stroke="#38bdf8" stroke-width="0.5" rx="1"/>
+          <rect x="202" y="130.3" width="18" height="27.7" fill="#38bdf8" opacity="0.7" stroke="#38bdf8" stroke-width="0.5" rx="1"/>
+          <rect x="220" y="144.1" width="18" height="13.9" fill="#38bdf8" opacity="0.65" stroke="#38bdf8" stroke-width="0.5" rx="1"/>
+          <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="middle">
+            <text x="49" y="172">140</text><text x="85" y="172">155</text><text x="121" y="172">165</text>
+            <text x="157" y="172">175</text><text x="193" y="172">185</text><text x="229" y="172">195</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 07 ANATOMY ══ -->
+<section class="section" id="s07">
+  <div class="section-header">
+    <div class="section-num">07</div>
+    <div class="section-title">Figure <span>해부도</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Anatomy of a Figure — Matplotlib 구성 요소</div>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0d1525">
+        <rect width="720" height="360" fill="#0d1525"/>
+        <!-- figure border -->
+        <rect x="60" y="30" width="500" height="300" fill="#111827" stroke="#f472b6" stroke-width="1.5" rx="4"/>
+        <!-- axes area -->
+        <rect x="100" y="55" width="420" height="245" fill="#0d1420" stroke="#38bdf8" stroke-width="1" opacity="0.5"/>
+        <!-- grid lines -->
+        <g stroke="#1f2f4a" stroke-width="0.5">
+          <line x1="100" y1="116" x2="520" y2="116"/><line x1="100" y1="177" x2="520" y2="177"/><line x1="100" y1="238" x2="520" y2="238"/>
+          <line x1="205" y1="55" x2="205" y2="300"/><line x1="310" y1="55" x2="310" y2="300"/><line x1="415" y1="55" x2="415" y2="300"/>
+        </g>
+        <!-- sin line (blue) -->
+        <polyline fill="none" stroke="#4fa3e0" stroke-width="2.5"
+          points="100,177 120,150 140,120 160,100 180,95 200,105 220,130 240,163 260,192 280,208 300,203 320,185 340,160 360,133 380,112 400,100 420,100 440,112 460,133 480,155 500,172 520,177"/>
+        <!-- scatter dots (orange) -->
+        <g fill="#e08c3c" opacity="0.9">
+          <circle cx="110" cy="190" r="4"/><circle cx="135" cy="210" r="4"/><circle cx="160" cy="200" r="4"/>
+          <circle cx="190" cy="225" r="4"/><circle cx="220" cy="218" r="4"/><circle cx="250" cy="230" r="4"/>
+          <circle cx="270" cy="215" r="4"/><circle cx="300" cy="220" r="4"/><circle cx="330" cy="205" r="4"/>
+          <circle cx="360" cy="195" r="4"/><circle cx="390" cy="188" r="4"/><circle cx="420" cy="180" r="4"/>
+          <circle cx="450" cy="170" r="4"/><circle cx="480" cy="165" r="4"/><circle cx="510" cy="160" r="4"/>
+        </g>
+        <!-- x axis -->
+        <line x1="100" y1="300" x2="520" y2="300" stroke="#818cf8" stroke-width="1.5"/>
+        <!-- y axis -->
+        <line x1="100" y1="55" x2="100" y2="300" stroke="#818cf8" stroke-width="1.5"/>
+        <!-- axis ticks -->
+        <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="middle">
+          <text x="100" y="315">0</text><text x="205" y="315">1</text><text x="310" y="315">2</text><text x="415" y="315">3</text><text x="520" y="315">4</text>
+        </g>
+        <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="end">
+          <text x="94" y="304">-1</text><text x="94" y="242">-0.5</text><text x="94" y="181">0</text><text x="94" y="120">0.5</text><text x="94" y="59">1</text>
+        </g>
+        <!-- Title -->
+        <text x="310" y="46" fill="#ffffff" font-size="13" font-family="Arial,sans-serif" font-weight="bold" text-anchor="middle">Anatomy of a figure</text>
+        <!-- Legend box -->
+        <rect x="434" y="62" width="80" height="48" fill="#1a2535" stroke="#1f2f4a" stroke-width="1" rx="3"/>
+        <line x1="440" y1="76" x2="458" y2="76" stroke="#4fa3e0" stroke-width="2"/>
+        <text x="462" y="80" fill="#94a3b8" font-size="9" font-family="Arial">Blue signal</text>
+        <line x1="440" y1="92" x2="458" y2="92" stroke="#e08c3c" stroke-width="2"/>
+        <text x="462" y="96" fill="#94a3b8" font-size="9" font-family="Arial">Orange</text>
+
+        <!-- ANNOTATION LINES AND LABELS (right side) -->
+        <g font-family="Arial,sans-serif" font-size="10">
+          <!-- Figure -->
+          <line x1="560" y1="30" x2="560" y2="30" stroke="#f472b6" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="572" y="26" fill="#f472b6" font-weight="bold">Figure</text>
+          <text x="572" y="38" fill="#94a3b8" font-size="8" font-family="Menlo,monospace">plt.figure</text>
+          <line x1="560" y1="30" x2="572" y2="30" stroke="#f472b6" stroke-width="1" stroke-dasharray="3,3"/>
+
+          <!-- Title -->
+          <line x1="310" y1="46" x2="310" y2="15" stroke="#818cf8" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="316" y="12" fill="#818cf8" font-weight="bold">Title</text>
+          <text x="316" y="22" fill="#94a3b8" font-size="8" font-family="Menlo,monospace">ax.set_title</text>
+
+          <!-- Legend -->
+          <line x1="514" y1="86" x2="560" y2="86" stroke="#34d399" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="563" y="82" fill="#34d399" font-weight="bold">Legend</text>
+          <text x="563" y="93" fill="#94a3b8" font-size="8" font-family="Menlo,monospace">ax.legend</text>
+
+          <!-- Grid -->
+          <line x1="310" y1="177" x2="570" y2="130" stroke="#fb923c" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="573" y="126" fill="#fb923c" font-weight="bold">Grid</text>
+          <text x="573" y="137" fill="#94a3b8" font-size="8" font-family="Menlo,monospace">ax.grid</text>
+
+          <!-- Line -->
+          <line x1="300" y1="203" x2="570" y2="170" stroke="#4fa3e0" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="573" y="166" fill="#4fa3e0" font-weight="bold">Line</text>
+          <text x="573" y="177" fill="#94a3b8" font-size="8" font-family="Menlo,monospace">ax.plot</text>
+
+          <!-- Markers -->
+          <line x1="390" y1="188" x2="570" y2="210" stroke="#e08c3c" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="573" y="206" fill="#e08c3c" font-weight="bold">Markers</text>
+          <text x="573" y="217" fill="#94a3b8" font-size="8" font-family="Menlo,monospace">ax.scatter</text>
+
+          <!-- Spines -->
+          <line x1="520" y1="177" x2="570" y2="250" stroke="#f472b6" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="573" y="246" fill="#f472b6" font-weight="bold">Spine</text>
+          <text x="573" y="257" fill="#94a3b8" font-size="8" font-family="Menlo,monospace">ax.spines</text>
+
+          <!-- Axes -->
+          <line x1="310" y1="300" x2="310" y2="330" stroke="#818cf8" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="280" y="342" fill="#818cf8" font-weight="bold">Axes</text>
+          <text x="270" y="353" fill="#94a3b8" font-size="8" font-family="Menlo,monospace">fig.subplots</text>
+        </g>
+
+        <!-- y Axis label -->
+        <text x="28" y="177" fill="#f472b6" font-size="10" font-family="Arial" font-weight="bold" text-anchor="middle" transform="rotate(-90,28,177)">y Axis</text>
+        <text x="44" y="177" fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="middle" transform="rotate(-90,44,177)">ax.yaxis</text>
+
+        <!-- x Axis label -->
+        <text x="310" y="345" fill="#f472b6" font-size="10" font-family="Arial" font-weight="bold" text-anchor="middle">x Axis</text>
+        <text x="310" y="357" fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="middle">ax.xaxis</text>
+
+        <!-- xlabel / ylabel labels -->
+        <text x="14" y="240" fill="#818cf8" font-size="9" font-family="Arial" text-anchor="middle" transform="rotate(-90,14,240)">ylabel</text>
+        <text x="310" y="328" fill="#818cf8" font-size="9" font-family="Arial" text-anchor="middle">xlabel</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 08 SEABORN ══ -->
+<section class="section" id="s08">
+  <div class="section-header">
+    <div class="section-num">08</div>
+    <div class="section-title"><span>Seaborn</span> 소개</div>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <div class="card-title">What is Seaborn?</div>
+        <ul class="bullet-list">
+          <li><strong>통계 그래픽</strong>을 위한 시각화 라이브러리</li>
+          <li>Matplotlib 위에서 구축 (builds on top of)</li>
+          <li>Pandas 데이터 구조와 긴밀하게 통합</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Why use Seaborn?</div>
+        <ul class="bullet-list">
+          <li>데이터 탐색 및 이해를 도움</li>
+          <li>함수가 <strong>전체 DataFrame/배열</strong>에서 직접 동작</li>
+          <li>내부적으로 <strong>시맨틱 매핑</strong>과 <strong>통계 집계</strong> 자동 수행</li>
+        </ul>
+      </div>
+      <div class="hbox">
+        기본 import: <code>import seaborn as sns</code><br>
+        테마: <code>sns.set_theme(style="darkgrid")</code>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">seaborn.lineplot() 시그니처</div>
+      <div class="code-block" style="font-size:11px"><span class="fn">seaborn.lineplot</span><span class="plain">(</span>
+  <span class="id">data</span><span class="plain">=</span><span class="id">None</span><span class="plain">, *, </span><span class="id">x</span><span class="plain">=</span><span class="id">None</span><span class="plain">, </span><span class="id">y</span><span class="plain">=</span><span class="id">None</span><span class="plain">,</span>
+  <span class="id">hue</span><span class="plain">=</span><span class="id">None</span><span class="plain">, </span><span class="id">size</span><span class="plain">=</span><span class="id">None</span><span class="plain">, </span><span class="id">style</span><span class="plain">=</span><span class="id">None</span><span class="plain">,</span>
+  <span class="id">palette</span><span class="plain">=</span><span class="id">None</span><span class="plain">, </span><span class="id">markers</span><span class="plain">=</span><span class="id">None</span><span class="plain">,</span>
+  <span class="id">estimator</span><span class="plain">=</span><span class="st">'mean'</span><span class="plain">,</span>
+  <span class="id">errorbar</span><span class="plain">=(</span><span class="st">'ci'</span><span class="plain">, </span><span class="nm">95</span><span class="plain">),</span>
+  <span class="id">n_boot</span><span class="plain">=</span><span class="nm">1000</span><span class="plain">, ...</span>
+<span class="plain">)</span></div>
+      <div class="hbox" style="margin-top:10px"><strong>data</strong>: pandas.DataFrame, numpy.ndarray, mapping or sequence</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 09 SEABORN 그래프 ══ -->
+<section class="section" id="s09">
+  <div class="section-header">
+    <div class="section-num">09</div>
+    <div class="section-title">Seaborn <span>다양한 그래프</span></div>
+  </div>
+
+  <!-- lineplot -->
+  <div class="card">
+    <div class="card-title">seaborn.lineplot() — semantic grouping 선 그래프</div>
+    <div class="two-col">
+      <div>
+        <div class="code-block"><span class="kw">import</span> <span class="plain">seaborn</span> <span class="kw">as</span> <span class="id">sns</span>
+<span class="id">sns</span><span class="plain">.</span><span class="fn">set_theme</span><span class="plain">(</span><span class="id">style</span><span class="plain">=</span><span class="st">"darkgrid"</span><span class="plain">)</span>
+
+<span class="id">fmri</span> <span class="plain">=</span> <span class="id">sns</span><span class="plain">.</span><span class="fn">load_dataset</span><span class="plain">(</span><span class="st">"fmri"</span><span class="plain">)</span>
+<span class="id">sns</span><span class="plain">.</span><span class="fn">lineplot</span><span class="plain">(</span>
+  <span class="id">x</span><span class="plain">=</span><span class="st">"timepoint"</span><span class="plain">, </span><span class="id">y</span><span class="plain">=</span><span class="st">"signal"</span><span class="plain">,</span>
+  <span class="id">hue</span><span class="plain">=</span><span class="st">"region"</span><span class="plain">, </span><span class="id">style</span><span class="plain">=</span><span class="st">"event"</span><span class="plain">,</span>
+  <span class="id">data</span><span class="plain">=</span><span class="id">fmri</span>
+<span class="plain">)</span></div>
+        <ul class="bullet-list" style="margin-top:10px">
+          <li><code>hue</code>: 색상으로 그룹 구분</li>
+          <li><code>style</code>: 선 스타일로 그룹 구분</li>
+          <li>자동으로 <strong>신뢰구간(CI)</strong> 음영 표시</li>
+        </ul>
+      </div>
+      <div>
+        <div class="svg-wrap">
+          <svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+            <rect width="320" height="240" fill="#111827"/>
+            <g stroke="#1f2f4a" stroke-width="0.5">
+              <line x1="50" y1="20" x2="50" y2="195"/><line x1="50" y1="195" x2="245" y2="195"/>
+              <line x1="50" y1="55" x2="245" y2="55"/><line x1="50" y1="90" x2="245" y2="90"/>
+              <line x1="50" y1="125" x2="245" y2="125"/><line x1="50" y1="160" x2="245" y2="160"/>
+              <line x1="88.8" y1="20" x2="88.8" y2="195"/><line x1="127.5" y1="20" x2="127.5" y2="195"/>
+              <line x1="166.3" y1="20" x2="166.3" y2="195"/><line x1="205" y1="20" x2="205" y2="195"/>
+            </g>
+            <line x1="50" y1="20" x2="50" y2="195" stroke="#38bdf8" stroke-width="1" opacity="0.3"/>
+            <line x1="50" y1="195" x2="245" y2="195" stroke="#38bdf8" stroke-width="1" opacity="0.3"/>
+            <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="middle">
+              <text x="50" y="208">0</text><text x="88.8" y="208">5</text><text x="127.5" y="208">10</text>
+              <text x="166.3" y="208">15</text><text x="205" y="208">17.5</text>
+            </g>
+            <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="end">
+              <text x="44" y="199">-0.1</text><text x="44" y="164">0</text>
+              <text x="44" y="129">0.1</text><text x="44" y="94">0.2</text><text x="44" y="59">0.3</text>
+            </g>
+            <!-- xlabel -->
+            <text x="147" y="222" fill="#94a3b8" font-size="9" font-family="Arial" text-anchor="middle">timepoint</text>
+            <text x="18" y="107" fill="#94a3b8" font-size="9" font-family="Arial" text-anchor="middle" transform="rotate(-90,18,107)">signal</text>
+            <!-- CI band blue -->
+            <polygon fill="#4fa3e0" opacity="0.15" points="50,160 78,155 107,130 127.5,75 147,62 166,80 185,130 205,148 225,153 245,155 245,165 225,163 205,158 185,140 166,92 147,75 127.5,88 107,143 78,165 50,170"/>
+            <!-- blue line parietal -->
+            <polyline fill="none" stroke="#4fa3e0" stroke-width="2"
+              points="50,163 78,158 107,135 127.5,80 147,68 166,85 185,133 205,151 225,156 245,158"/>
+            <!-- CI band orange -->
+            <polygon fill="#e08c3c" opacity="0.12" points="50,163 78,162 107,158 127.5,155 147,155 166,152 185,150 205,148 225,147 245,148 245,155 225,153 205,154 185,156 166,158 147,160 127.5,161 107,163 78,167 50,169"/>
+            <!-- orange line frontal -->
+            <polyline fill="none" stroke="#e08c3c" stroke-width="2" stroke-dasharray="6,3"
+              points="50,166 78,164 107,160 127.5,158 147,157 166,155 185,153 205,151 225,150 245,151"/>
+            <!-- legend -->
+            <text x="252" y="28" fill="#94a3b8" font-size="9" font-family="Arial" font-weight="bold">region</text>
+            <line x1="252" y1="38" x2="268" y2="38" stroke="#4fa3e0" stroke-width="2"/>
+            <text x="271" y="42" fill="#94a3b8" font-size="8" font-family="Arial">parietal</text>
+            <line x1="252" y1="52" x2="268" y2="52" stroke="#e08c3c" stroke-width="2" stroke-dasharray="4,2"/>
+            <text x="271" y="56" fill="#94a3b8" font-size="8" font-family="Arial">frontal</text>
+          </svg>
+        </div>
+        <div class="svg-label">lineplot — fmri dataset (시뮬레이션)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- histplot -->
+  <div class="card">
+    <div class="card-title">seaborn.histplot() — 분포 히스토그램</div>
+    <div class="two-col">
+      <div>
+        <div class="code-block"><span class="id">penguins</span> <span class="plain">=</span> <span class="id">sns</span><span class="plain">.</span><span class="fn">load_dataset</span><span class="plain">(</span><span class="st">"penguins"</span><span class="plain">)</span>
+
+<span class="cm"># 단순</span>
+<span class="id">sns</span><span class="plain">.</span><span class="fn">histplot</span><span class="plain">(</span>
+  <span class="id">data</span><span class="plain">=</span><span class="id">penguins</span><span class="plain">,</span>
+  <span class="id">x</span><span class="plain">=</span><span class="st">"flipper_length_mm"</span>
+<span class="plain">)</span>
+
+<span class="cm"># hue 종(species)별</span>
+<span class="id">sns</span><span class="plain">.</span><span class="fn">histplot</span><span class="plain">(</span>
+  <span class="id">data</span><span class="plain">=</span><span class="id">penguins</span><span class="plain">,</span>
+  <span class="id">x</span><span class="plain">=</span><span class="st">"flipper_length_mm"</span><span class="plain">,</span>
+  <span class="id">hue</span><span class="plain">=</span><span class="st">"species"</span>
+<span class="plain">)</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div>
+          <div class="svg-wrap">
+            <svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+              <rect width="300" height="150" fill="#111827"/>
+              <g stroke="#1f2f4a" stroke-width="0.4">
+                <line x1="40" y1="10" x2="40" y2="120"/><line x1="40" y1="120" x2="278" y2="120"/>
+                <line x1="40" y1="35" x2="278" y2="35"/><line x1="40" y1="60" x2="278" y2="60"/>
+                <line x1="40" y1="85" x2="278" y2="85"/>
+              </g>
+              <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="end">
+                <text x="35" y="124">0</text><text x="35" y="89">20</text><text x="35" y="64">40</text><text x="35" y="39">60</text><text x="35" y="14">80</text>
+              </g>
+              <!-- bins 170-230, 7 bins, bw=34 -->
+              <rect x="40" y="81" width="32" height="39" fill="#38bdf8" opacity="0.8" rx="1"/>
+              <rect x="74" y="44" width="32" height="76" fill="#38bdf8" opacity="0.8" rx="1"/>
+              <rect x="108" y="25" width="32" height="95" fill="#38bdf8" opacity="0.8" rx="1"/>
+              <rect x="142" y="62" width="32" height="58" fill="#38bdf8" opacity="0.75" rx="1"/>
+              <rect x="176" y="69" width="32" height="51" fill="#38bdf8" opacity="0.75" rx="1"/>
+              <rect x="210" y="95" width="32" height="25" fill="#38bdf8" opacity="0.7" rx="1"/>
+              <rect x="244" y="101" width="32" height="19" fill="#38bdf8" opacity="0.65" rx="1"/>
+              <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="middle">
+                <text x="56" y="132">170</text><text x="90" y="132">180</text><text x="124" y="132">190</text>
+                <text x="158" y="132">200</text><text x="192" y="132">210</text><text x="226" y="132">220</text><text x="260" y="132">230</text>
+              </g>
+              <text x="159" y="144" fill="#94a3b8" font-size="8" text-anchor="middle" font-family="Arial">flipper_length_mm</text>
+            </svg>
+          </div>
+          <div class="svg-label">histplot — 단순</div>
+        </div>
+        <div>
+          <div class="svg-wrap">
+            <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+              <rect width="300" height="160" fill="#111827"/>
+              <g stroke="#1f2f4a" stroke-width="0.4">
+                <line x1="40" y1="10" x2="40" y2="120"/><line x1="40" y1="120" x2="278" y2="120"/>
+                <line x1="40" y1="35" x2="278" y2="35"/><line x1="40" y1="60" x2="278" y2="60"/>
+                <line x1="40" y1="85" x2="278" y2="85"/>
+              </g>
+              <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="end">
+                <text x="35" y="124">0</text><text x="35" y="89">20</text><text x="35" y="64">40</text><text x="35" y="39">60</text>
+              </g>
+              <!-- Adelie blue, Chinstrap orange, Gentoo green - stacked -->
+              <rect x="40" y="81" width="32" height="39" fill="#38bdf8" opacity="0.8" rx="1"/>
+              <rect x="74" y="50" width="32" height="30" fill="#38bdf8" opacity="0.8" rx="1"/>
+              <rect x="74" y="43" width="32" height="7" fill="#fb923c" opacity="0.8"/>
+              <rect x="108" y="44" width="32" height="38" fill="#38bdf8" opacity="0.8" rx="1"/>
+              <rect x="108" y="37" width="32" height="7" fill="#fb923c" opacity="0.8"/>
+              <rect x="142" y="87" width="32" height="33" fill="#38bdf8" opacity="0.7"/>
+              <rect x="142" y="50" width="32" height="37" fill="#34d399" opacity="0.8"/>
+              <rect x="176" y="72" width="32" height="48" fill="#34d399" opacity="0.8" rx="1"/>
+              <rect x="210" y="50" width="32" height="40" fill="#34d399" opacity="0.8"/>
+              <rect x="210" y="101" width="32" height="19" fill="#38bdf8" opacity="0.6"/>
+              <rect x="244" y="72" width="32" height="48" fill="#34d399" opacity="0.75" rx="1"/>
+              <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="middle">
+                <text x="56" y="132">170</text><text x="90" y="132">180</text><text x="124" y="132">190</text>
+                <text x="158" y="132">200</text><text x="192" y="132">210</text><text x="226" y="132">220</text><text x="260" y="132">230</text>
+              </g>
+              <!-- legend -->
+              <rect x="42" y="12" width="8" height="8" fill="#38bdf8" opacity="0.8"/>
+              <text x="54" y="20" fill="#94a3b8" font-size="7" font-family="Arial">Adelie</text>
+              <rect x="86" y="12" width="8" height="8" fill="#fb923c" opacity="0.8"/>
+              <text x="98" y="20" fill="#94a3b8" font-size="7" font-family="Arial">Chinstrap</text>
+              <rect x="142" y="12" width="8" height="8" fill="#34d399" opacity="0.8"/>
+              <text x="154" y="20" fill="#94a3b8" font-size="7" font-family="Arial">Gentoo</text>
+              <text x="159" y="148" fill="#94a3b8" font-size="8" text-anchor="middle" font-family="Arial">flipper_length_mm</text>
+            </svg>
+          </div>
+          <div class="svg-label">histplot — hue="species"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- boxplot + violinplot -->
+  <div class="plot-grid">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">seaborn.boxplot()</div>
+      <ul class="bullet-list" style="margin-bottom:10px">
+        <li>카테고리별 <strong>분포</strong>를 박스플롯으로 표시</li>
+        <li><code>hue</code>로 중첩 그룹핑</li>
+      </ul>
+      <div class="code-block" style="font-size:11px"><span class="id">tips</span> <span class="plain">=</span> <span class="id">sns</span><span class="plain">.</span><span class="fn">load_dataset</span><span class="plain">(</span><span class="st">"tips"</span><span class="plain">)</span>
+<span class="id">sns</span><span class="plain">.</span><span class="fn">boxplot</span><span class="plain">(</span>
+  <span class="id">x</span><span class="plain">=</span><span class="st">"day"</span><span class="plain">, </span><span class="id">y</span><span class="plain">=</span><span class="st">"total_bill"</span><span class="plain">,</span>
+  <span class="id">hue</span><span class="plain">=</span><span class="st">"smoker"</span><span class="plain">,</span>
+  <span class="id">palette</span><span class="plain">=[</span><span class="st">"m"</span><span class="plain">,</span><span class="st">"g"</span><span class="plain">], </span><span class="id">data</span><span class="plain">=</span><span class="id">tips</span>
+<span class="plain">)</span></div>
+      <div style="height:10px"></div>
+      <div class="svg-wrap">
+        <svg viewBox="0 0 270 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+          <rect width="270" height="200" fill="#111827"/>
+          <g stroke="#1f2f4a" stroke-width="0.4">
+            <line x1="40" y1="14" x2="40" y2="160"/><line x1="40" y1="160" x2="256" y2="160"/>
+            <line x1="40" y1="43" x2="256" y2="43"/><line x1="40" y1="72" x2="256" y2="72"/>
+            <line x1="40" y1="101" x2="256" y2="101"/><line x1="40" y1="130" x2="256" y2="130"/>
+          </g>
+          <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="end">
+            <text x="36" y="164">0</text><text x="36" y="134">10</text><text x="36" y="105">20</text>
+            <text x="36" y="76">30</text><text x="36" y="47">40</text><text x="36" y="18">50</text>
+          </g>
+          <!-- scale: 146px for 50 = 2.92px/unit. y=160-val*2.92 -->
+          <!-- 4 days, each has 2 boxes side by side -->
+          <!-- Thur: Yes(15-20-30,10-42), No(14-18-26,8-35) -->
+          <line x1="62" y1="131.6" x2="62" y2="37.4" stroke="#818cf8" stroke-width="1"/>
+          <rect x="54" y="96.4" width="16" height="29.2" fill="#818cf8" fill-opacity="0.25" stroke="#818cf8" stroke-width="1.5" rx="1"/>
+          <line x1="54" y1="101.6" x2="70" y2="101.6" stroke="#818cf8" stroke-width="2"/>
+          <line x1="80" y1="137.6" x2="80" y2="54.8" stroke="#34d399" stroke-width="1"/>
+          <rect x="72" y="105.6" width="16" height="23.4" fill="#34d399" fill-opacity="0.25" stroke="#34d399" stroke-width="1.5" rx="1"/>
+          <line x1="72" y1="107.4" x2="88" y2="107.4" stroke="#34d399" stroke-width="2"/>
+
+          <line x1="116" y1="131.6" x2="116" y2="43.8" stroke="#818cf8" stroke-width="1"/>
+          <rect x="108" y="96.4" width="16" height="29.2" fill="#818cf8" fill-opacity="0.25" stroke="#818cf8" stroke-width="1.5" rx="1"/>
+          <line x1="108" y1="107.4" x2="124" y2="107.4" stroke="#818cf8" stroke-width="2"/>
+          <line x1="134" y1="136.8" x2="134" y2="60.8" stroke="#34d399" stroke-width="1"/>
+          <rect x="126" y="101.6" width="16" height="26.3" fill="#34d399" fill-opacity="0.25" stroke="#34d399" stroke-width="1.5" rx="1"/>
+          <line x1="126" y1="110.4" x2="142" y2="110.4" stroke="#34d399" stroke-width="2"/>
+
+          <line x1="170" y1="125.2" x2="170" y2="14" stroke="#818cf8" stroke-width="1"/>
+          <rect x="162" y="81.2" width="16" height="35.1" fill="#818cf8" fill-opacity="0.25" stroke="#818cf8" stroke-width="1.5" rx="1"/>
+          <line x1="162" y1="87.0" x2="178" y2="87.0" stroke="#818cf8" stroke-width="2"/>
+          <line x1="188" y1="131.6" x2="188" y2="31.4" stroke="#34d399" stroke-width="1"/>
+          <rect x="180" y="94.2" width="16" height="29.2" fill="#34d399" fill-opacity="0.25" stroke="#34d399" stroke-width="1.5" rx="1"/>
+          <line x1="180" y1="101.6" x2="196" y2="101.6" stroke="#34d399" stroke-width="2"/>
+
+          <line x1="224" y1="128.4" x2="224" y2="20.3" stroke="#818cf8" stroke-width="1"/>
+          <rect x="216" y="84.7" width="16" height="35.1" fill="#818cf8" fill-opacity="0.25" stroke="#818cf8" stroke-width="1.5" rx="1"/>
+          <line x1="216" y1="95.8" x2="232" y2="95.8" stroke="#818cf8" stroke-width="2"/>
+          <line x1="242" y1="130" x2="242" y2="27.0" stroke="#34d399" stroke-width="1"/>
+          <rect x="234" y="101.6" width="16" height="26.3" fill="#34d399" fill-opacity="0.25" stroke="#34d399" stroke-width="1.5" rx="1"/>
+          <line x1="234" y1="107.4" x2="250" y2="107.4" stroke="#34d399" stroke-width="2"/>
+
+          <g fill="#94a3b8" font-size="9" font-family="Arial" text-anchor="middle">
+            <text x="71" y="175">Thur</text><text x="125" y="175">Fri</text>
+            <text x="179" y="175">Sat</text><text x="233" y="175">Sun</text>
+          </g>
+          <text x="148" y="190" fill="#94a3b8" font-size="8" font-family="Arial" text-anchor="middle">day</text>
+          <!-- legend -->
+          <rect x="42" y="16" width="8" height="8" fill="#818cf8" opacity="0.6"/>
+          <text x="54" y="23" fill="#94a3b8" font-size="8" font-family="Arial">Yes</text>
+          <rect x="74" y="16" width="8" height="8" fill="#34d399" opacity="0.6"/>
+          <text x="86" y="23" fill="#94a3b8" font-size="8" font-family="Arial">No</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">seaborn.violinplot()</div>
+      <ul class="bullet-list" style="margin-bottom:10px">
+        <li><strong>박스플롯 + KDE</strong> 결합</li>
+        <li><code>split=True</code>: 좌우 반반 분할</li>
+        <li><code>inner="quart"</code>: 사분위수 표시</li>
+      </ul>
+      <div class="code-block" style="font-size:11px"><span class="id">sns</span><span class="plain">.</span><span class="fn">violinplot</span><span class="plain">(</span>
+  <span class="id">data</span><span class="plain">=</span><span class="id">tips</span><span class="plain">, </span><span class="id">x</span><span class="plain">=</span><span class="st">"day"</span><span class="plain">,</span>
+  <span class="id">y</span><span class="plain">=</span><span class="st">"total_bill"</span><span class="plain">,</span>
+  <span class="id">hue</span><span class="plain">=</span><span class="st">"smoker"</span><span class="plain">,</span>
+  <span class="id">split</span><span class="plain">=</span><span class="id">True</span><span class="plain">,</span>
+  <span class="id">inner</span><span class="plain">=</span><span class="st">"quart"</span>
+<span class="plain">)</span></div>
+      <div style="height:10px"></div>
+      <div class="svg-wrap">
+        <svg viewBox="0 0 270 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+          <rect width="270" height="200" fill="#111827"/>
+          <g stroke="#1f2f4a" stroke-width="0.4">
+            <line x1="40" y1="14" x2="40" y2="160"/><line x1="40" y1="160" x2="256" y2="160"/>
+            <line x1="40" y1="43" x2="256" y2="43"/><line x1="40" y1="72" x2="256" y2="72"/>
+            <line x1="40" y1="101" x2="256" y2="101"/><line x1="40" y1="130" x2="256" y2="130"/>
+          </g>
+          <g fill="#94a3b8" font-size="7" font-family="Menlo,monospace" text-anchor="end">
+            <text x="36" y="164">0</text><text x="36" y="134">10</text><text x="36" y="105">20</text>
+            <text x="36" y="76">30</text><text x="36" y="47">40</text><text x="36" y="18">50</text>
+          </g>
+          <!-- 4 violins centered at 71, 125, 179, 233 -->
+          <!-- Each violin: ellipse shape using path -->
+          <g opacity="0.75">
+            <!-- Thur -->
+            <path d="M71,43 C85,55 85,120 71,145 C57,120 57,55 71,43 Z" fill="#4fa3e0"/>
+            <line x1="71" y1="72" x2="71" y2="130" stroke="#fff" stroke-width="1.5" stroke-dasharray="2,2"/>
+            <!-- Fri -->
+            <path d="M125,50 C139,62 139,118 125,143 C111,118 111,62 125,50 Z" fill="#4fa3e0"/>
+            <line x1="125" y1="78" x2="125" y2="128" stroke="#fff" stroke-width="1.5" stroke-dasharray="2,2"/>
+            <!-- Sat -->
+            <path d="M179,36 C197,50 197,125 179,152 C161,125 161,50 179,36 Z" fill="#4fa3e0"/>
+            <line x1="179" y1="65" x2="179" y2="138" stroke="#fff" stroke-width="1.5" stroke-dasharray="2,2"/>
+            <!-- Sun -->
+            <path d="M233,43 C248,55 248,122 233,148 C218,122 218,55 233,43 Z" fill="#4fa3e0"/>
+            <line x1="233" y1="72" x2="233" y2="132" stroke="#fff" stroke-width="1.5" stroke-dasharray="2,2"/>
+          </g>
+          <g fill="#94a3b8" font-size="9" font-family="Arial" text-anchor="middle">
+            <text x="71" y="175">Thur</text><text x="125" y="175">Fri</text>
+            <text x="179" y="175">Sat</text><text x="233" y="175">Sun</text>
+          </g>
+          <text x="148" y="190" fill="#94a3b8" font-size="8" font-family="Arial" text-anchor="middle">day</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- jointplot / kdeplot -->
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">seaborn.jointplot() / seaborn.kdeplot()</div>
+    <div class="two-col">
+      <div>
+        <ul class="bullet-list" style="margin-bottom:12px">
+          <li><code>jointplot()</code>: 두 변수의 <strong>이변량+단변량 그래프</strong> 동시 표시</li>
+          <li><code>kdeplot()</code>: 커널 밀도 추정으로 <strong>분포 시각화</strong></li>
+          <li><code>fill=True</code>: 밀도 영역 채우기</li>
+          <li><code>hue</code>: 그룹별 다른 색상</li>
+        </ul>
+        <div class="code-block"><span class="id">sns</span><span class="plain">.</span><span class="fn">jointplot</span><span class="plain">(</span>
+  <span class="id">data</span><span class="plain">=</span><span class="id">penguins</span><span class="plain">,</span>
+  <span class="id">x</span><span class="plain">=</span><span class="st">"bill_length_mm"</span><span class="plain">,</span>
+  <span class="id">y</span><span class="plain">=</span><span class="st">"bill_depth_mm"</span>
+<span class="plain">)</span>
+<span class="id">sns</span><span class="plain">.</span><span class="fn">kdeplot</span><span class="plain">(</span>
+  <span class="id">data</span><span class="plain">=</span><span class="id">geyser</span><span class="plain">,</span>
+  <span class="id">x</span><span class="plain">=</span><span class="st">"waiting"</span><span class="plain">, </span><span class="id">y</span><span class="plain">=</span><span class="st">"duration"</span><span class="plain">,</span>
+  <span class="id">hue</span><span class="plain">=</span><span class="st">"kind"</span><span class="plain">, </span><span class="id">fill</span><span class="plain">=</span><span class="id">True</span>
+<span class="plain">)</span></div>
+      </div>
+      <div>
+        <div class="svg-wrap">
+          <svg viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#111827">
+            <rect width="300" height="240" fill="#111827"/>
+            <g stroke="#1f2f4a" stroke-width="0.5">
+              <line x1="50" y1="20" x2="50" y2="195"/><line x1="50" y1="195" x2="250" y2="195"/>
+              <line x1="50" y1="60" x2="250" y2="60"/><line x1="50" y1="107" x2="250" y2="107"/>
+              <line x1="50" y1="151" x2="250" y2="151"/>
+              <line x1="90" y1="20" x2="90" y2="195"/><line x1="130" y1="20" x2="130" y2="195"/>
+              <line x1="170" y1="20" x2="170" y2="195"/><line x1="210" y1="20" x2="210" y2="195"/>
+            </g>
+            <line x1="50" y1="20" x2="50" y2="195" stroke="#38bdf8" stroke-width="1" opacity="0.3"/>
+            <line x1="50" y1="195" x2="250" y2="195" stroke="#38bdf8" stroke-width="1" opacity="0.3"/>
+            <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="middle">
+              <text x="50" y="208">40</text><text x="90" y="208">50</text><text x="130" y="208">60</text>
+              <text x="170" y="208">70</text><text x="210" y="208">80</text><text x="250" y="208">90</text>
+            </g>
+            <g fill="#94a3b8" font-size="8" font-family="Menlo,monospace" text-anchor="end">
+              <text x="44" y="199">1</text><text x="44" y="154">2</text>
+              <text x="44" y="110">3</text><text x="44" y="63">4</text><text x="44" y="24">5</text>
+            </g>
+            <text x="150" y="222" fill="#94a3b8" font-size="9" font-family="Arial" text-anchor="middle">waiting</text>
+            <text x="18" y="107" fill="#94a3b8" font-size="9" font-family="Arial" text-anchor="middle" transform="rotate(-90,18,107)">duration</text>
+            <!-- KDE blobs: short geyser (waiting~55, duration~2) orange -->
+            <ellipse cx="90" cy="151" rx="28" ry="22" fill="#fb923c" opacity="0.25"/>
+            <ellipse cx="90" cy="151" rx="16" ry="13" fill="#fb923c" opacity="0.35"/>
+            <ellipse cx="90" cy="151" rx="8" ry="6" fill="#fb923c" opacity="0.5"/>
+            <!-- long geyser (waiting~80, duration~4) blue -->
+            <ellipse cx="190" cy="63" rx="38" ry="28" fill="#38bdf8" opacity="0.2"/>
+            <ellipse cx="190" cy="63" rx="22" ry="17" fill="#38bdf8" opacity="0.3"/>
+            <ellipse cx="190" cy="63" rx="10" ry="8" fill="#38bdf8" opacity="0.5"/>
+            <!-- legend -->
+            <text x="258" y="28" fill="#94a3b8" font-size="9" font-family="Arial" font-weight="bold">kind</text>
+            <rect x="258" y="35" width="10" height="10" fill="#38bdf8" opacity="0.7" rx="1"/>
+            <text x="272" y="44" fill="#94a3b8" font-size="8" font-family="Arial">long</text>
+            <rect x="258" y="50" width="10" height="10" fill="#fb923c" opacity="0.7" rx="1"/>
+            <text x="272" y="59" fill="#94a3b8" font-size="8" font-family="Arial">short</text>
+          </svg>
+        </div>
+        <div class="svg-label">kdeplot — geyser 두 그룹 분포 (시뮬레이션)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- color/style properties -->
+  <div class="card">
+    <div class="card-title">Seaborn — Color &amp; Style Properties</div>
+    <div class="two-col">
+      <div>
+        <p style="color:var(--text-dim);font-size:13px;margin-bottom:10px"><strong style="color:var(--text)">color properties</strong> — color / edgecolor / fillcolor</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+          <div style="width:26px;height:26px;background:#4c8eda;border-radius:4px"></div>
+          <div style="width:26px;height:26px;background:#e08c3c;border-radius:4px"></div>
+          <div style="width:26px;height:26px;background:#5ab85a;border-radius:4px"></div>
+          <div style="width:26px;height:26px;background:#d95050;border-radius:4px"></div>
+          <div style="width:26px;height:26px;background:#9b59b6;border-radius:4px"></div>
+          <div style="width:26px;height:26px;background:#16a0a0;border-radius:4px"></div>
+          <div style="width:26px;height:26px;background:#e74c8b;border-radius:4px"></div>
+        </div>
+        <p style="color:var(--text-dim);font-size:13px;margin-bottom:8px"><strong style="color:var(--text)">style properties</strong></p>
+        <ul class="bullet-list">
+          <li><strong>marker</strong>: ●, ▲, ▼, ◆, ■, ×, + 등</li>
+          <li><strong>linestyle</strong>: solid, dashed, dotted, dashdot 등</li>
+        </ul>
+      </div>
+      <div>
+        <div class="svg-wrap">
+          <svg viewBox="0 0 300 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0a0e1a">
+            <rect width="300" height="190" fill="#0a0e1a"/>
+            <!-- 6 linestyles -->
+            <line x1="90" y1="28" x2="260" y2="28" stroke="#38bdf8" stroke-width="2"/>
+            <text x="8" y="32" fill="#38bdf8" font-size="9" font-family="Menlo,monospace">'solid'</text>
+            <line x1="90" y1="60" x2="260" y2="60" stroke="#818cf8" stroke-width="2" stroke-dasharray="8,4"/>
+            <text x="8" y="64" fill="#818cf8" font-size="9" font-family="Menlo,monospace">'dashed'</text>
+            <line x1="90" y1="92" x2="260" y2="92" stroke="#34d399" stroke-width="2" stroke-dasharray="2,4"/>
+            <text x="8" y="96" fill="#34d399" font-size="9" font-family="Menlo,monospace">'dotted'</text>
+            <line x1="90" y1="124" x2="260" y2="124" stroke="#fb923c" stroke-width="2" stroke-dasharray="8,4,2,4"/>
+            <text x="8" y="128" fill="#fb923c" font-size="9" font-family="Menlo,monospace">'dashdot'</text>
+            <line x1="90" y1="156" x2="260" y2="156" stroke="#f472b6" stroke-width="2" stroke-dasharray="6,2"/>
+            <text x="8" y="160" fill="#f472b6" font-size="9" font-family="Menlo,monospace">(6,2)</text>
+            <line x1="90" y1="180" x2="260" y2="180" stroke="#a3e635" stroke-width="2" stroke-dasharray="2,1"/>
+            <text x="8" y="184" fill="#a3e635" font-size="9" font-family="Menlo,monospace">(2,1)</text>
+          </svg>
+        </div>
+        <div class="svg-label">다양한 linestyle 예시</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 10 SUMMARY ══ -->
+<section class="section" id="s10">
+  <div class="section-header">
+    <div class="section-num">10</div>
+    <div class="section-title"><span>Summary</span> — Matplotlib vs Seaborn</div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-card mpl">
+      <div class="summary-card-title">MATPLOTLIB</div>
+      <ul class="bullet-list">
+        <li><strong>Low-level</strong> 라이브러리</li>
+        <li>범용 플로팅</li>
+        <li>플롯 요소에 대한 세밀한 제어</li>
+        <li>복잡한 플롯에 코드가 많이 필요</li>
+        <li>기본 기본값, 수동 스타일링 필요</li>
+        <li>Pandas와 통합되지만 매끄럽지 않음</li>
+        <li>커스텀·복잡·저수준 플롯에 적합</li>
+      </ul>
+    </div>
+    <div class="summary-card sns">
+      <div class="summary-card-title">SEABORN</div>
+      <ul class="bullet-list">
+        <li><strong>High-level</strong> 라이브러리</li>
+        <li>통계 데이터 시각화</li>
+        <li>일반 작업에 간소화된 제어</li>
+        <li>통계 플롯에 간결한 문법</li>
+        <li>매력적인 기본값, 내장 테마</li>
+        <li>Pandas DataFrame과 완벽 통합</li>
+        <li>빠르고 보기 좋은 통계 플롯에 적합</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Matplotlib vs Seaborn 비교표</div>
+    <table class="compare-table">
+      <thead>
+        <tr><th>Features</th><th>Matplotlib</th><th class="sns-h">Seaborn</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>level</td><td>low-level</td><td>high-level</td></tr>
+        <tr><td>purpose</td><td>general plotting</td><td>statistical data visualization</td></tr>
+        <tr><td>control</td><td>high, granular control over plot elements</td><td>simplified control, defaults for common tasks</td></tr>
+        <tr><td>syntax</td><td>verbose, requires more code for complex plots</td><td>concise, easier syntax for statistical plots</td></tr>
+        <tr><td>aesthetics</td><td>basic defaults, requires manual styling</td><td>attractive defaults, built-in themes</td></tr>
+        <tr><td>statistical focus</td><td>limited built-in statistical plots</td><td>specialized statistical plots</td></tr>
+        <tr><td>integration w/ Pandas</td><td>integrates w/ Pandas, but less seamless</td><td>seamless integration w/ Pandas DataFrames</td></tr>
+        <tr><td>flexibility</td><td>highly customizable, powerful</td><td>focused on statistical plots, less flexibility</td></tr>
+        <tr><td>use case</td><td>custom, complex, or low-level plots</td><td>quick, aesthetically pleasing statistical plot</td></tr>
+      </tbody>
+    </table>
+    <div style="text-align:center;margin-top:18px;padding:14px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.2);border-radius:8px">
+      <span style="color:var(--accent);font-size:15px;font-weight:700">→ select the best visualization tool for a specific task!</span>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+</body>
+</html>
