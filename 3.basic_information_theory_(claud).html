@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3. Basic Information Theory — Data Mining</title>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --surface: #111827;
+  --surface2: #1a2234;
+  --surface3: #1e2d42;
+  --border: #2a3a55;
+  --accent: #38bdf8;
+  --accent2: #a78bfa;
+  --accent3: #34d399;
+  --accent4: #fb923c;
+  --accent5: #f472b6;
+  --text: #e2e8f0;
+  --text-muted: #8899aa;
+  --text-dim: #4a6280;
+  --red: #f87171;
+  --yellow: #facc15;
+  --formula-bg: #0d1520;
+  --formula-border: #1e3a5f;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+/* ── LAYOUT ── */
+.wrapper { display: flex; min-height: 100vh; }
+
+/* ── TOC ── */
+#toc {
+  position: fixed;
+  top: 0; left: 0;
+  width: 260px;
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+.toc-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.toc-header .course { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.toc-header .title { font-family: 'Impact','Arial Narrow',sans-serif; font-size: 15px; color: var(--accent); letter-spacing: 0.04em; line-height: 1.3; }
+.toc-nav { padding: 12px 0; flex: 1; }
+.toc-nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 12.5px;
+  transition: all 0.2s;
+  border-left: 2px solid transparent;
+}
+.toc-nav a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--border); }
+.toc-nav a.active { color: var(--accent); background: rgba(56,189,248,0.07); border-left-color: var(--accent); font-weight: 600; }
+.toc-num {
+  font-family: 'Menlo','Courier New',monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  background: var(--surface2);
+  padding: 2px 6px;
+  border-radius: 3px;
+  min-width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.toc-nav a.active .toc-num { background: rgba(56,189,248,0.15); color: var(--accent); }
+
+/* ── MAIN CONTENT ── */
+.main { margin-left: 260px; padding: 48px 48px 80px; max-width: 960px; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+  margin-bottom: 52px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+}
+.page-header .badge {
+  font-family: 'Menlo','Courier New',monospace;
+  font-size: 11px;
+  color: var(--accent);
+  background: rgba(56,189,248,0.1);
+  border: 1px solid rgba(56,189,248,0.25);
+  padding: 3px 10px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+.page-header h1 {
+  font-family: 'Impact','Arial Narrow',sans-serif;
+  font-size: 42px;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+.page-header .sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── SECTION ── */
+.section { margin-bottom: 56px; }
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.sec-num {
+  font-family: 'Impact','Arial Narrow',sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.2);
+  padding: 5px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.section-header h2 {
+  font-family: 'Impact','Arial Narrow',sans-serif;
+  font-size: 26px;
+  letter-spacing: 0.03em;
+  color: var(--text);
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent2);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-title::before { content: ''; width: 3px; height: 14px; background: var(--accent2); border-radius: 2px; display: inline-block; }
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.split-3 { display: grid; grid-template-columns: 1fr 1.4fr; gap: 20px; align-items: start; }
+
+/* ── FORMULA BOX ── */
+.formula {
+  background: var(--formula-bg);
+  border: 1px solid var(--formula-border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 14px 18px;
+  font-family: 'Menlo','Courier New',monospace;
+  font-size: 14.5px;
+  color: var(--accent);
+  margin: 10px 0;
+  line-height: 1.6;
+}
+.formula.purple { border-left-color: var(--accent2); color: var(--accent2); }
+.formula.green { border-left-color: var(--accent3); color: var(--accent3); }
+.formula.orange { border-left-color: var(--accent4); color: var(--accent4); }
+
+/* ── LIST ── */
+ul.content-list { list-style: none; padding: 0; }
+ul.content-list li {
+  padding: 5px 0 5px 18px;
+  position: relative;
+  color: var(--text);
+  font-size: 14px;
+}
+ul.content-list li::before { content: '›'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+ul.content-list li.sub { padding-left: 36px; color: var(--text-muted); font-size: 13.5px; }
+ul.content-list li.sub::before { content: '–'; left: 18px; color: var(--text-dim); }
+.highlight { color: var(--accent); font-weight: 600; }
+.highlight2 { color: var(--accent2); font-weight: 600; }
+.highlight3 { color: var(--accent3); font-weight: 600; }
+.highlight4 { color: var(--accent4); font-weight: 600; }
+.highlight5 { color: var(--accent5); font-weight: 600; }
+
+/* ── TABLE ── */
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  margin: 10px 0;
+}
+table.data-table th {
+  background: var(--surface3);
+  color: var(--accent);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--border);
+}
+table.data-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: 'Menlo','Courier New',monospace;
+  font-size: 13px;
+}
+table.data-table tr:last-child td { border-bottom: none; }
+table.data-table tr:hover td { background: var(--surface2); }
+table.data-table td:first-child { color: var(--text); font-family: inherit; }
+
+/* ── CALLOUT ── */
+.callout {
+  display: flex;
+  gap: 12px;
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.18);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 10px 0;
+  font-size: 13.5px;
+  align-items: flex-start;
+}
+.callout.purple { background: rgba(167,139,250,0.06); border-color: rgba(167,139,250,0.2); }
+.callout.green { background: rgba(52,211,153,0.06); border-color: rgba(52,211,153,0.2); }
+.callout.orange { background: rgba(251,146,60,0.06); border-color: rgba(251,146,60,0.2); }
+.callout-icon { font-size: 18px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+.callout-text { color: var(--text-muted); }
+.callout-text strong { color: var(--text); }
+
+/* ── PROPERTY CARDS ── */
+.prop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 10px 0; }
+.prop-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.prop-num { font-family: 'Impact','Arial Narrow',sans-serif; font-size: 28px; color: var(--border); line-height: 1; margin-bottom: 6px; }
+.prop-title { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+.prop-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+.prop-formula { font-family: 'Menlo','Courier New',monospace; font-size: 12px; color: var(--accent3); margin-top: 6px; }
+
+/* ── SVG CONTAINER ── */
+.svg-wrap { background: var(--surface2); border-radius: 8px; padding: 16px; overflow: hidden; }
+.svg-wrap svg { width: 100%; display: block; }
+.graph-title { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 8px; letter-spacing: 0.05em; }
+
+/* ── SUMMARY ── */
+.summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.sum-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  transition: border-color 0.2s;
+}
+.sum-card:hover { border-color: var(--accent); }
+.sum-icon { font-size: 24px; margin-bottom: 8px; }
+.sum-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent2); margin-bottom: 6px; }
+.sum-formula { font-family: 'Menlo','Courier New',monospace; font-size: 12.5px; color: var(--accent); background: var(--formula-bg); padding: 6px 10px; border-radius: 4px; margin: 6px 0; }
+.sum-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+/* slide ref */
+.slide-ref { font-family: 'Menlo','Courier New',monospace; font-size: 10px; color: var(--text-dim); background: var(--surface2); padding: 2px 7px; border-radius: 3px; margin-left: 8px; vertical-align: middle; }
+
+.key-eq {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-family: 'Menlo','Courier New',monospace;
+  font-size: 13.5px;
+  color: var(--accent2);
+  margin: 6px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- TOC -->
+<nav id="toc">
+  <div class="toc-header">
+    <div class="course">Data Mining · FE06064001</div>
+    <div class="title">3. Basic Information Theory</div>
+  </div>
+  <div class="toc-nav">
+    <a href="#sec01" id="link-01"><span class="toc-num">01</span>불확실성과 정보이론</a>
+    <a href="#sec02" id="link-02"><span class="toc-num">02</span>정보이론 개요</a>
+    <a href="#sec03" id="link-03"><span class="toc-num">03</span>자기 정보</a>
+    <a href="#sec04" id="link-04"><span class="toc-num">04</span>자기 정보의 성질</a>
+    <a href="#sec05" id="link-05"><span class="toc-num">05</span>엔트로피</a>
+    <a href="#sec06" id="link-06"><span class="toc-num">06</span>엔트로피의 성질</a>
+    <a href="#sec07" id="link-07"><span class="toc-num">07</span>조건부 엔트로피</a>
+    <a href="#sec08" id="link-08"><span class="toc-num">08</span>연쇄 법칙</a>
+    <a href="#sec09" id="link-09"><span class="toc-num">09</span>상호 정보</a>
+    <a href="#sec10" id="link-10"><span class="toc-num">10</span>정보 이득</a>
+    <a href="#sec11" id="link-11"><span class="toc-num">11</span>결정 트리 응용</a>
+    <a href="#sec12" id="link-12"><span class="toc-num">12</span>핵심 요약</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="wrapper">
+<main class="main">
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <div class="badge">Lecture 3 / 16 slides</div>
+    <h1>Basic Information<br>Theory</h1>
+    <div class="sub">Jangho Lee &nbsp;·&nbsp; Computer Science Engineering, Incheon National University</div>
+  </header>
+
+  <!-- 01 -->
+  <section class="section" id="sec01">
+    <div class="section-header">
+      <span class="sec-num">01</span>
+      <h2>불확실성과 데이터 마이닝</h2>
+    </div>
+    <span class="slide-ref">Slide 2</span>
+    <div class="card" style="margin-top:14px;">
+      <div class="card-title">핵심 개념</div>
+      <ul class="content-list">
+        <li>데이터 마이닝의 많은 작업은 <span class="highlight">불확실성 하에서 예측</span>을 수행</li>
+        <li class="sub">분류(Classification): 입력 특징 벡터 <em>X</em>로부터 클래스 레이블 <em>Y</em>를 예측</li>
+        <li class="sub">예: 이메일을 스팸/햄으로 분류 → 사후 확률 P(Y|X) 로 표현</li>
+        <li>현실 데이터에는 다양한 원인으로 <span class="highlight2">불확실성</span>이 존재</li>
+        <li class="sub">데이터 수집 오류로 인한 노이즈 데이터</li>
+        <li class="sub">누락되거나 불완전한 속성</li>
+        <li class="sub">클래스 간 특징 분포의 중첩</li>
+        <li class="sub">측정 오류 및 환경적 변동성</li>
+        <li><span class="highlight3">정보 이론</span>은 확률 분포에서 불확실성을 수량화하는 수학적 프레임워크를 제공</li>
+        <li class="sub">엔트로피, 조건부 엔트로피, 상호 정보 등의 개념 포함</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <div class="callout-icon">💡</div>
+      <div class="callout-text"><strong>핵심 질문:</strong> 데이터의 불확실성을 어떻게 측정할 수 있는가?</div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="section" id="sec02">
+    <div class="section-header">
+      <span class="sec-num">02</span>
+      <h2>정보 이론 개요</h2>
+    </div>
+    <span class="slide-ref">Slide 3</span>
+    <div class="split" style="margin-top:14px;">
+      <div class="card">
+        <div class="card-title">역사</div>
+        <ul class="content-list">
+          <li><span class="highlight">Claude Shannon</span>이 1948년 논문에서 정보이론 창시</li>
+          <li class="sub">"A Mathematical Theory of Communication"</li>
+          <li>원래 목표: 채널을 통해 정보를 효율적으로 <span class="highlight4">전송</span>하는 방법 연구</li>
+          <li>현재는 정보와 불확실성을 <span class="highlight3">분석</span>하는 수학적 프레임워크로 확장</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">핵심 목표</div>
+        <ul class="content-list">
+          <li>메시지에 포함된 정보량 <span class="highlight">수량화</span></li>
+          <li>확률 변수에서의 불확실성 <span class="highlight2">측정</span></li>
+          <li>확률 분포와 정보 사이의 관계 <span class="highlight3">이해</span></li>
+        </ul>
+        <div class="callout green" style="margin-top:12px;">
+          <div class="callout-icon">🔗</div>
+          <div class="callout-text">정보이론은 <strong>머신러닝, 통신, 통계학</strong> 등 다양한 분야에서 핵심 도구로 활용됨</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="section" id="sec03">
+    <div class="section-header">
+      <span class="sec-num">03</span>
+      <h2>자기 정보 (Self-Information)</h2>
+    </div>
+    <span class="slide-ref">Slide 4</span>
+    <div class="split-3" style="margin-top:14px;">
+      <div>
+        <div class="card">
+          <div class="card-title">정의</div>
+          <div class="formula">I(x) = −log₂ P(x)</div>
+          <div style="font-size:13px; color:var(--text-muted); margin-top:8px;">P(x): 사건 x의 확률</div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <div class="card-title">직관</div>
+          <ul class="content-list">
+            <li>낮은 확률 사건 → <span class="highlight">더 많은 정보</span> 제공</li>
+            <li>높은 확률 사건 → <span class="highlight2">더 적은 정보</span> 제공</li>
+            <li>사건의 확률이 감소할수록 정보량 증가</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">확률 vs 정보량 예시</div>
+        <table class="data-table">
+          <thead><tr><th>확률 P(x)</th><th>정보량 I(x)</th></tr></thead>
+          <tbody>
+            <tr><td>P(x) = 1.0</td><td>0 bits</td></tr>
+            <tr><td>P(x) = 0.5</td><td>1 bit</td></tr>
+            <tr><td>P(x) = 0.25</td><td>2 bits</td></tr>
+            <tr><td>P(x) = 0.125</td><td>3 bits</td></tr>
+          </tbody>
+        </table>
+        <!-- Self-information curve SVG -->
+        <div class="svg-wrap" style="margin-top:12px;">
+          <div class="graph-title">Self-Information: I(x) = −log₂ P(x)</div>
+          <svg viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="ah" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <polygon points="0 0, 6 3, 0 6" fill="#4a6280"/>
+              </marker>
+            </defs>
+            <!-- axes -->
+            <line x1="50" y1="170" x2="320" y2="170" stroke="#4a6280" stroke-width="1" marker-end="url(#ah)"/>
+            <line x1="50" y1="170" x2="50" y2="15" stroke="#4a6280" stroke-width="1" marker-end="url(#ah)"/>
+            <!-- x ticks & labels -->
+            <text x="50" y="184" fill="#6b7f99" font-size="10" text-anchor="middle" font-family="Menlo,monospace">0</text>
+            <text x="104" y="184" fill="#6b7f99" font-size="10" text-anchor="middle" font-family="Menlo,monospace">0.2</text>
+            <text x="157" y="184" fill="#6b7f99" font-size="10" text-anchor="middle" font-family="Menlo,monospace">0.4</text>
+            <text x="210" y="184" fill="#6b7f99" font-size="10" text-anchor="middle" font-family="Menlo,monospace">0.6</text>
+            <text x="263" y="184" fill="#6b7f99" font-size="10" text-anchor="middle" font-family="Menlo,monospace">0.8</text>
+            <text x="310" y="184" fill="#6b7f99" font-size="10" text-anchor="middle" font-family="Menlo,monospace">1.0</text>
+            <!-- y ticks & labels -->
+            <text x="44" y="173" fill="#6b7f99" font-size="10" text-anchor="end" font-family="Menlo,monospace">0</text>
+            <text x="44" y="131" fill="#6b7f99" font-size="10" text-anchor="end" font-family="Menlo,monospace">1</text>
+            <text x="44" y="90" fill="#6b7f99" font-size="10" text-anchor="end" font-family="Menlo,monospace">2</text>
+            <text x="44" y="48" fill="#6b7f99" font-size="10" text-anchor="end" font-family="Menlo,monospace">3</text>
+            <!-- y gridlines -->
+            <line x1="50" y1="130" x2="315" y2="130" stroke="#2a3a55" stroke-width="0.5" stroke-dasharray="3,3"/>
+            <line x1="50" y1="90" x2="315" y2="90" stroke="#2a3a55" stroke-width="0.5" stroke-dasharray="3,3"/>
+            <line x1="50" y1="50" x2="315" y2="50" stroke="#2a3a55" stroke-width="0.5" stroke-dasharray="3,3"/>
+            <!-- axis labels -->
+            <text x="185" y="197" fill="#8899aa" font-size="10" text-anchor="middle">P(x)</text>
+            <text x="14" y="100" fill="#8899aa" font-size="10" text-anchor="middle" transform="rotate(-90,14,100)">I(x) [bits]</text>
+            <!-- curve: I(x) = -log2(p), p in (0.01..1), x mapped 50+p*260, y mapped 170 - I*40 (capped at 20) -->
+            <!-- precomputed points: p=0.01→6.64bits, p=0.05→4.32, p=0.1→3.32, p=0.2→2.32, p=0.25→2, p=0.3→1.74, p=0.4→1.32, p=0.5→1, p=0.6→0.74, p=0.7→0.51, p=0.8→0.32, p=0.9→0.15, p=1.0→0 -->
+            <path d="M52,23 C60,30 70,45 78,58 C90,76 104,91 130,110 C150,123 168,130 210,143 C235,149 263,156 310,170"
+              fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+            <!-- marker dots -->
+            <circle cx="104" cy="127" r="3.5" fill="#fb923c"/>
+            <text x="108" y="123" fill="#fb923c" font-size="9">P=0.2, I≈2.3</text>
+            <circle cx="157" cy="117" r="3.5" fill="#34d399"/>
+            <text x="161" y="113" fill="#34d399" font-size="9">P=0.4, I≈1.3</text>
+            <circle cx="210" cy="130" r="3.5" fill="#a78bfa"/>
+            <text x="214" y="126" fill="#a78bfa" font-size="9">P=0.5, I=1</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="section" id="sec04">
+    <div class="section-header">
+      <span class="sec-num">04</span>
+      <h2>자기 정보의 성질</h2>
+    </div>
+    <span class="slide-ref">Slide 5</span>
+    <div class="prop-grid" style="margin-top:14px;">
+      <div class="prop-card">
+        <div class="prop-num">1</div>
+        <div class="prop-title">비음수성 (Non-negativity)</div>
+        <div class="prop-desc">정보량은 항상 0 이상<br>0 &lt; P(x) &lt; 1 이면 log P(x) &lt; 0<br>→ 음수 부호로 양수가 됨</div>
+        <div class="prop-formula">I(x) ≥ 0</div>
+      </div>
+      <div class="prop-card">
+        <div class="prop-num">2</div>
+        <div class="prop-title">단조성 (Monotonicity)</div>
+        <div class="prop-desc">확률이 낮을수록 더 많은 정보를 제공<br>희귀한 사건 = 더 많은 정보량</div>
+        <div class="prop-formula">P(x₁) &gt; P(x₂)<br>⟹ I(x₁) &lt; I(x₂)</div>
+      </div>
+      <div class="prop-card">
+        <div class="prop-num">3</div>
+        <div class="prop-title">가산성 (Additivity)</div>
+        <div class="prop-desc">독립 사건 x, y에 대해<br>전체 정보 = 개별 정보의 합<br>로그의 성질에서 유도됨</div>
+        <div class="prop-formula">I(x,y) = I(x) + I(y)</div>
+      </div>
+    </div>
+    <div class="callout purple" style="margin-top:14px;">
+      <div class="callout-icon">📐</div>
+      <div class="callout-text">가산성 증명: <strong>−log P(x,y) = −log[P(x)·P(y)] = −log P(x) − log P(y)</strong> (독립일 때 P(x,y)=P(x)P(y))</div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section class="section" id="sec05">
+    <div class="section-header">
+      <span class="sec-num">05</span>
+      <h2>엔트로피 (Entropy)</h2>
+    </div>
+    <span class="slide-ref">Slide 6–7</span>
+    <div class="split-3" style="margin-top:14px;">
+      <div>
+        <div class="card">
+          <div class="card-title">정의</div>
+          <div class="formula purple">H(X) = −Σ p(x) log p(x)</div>
+          <ul class="content-list" style="margin-top:10px;">
+            <li>자기 정보의 <span class="highlight2">기댓값(Expected Value)</span></li>
+            <li>확률 변수가 생성하는 <span class="highlight">평균 정보량</span></li>
+            <li>전체 확률 분포의 불확실성 측정</li>
+          </ul>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <div class="card-title">버킷 예시 <span style="color:var(--text-dim);font-size:11px;">(Red/Blue balls)</span></div>
+          <table class="data-table">
+            <thead><tr><th>버킷</th><th>구성</th><th>H(X)</th></tr></thead>
+            <tbody>
+              <tr><td>#1 (100% Red)</td><td>P(R)=1, P(B)=0</td><td style="color:#34d399;">0 bits</td></tr>
+              <tr><td>#2 (75% Red)</td><td>P(R)=0.75, P(B)=0.25</td><td style="color:#fb923c;">≈ 0.811 bits</td></tr>
+              <tr><td>#3 (50/50)</td><td>P(R)=0.5, P(B)=0.5</td><td style="color:#f87171;">1 bit (최대)</td></tr>
+            </tbody>
+          </table>
+          <div class="callout" style="margin-top:10px;">
+            <div class="callout-icon">🎯</div>
+            <div class="callout-text">이 개념은 <strong>Decision Tree</strong>에서 노드 불순도(impurity) 측정 및 최적 분할 결정에 핵심적으로 사용됨</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <!-- Entropy curve of Bernoulli RV -->
+        <div class="card">
+          <div class="card-title">베르누이 확률변수의 엔트로피 곡선</div>
+          <div class="svg-wrap">
+            <div class="graph-title">Entropy of a Bernoulli Random Variable</div>
+            <svg viewBox="0 0 360 230" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="ah2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <polygon points="0 0, 6 3, 0 6" fill="#4a6280"/>
+                </marker>
+              </defs>
+              <!-- axes -->
+              <line x1="55" y1="190" x2="335" y2="190" stroke="#4a6280" stroke-width="1.2" marker-end="url(#ah2)"/>
+              <line x1="55" y1="190" x2="55" y2="18" stroke="#4a6280" stroke-width="1.2" marker-end="url(#ah2)"/>
+              <!-- x ticks -->
+              <line x1="55" y1="190" x2="55" y2="194" stroke="#4a6280" stroke-width="1"/>
+              <line x1="111" y1="190" x2="111" y2="194" stroke="#4a6280" stroke-width="1"/>
+              <line x1="167" y1="190" x2="167" y2="194" stroke="#4a6280" stroke-width="1"/>
+              <line x1="222" y1="190" x2="222" y2="194" stroke="#4a6280" stroke-width="1"/>
+              <line x1="278" y1="190" x2="278" y2="194" stroke="#4a6280" stroke-width="1"/>
+              <line x1="330" y1="190" x2="330" y2="194" stroke="#4a6280" stroke-width="1"/>
+              <!-- x labels -->
+              <text x="55" y="205" fill="#6b7f99" font-size="10" text-anchor="middle" font-family="Menlo,monospace">0.0</text>
+              <text x="111" y="205" fill="#6b7f99" font-size="10" text-anchor="middle" font-family="Menlo,monospace">0.2</text>
+              <text x="167" y="205" fill="#6b7f99" font-size="10" text-anchor="middle" font-family="Menlo,monospace">0.4</text>
+              <text x="222" y="205" fill="#6b7f99" font-size="10" text-anchor="middle" font-family="Menlo,monospace">0.6</text>
+              <text x="278" y="205" fill="#6b7f99" font-size="10" text-anchor="middle" font-family="Menlo,monospace">0.8</text>
+              <text x="330" y="205" fill="#6b7f99" font-size="10" text-anchor="middle" font-family="Menlo,monospace">1.0</text>
+              <!-- y ticks -->
+              <line x1="51" y1="190" x2="55" y2="190" stroke="#4a6280" stroke-width="1"/>
+              <line x1="51" y1="140" x2="55" y2="140" stroke="#4a6280" stroke-width="1"/>
+              <line x1="51" y1="90" x2="55" y2="90" stroke="#4a6280" stroke-width="1"/>
+              <line x1="51" y1="40" x2="55" y2="40" stroke="#4a6280" stroke-width="1"/>
+              <!-- y labels -->
+              <text x="47" y="193" fill="#6b7f99" font-size="10" text-anchor="end" font-family="Menlo,monospace">0.0</text>
+              <text x="47" y="143" fill="#6b7f99" font-size="10" text-anchor="end" font-family="Menlo,monospace">0.5</text>
+              <text x="47" y="93" fill="#6b7f99" font-size="10" text-anchor="end" font-family="Menlo,monospace">1.0</text>
+              <!-- gridlines -->
+              <line x1="55" y1="140" x2="330" y2="140" stroke="#2a3a55" stroke-width="0.6" stroke-dasharray="3,3"/>
+              <line x1="55" y1="90" x2="330" y2="90" stroke="#2a3a55" stroke-width="0.6" stroke-dasharray="3,3"/>
+              <line x1="55" y1="40" x2="330" y2="40" stroke="#2a3a55" stroke-width="0.6" stroke-dasharray="3,3"/>
+              <!-- H(p) = -p*log2(p) - (1-p)*log2(1-p) curve
+                   p:  0.01→0.081, 0.05→0.286, 0.1→0.469, 0.2→0.722, 0.3→0.881, 0.4→0.971, 0.5→1.0,
+                       0.6→0.971, 0.7→0.881, 0.8→0.722, 0.9→0.469, 0.95→0.286, 0.99→0.081
+                   x = 55 + p*275; y = 190 - H*150 -->
+              <path d="M58,178 C65,163 75,155 83,148 C97,136 111,120 125,107 C139,94 153,85 167,81 C181,76 194,73 192.5,40 C194,73 208,76 222,81 C236,85 249,95 264,108 C278,122 292,139 306,152 C316,160 323,167 328,178"
+                fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round"/>
+              <!-- peak marker -->
+              <circle cx="192" cy="40" r="4" fill="#f472b6"/>
+              <text x="200" y="37" fill="#f472b6" font-size="10">H=1 (최대, p=0.5)</text>
+              <!-- bucket dots -->
+              <circle cx="55" cy="190" r="3.5" fill="#34d399"/>
+              <text x="58" y="183" fill="#34d399" font-size="9">#1 H=0</text>
+              <circle cx="124" cy="107" r="3.5" fill="#fb923c"/>
+              <text x="128" y="103" fill="#fb923c" font-size="9">#2 H≈0.81</text>
+              <!-- axis labels -->
+              <text x="192" y="220" fill="#8899aa" font-size="10" text-anchor="middle">Pr(X=1)</text>
+              <text x="13" y="115" fill="#8899aa" font-size="10" text-anchor="middle" transform="rotate(-90,13,115)">H(X)</text>
+            </svg>
+          </div>
+        </div>
+        <div class="callout orange" style="margin-top:12px;">
+          <div class="callout-icon">📊</div>
+          <div class="callout-text">엔트로피는 p=0.5일 때 <strong>최대(1 bit)</strong>, p=0 또는 p=1일 때 <strong>최소(0 bit)</strong></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section class="section" id="sec06">
+    <div class="section-header">
+      <span class="sec-num">06</span>
+      <h2>엔트로피의 성질</h2>
+    </div>
+    <span class="slide-ref">Slide 8</span>
+    <div class="prop-grid" style="margin-top:14px;">
+      <div class="prop-card">
+        <div class="prop-num">1</div>
+        <div class="prop-title">비음수성 (Non-negativity)</div>
+        <div class="prop-desc">엔트로피는 항상 0 이상<br>확률은 0~1 사이이므로 엔트로피 값은 음수가 될 수 없음</div>
+        <div class="prop-formula">H(X) ≥ 0</div>
+      </div>
+      <div class="prop-card">
+        <div class="prop-num">2</div>
+        <div class="prop-title">최대 엔트로피</div>
+        <div class="prop-desc">모든 결과가 동일한 확률일 때 최대<br>n개의 결과가 동일 확률 1/n이면 최대 불확실성</div>
+        <div class="prop-formula">H(X) = log n<br>(p(x) = 1/n 일 때)</div>
+      </div>
+      <div class="prop-card">
+        <div class="prop-num">3</div>
+        <div class="prop-title">결정적 경우 (0 엔트로피)</div>
+        <div class="prop-desc">한 결과가 확률 1로 발생하면<br>불확실성이 없으므로 엔트로피 = 0<br>예: P(H)=1, P(T)=0</div>
+        <div class="prop-formula">H(X) = 0</div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:14px;">
+      <div class="callout-icon">🪙</div>
+      <div class="callout-text">예시: 공정한 동전 P(H)=0.5, P(T)=0.5 → <strong>최대 불확실성 H=1 bit</strong> / 편향된 동전 P(H)=1 → <strong>H=0 bit (완전 예측 가능)</strong></div>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section class="section" id="sec07">
+    <div class="section-header">
+      <span class="sec-num">07</span>
+      <h2>조건부 엔트로피 (Conditional Entropy)</h2>
+    </div>
+    <span class="slide-ref">Slide 9</span>
+    <div class="split-3" style="margin-top:14px;">
+      <div>
+        <div class="card">
+          <div class="card-title">정의</div>
+          <div class="formula purple">H(Y|X) = −Σ p(x,y) log p(y|x)</div>
+          <div class="formula" style="margin-top:8px;">H(Y|X) = Σ p(x) H(Y|X=x)</div>
+          <ul class="content-list" style="margin-top:10px;">
+            <li>다른 변수를 관측한 후 <span class="highlight">남은 불확실성</span> 측정</li>
+            <li>H(Y|X): X를 알고 난 후 Y의 불확실성</li>
+            <li>X에 대한 기댓값으로 계산</li>
+          </ul>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <div class="card-title">해석</div>
+          <ul class="content-list">
+            <li>X가 Y를 잘 예측 → <span class="highlight3">조건부 엔트로피 작음</span></li>
+            <li>X가 Y에 대한 정보 거의 없음 → <span class="highlight2">조건부 엔트로피 큼</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">예시: 시험 결과 H(Y|X) 계산</div>
+        <table class="data-table">
+          <thead><tr><th>Study (X)</th><th>P(X)</th><th>P(Pass|X)</th><th>P(Fail|X)</th></tr></thead>
+          <tbody>
+            <tr><td>Yes</td><td>0.6</td><td>0.9</td><td>0.1</td></tr>
+            <tr><td>No</td><td>0.4</td><td>0.2</td><td>0.8</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:14px;">
+          <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:6px;">계산 과정:</div>
+          <div class="key-eq">H(Y|X=Yes) = −(0.9 log 0.9 + 0.1 log 0.1) ≈ 0.469</div>
+          <div class="key-eq">H(Y|X=No) = −(0.2 log 0.2 + 0.8 log 0.8) ≈ 0.722</div>
+          <div class="key-eq" style="color:var(--accent3);">H(Y|X) = 0.6×0.469 + 0.4×0.722 ≈ 0.570</div>
+        </div>
+        <div class="callout green" style="margin-top:12px;">
+          <div class="callout-icon">💡</div>
+          <div class="callout-text">공부 여부(X)를 알면 시험 결과(Y)의 불확실성이 <strong>감소</strong></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section class="section" id="sec08">
+    <div class="section-header">
+      <span class="sec-num">08</span>
+      <h2>엔트로피 연쇄 법칙 (Chain Rule)</h2>
+    </div>
+    <span class="slide-ref">Slide 10</span>
+    <div class="split" style="margin-top:14px;">
+      <div class="card">
+        <div class="card-title">정의</div>
+        <div class="formula">H(X, Y) = H(X) + H(Y|X)</div>
+        <div class="formula" style="margin-top:8px;">H(X, Y) = H(Y) + H(X|Y)</div>
+        <ul class="content-list" style="margin-top:10px;">
+          <li>결합 엔트로피 H(X,Y): 두 변수의 총 불확실성</li>
+          <li>두 부분으로 분해 가능</li>
+          <li class="sub">① 한 변수의 불확실성</li>
+          <li class="sub">② 첫 번째 변수를 알고 난 후 나머지 변수의 불확실성</li>
+        </ul>
+      </div>
+      <div>
+        <!-- Chain rule Venn diagram SVG -->
+        <div class="svg-wrap">
+          <div class="graph-title">결합 엔트로피 분해</div>
+          <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- outer rect = H(X,Y) -->
+            <rect x="20" y="20" width="260" height="120" rx="8" fill="none" stroke="#2a3a55" stroke-width="1.5" stroke-dasharray="5,3"/>
+            <text x="155" y="155" fill="#6b7f99" font-size="10" text-anchor="middle">H(X, Y)</text>
+            <!-- H(X) block -->
+            <rect x="28" y="28" width="120" height="104" rx="6" fill="rgba(56,189,248,0.08)" stroke="#38bdf8" stroke-width="1.5"/>
+            <text x="88" y="82" fill="#38bdf8" font-size="13" text-anchor="middle" font-weight="bold">H(X)</text>
+            <!-- H(Y|X) block -->
+            <rect x="155" y="28" width="118" height="104" rx="6" fill="rgba(167,139,250,0.08)" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="214" y="78" fill="#a78bfa" font-size="13" text-anchor="middle" font-weight="bold">H(Y|X)</text>
+            <!-- plus sign -->
+            <text x="148" y="88" fill="#8899aa" font-size="20" text-anchor="middle" font-weight="bold">+</text>
+            <!-- equation -->
+            <text x="150" y="12" fill="#8899aa" font-size="10" text-anchor="middle">H(X,Y) = H(X) + H(Y|X)</text>
+          </svg>
+        </div>
+        <div class="callout" style="margin-top:12px;">
+          <div class="callout-icon">🔑</div>
+          <div class="callout-text"><strong>해석:</strong> 총 불확실성 = X의 불확실성 + X를 알고 난 후 Y의 나머지 불확실성</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section class="section" id="sec09">
+    <div class="section-header">
+      <span class="sec-num">09</span>
+      <h2>상호 정보 (Mutual Information)</h2>
+    </div>
+    <span class="slide-ref">Slide 11–12</span>
+    <div class="split-3" style="margin-top:14px;">
+      <div>
+        <div class="card">
+          <div class="card-title">정의</div>
+          <div class="formula green">I(X;Y) = H(Y) − H(Y|X)</div>
+          <div class="formula" style="margin-top:8px;">I(X;Y) = H(X) + H(Y) − H(X,Y)</div>
+          <ul class="content-list" style="margin-top:10px;">
+            <li>두 확률 변수가 <span class="highlight3">공유하는 정보량</span></li>
+            <li>한 변수를 알면 다른 변수의 불확실성이 얼마나 줄어드는지</li>
+            <li>항상 비음수: <span class="highlight">I(X;Y) ≥ 0</span></li>
+          </ul>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <div class="card-title">극단 케이스</div>
+          <ul class="content-list">
+            <li><span class="highlight2">독립</span>인 경우: I(X;Y) = 0<br><span style="font-size:12.5px;color:var(--text-dim);">→ 정보를 전혀 공유하지 않음</span></li>
+            <li>X가 Y를 <span class="highlight3">완전히 결정</span>하는 경우: I(X;Y) = H(Y)<br><span style="font-size:12.5px;color:var(--text-dim);">→ Y의 모든 불확실성이 사라짐</span></li>
+            <li><span class="highlight4">상호 정보가 클수록</span> 변수 간 의존성이 강함</li>
+          </ul>
+        </div>
+      </div>
+      <!-- Venn diagram -->
+      <div class="card">
+        <div class="card-title">상호 정보 벤 다이어그램</div>
+        <div class="svg-wrap">
+          <svg viewBox="0 0 340 220" xmlns="http://www.w3.org/2000/svg">
+            <!-- circles -->
+            <circle cx="120" cy="110" r="80" fill="rgba(248,113,113,0.08)" stroke="#f87171" stroke-width="1.8"/>
+            <circle cx="220" cy="110" r="80" fill="rgba(167,139,250,0.08)" stroke="#a78bfa" stroke-width="1.8"/>
+            <!-- labels outer -->
+            <text x="75" y="60" fill="#f87171" font-size="12" text-anchor="middle" font-weight="bold">H(X)</text>
+            <text x="265" y="60" fill="#a78bfa" font-size="12" text-anchor="middle" font-weight="bold">H(Y)</text>
+            <!-- inner labels -->
+            <text x="85" y="115" fill="#f87171" font-size="10" text-anchor="middle">H(X|Y)</text>
+            <text x="255" y="115" fill="#a78bfa" font-size="10" text-anchor="middle">H(Y|X)</text>
+            <!-- mutual information center -->
+            <text x="170" y="107" fill="#34d399" font-size="11" text-anchor="middle" font-weight="bold">I(X;Y)</text>
+            <!-- H(X,Y) bracket -->
+            <text x="170" y="210" fill="#6b7f99" font-size="10" text-anchor="middle">H(X,Y)</text>
+            <line x1="50" y1="205" x2="290" y2="205" stroke="#6b7f99" stroke-width="0.8"/>
+            <line x1="50" y1="200" x2="50" y2="205" stroke="#6b7f99" stroke-width="0.8"/>
+            <line x1="290" y1="200" x2="290" y2="205" stroke="#6b7f99" stroke-width="0.8"/>
+            <!-- I(X;Y) = H(Y) - H(Y|X) annotation -->
+            <text x="170" y="15" fill="#8899aa" font-size="10" text-anchor="middle">I(X;Y) = H(Y) − H(Y|X) = H(X) − H(X|Y)</text>
+          </svg>
+        </div>
+        <div class="callout green" style="margin-top:10px;">
+          <div class="callout-icon">📌</div>
+          <div class="callout-text">상호 정보는 <strong>대칭적</strong>: I(X;Y) = I(Y;X)</div>
+        </div>
+        <div class="callout purple" style="margin-top:8px;">
+          <div class="callout-icon">🔍</div>
+          <div class="callout-text"><strong>피처 선택 활용:</strong> max I(X;Y)를 최대화하는 피처 X를 선택 → 타겟 Y에 대한 가장 유익한 피처 선정</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="section" id="sec10">
+    <div class="section-header">
+      <span class="sec-num">10</span>
+      <h2>정보 이득 (Information Gain)</h2>
+    </div>
+    <span class="slide-ref">Slide 14</span>
+    <div class="split-3" style="margin-top:14px;">
+      <div>
+        <div class="card">
+          <div class="card-title">정의</div>
+          <div class="formula orange">IG = H(parent) − H(children)</div>
+          <div class="formula" style="margin-top:8px;">IG = H(Y) − H(Y|X)</div>
+          <ul class="content-list" style="margin-top:10px;">
+            <li>피처를 기준으로 데이터셋을 분할한 후 <span class="highlight4">엔트로피 감소량</span></li>
+            <li>H(Y): 타겟 변수의 엔트로피</li>
+            <li>H(Y|X): X를 관측한 후 남은 불확실성</li>
+            <li>클래스 레이블 Y의 불확실성이<br>피처 X를 알면 얼마나 줄어드는가</li>
+          </ul>
+        </div>
+        <div class="callout orange" style="margin-top:12px;">
+          <div class="callout-icon">🌳</div>
+          <div class="callout-text">Decision Tree에서 <strong>각 노드에서 정보 이득이 가장 높은 피처를 선택</strong>하여 분기 기준으로 사용</div>
+        </div>
+      </div>
+      <div>
+        <!-- IG diagram SVG -->
+        <div class="svg-wrap">
+          <div class="graph-title">Information Gain 시각화</div>
+          <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- before split bar H(Y) -->
+            <text x="60" y="22" fill="#8899aa" font-size="10">분할 전: H(Y)</text>
+            <rect x="60" y="28" width="200" height="28" rx="4" fill="rgba(251,146,60,0.15)" stroke="#fb923c" stroke-width="1.5"/>
+            <rect x="60" y="28" width="200" height="28" rx="4" fill="rgba(251,146,60,0.25)"/>
+            <text x="160" y="47" fill="#fb923c" font-size="11" text-anchor="middle" font-weight="bold">H(Y) = 1.0 bit</text>
+            <!-- arrow down -->
+            <line x1="160" y1="58" x2="160" y2="78" stroke="#4a6280" stroke-width="1.5" stroke-dasharray="4,2"/>
+            <polygon points="155,75 165,75 160,83" fill="#4a6280"/>
+            <text x="185" y="72" fill="#34d399" font-size="10">Split by X</text>
+            <!-- after split: H(Y|X) + IG -->
+            <text x="60" y="98" fill="#8899aa" font-size="10">분할 후</text>
+            <rect x="60" y="105" width="120" height="28" rx="4" fill="rgba(56,189,248,0.12)" stroke="#38bdf8" stroke-width="1.5"/>
+            <text x="120" y="124" fill="#38bdf8" font-size="10" text-anchor="middle">H(Y|X)</text>
+            <rect x="182" y="105" width="78" height="28" rx="4" fill="rgba(52,211,153,0.2)" stroke="#34d399" stroke-width="1.5"/>
+            <text x="221" y="124" fill="#34d399" font-size="10" text-anchor="middle">IG(Y|X)</text>
+            <!-- bracket -->
+            <line x1="60" y1="145" x2="260" y2="145" stroke="#6b7f99" stroke-width="0.8"/>
+            <line x1="60" y1="140" x2="60" y2="145" stroke="#6b7f99" stroke-width="0.8"/>
+            <line x1="260" y1="140" x2="260" y2="145" stroke="#6b7f99" stroke-width="0.8"/>
+            <text x="160" y="157" fill="#6b7f99" font-size="9" text-anchor="middle">H(Y|X) + IG = H(Y)</text>
+            <!-- formula -->
+            <rect x="50" y="167" width="210" height="24" rx="4" fill="rgba(52,211,153,0.06)" stroke="rgba(52,211,153,0.3)" stroke-width="1"/>
+            <text x="155" y="183" fill="#34d399" font-size="11" text-anchor="middle" font-family="Menlo,monospace">IG = H(Y) − H(Y|X)</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="section" id="sec11">
+    <div class="section-header">
+      <span class="sec-num">11</span>
+      <h2>결정 트리와 정보이론적 해석</h2>
+    </div>
+    <span class="slide-ref">Slide 15–16</span>
+    <div class="split-3" style="margin-top:14px;">
+      <div>
+        <div class="card">
+          <div class="card-title">핵심 원리</div>
+          <ul class="content-list">
+            <li>목표: 클래스 레이블의 불확실성 감소</li>
+            <li>각 노드에서 후보 피처 평가 후 <span class="highlight">최고 정보 이득</span>을 가진 피처 선택</li>
+            <li>정보이론적 관점: <span class="highlight2">상호 정보 최대화</span>와 동치</li>
+            <li class="sub">피처 X와 클래스 레이블 Y 사이의 max I(X;Y)</li>
+            <li>결정 트리 학습 = 데이터셋의 불확실성을 <span class="highlight3">반복적으로 감소</span>시키는 과정</li>
+          </ul>
+          <div class="callout purple" style="margin-top:12px;">
+            <div class="callout-icon">🎯</div>
+            <div class="callout-text"><strong>X* = argmax IG(Y|X)</strong><br>최고 정보이득을 주는 피처 X*로 분기</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <!-- Decision tree SVG -->
+        <div class="svg-wrap">
+          <div class="graph-title">Decision Tree 구조 예시 (age 기준 분기)</div>
+          <svg viewBox="0 0 340 230" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="dt-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <polygon points="0 0, 6 3, 0 6" fill="#4a6280"/>
+              </marker>
+            </defs>
+            <!-- root: age? -->
+            <rect x="125" y="10" width="90" height="32" rx="16" fill="var(--surface3)" stroke="#38bdf8" stroke-width="1.5"/>
+            <text x="170" y="31" fill="#38bdf8" font-size="11" text-anchor="middle" font-style="italic">age?</text>
+            <!-- edges to level 2 -->
+            <line x1="140" y1="42" x2="60" y2="82" stroke="#4a6280" stroke-width="1.2" marker-end="url(#dt-arrow)"/>
+            <line x1="170" y1="42" x2="170" y2="82" stroke="#4a6280" stroke-width="1.2" marker-end="url(#dt-arrow)"/>
+            <line x1="200" y1="42" x2="290" y2="82" stroke="#4a6280" stroke-width="1.2" marker-end="url(#dt-arrow)"/>
+            <text x="86" y="68" fill="#6b7f99" font-size="9">youth</text>
+            <text x="152" y="68" fill="#6b7f99" font-size="9">middle</text>
+            <text x="240" y="68" fill="#6b7f99" font-size="9">senior</text>
+            <!-- level 2 nodes -->
+            <rect x="20" y="82" width="80" height="28" rx="14" fill="var(--surface3)" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="60" y="100" fill="#a78bfa" font-size="10" text-anchor="middle" font-style="italic">student?</text>
+            <rect x="130" y="82" width="80" height="28" rx="14" fill="var(--surface3)" stroke="#34d399" stroke-width="1.5"/>
+            <text x="170" y="100" fill="#34d399" font-size="10" text-anchor="middle">yes</text>
+            <rect x="250" y="82" width="80" height="28" rx="14" fill="var(--surface3)" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="290" y="100" fill="#a78bfa" font-size="10" text-anchor="middle" font-style="italic">credit?</text>
+            <!-- edges level 2 → 3 -->
+            <line x1="45" y1="110" x2="30" y2="148" stroke="#4a6280" stroke-width="1.2" marker-end="url(#dt-arrow)"/>
+            <line x1="75" y1="110" x2="90" y2="148" stroke="#4a6280" stroke-width="1.2" marker-end="url(#dt-arrow)"/>
+            <line x1="265" y1="110" x2="248" y2="148" stroke="#4a6280" stroke-width="1.2" marker-end="url(#dt-arrow)"/>
+            <line x1="315" y1="110" x2="320" y2="148" stroke="#4a6280" stroke-width="1.2" marker-end="url(#dt-arrow)"/>
+            <text x="32" y="135" fill="#6b7f99" font-size="9">no</text>
+            <text x="76" y="135" fill="#6b7f99" font-size="9">yes</text>
+            <text x="238" y="135" fill="#6b7f99" font-size="9">fair</text>
+            <text x="308" y="135" fill="#6b7f99" font-size="9">excellent</text>
+            <!-- leaf nodes -->
+            <ellipse cx="28" cy="160" rx="24" ry="14" fill="rgba(248,113,113,0.15)" stroke="#f87171" stroke-width="1.2"/>
+            <text x="28" y="164" fill="#f87171" font-size="10" text-anchor="middle" font-style="italic">no</text>
+            <ellipse cx="88" cy="160" rx="24" ry="14" fill="rgba(52,211,153,0.15)" stroke="#34d399" stroke-width="1.2"/>
+            <text x="88" y="164" fill="#34d399" font-size="10" text-anchor="middle" font-style="italic">yes</text>
+            <ellipse cx="248" cy="160" rx="24" ry="14" fill="rgba(248,113,113,0.15)" stroke="#f87171" stroke-width="1.2"/>
+            <text x="248" y="164" fill="#f87171" font-size="10" text-anchor="middle" font-style="italic">no</text>
+            <ellipse cx="322" cy="160" rx="24" ry="14" fill="rgba(52,211,153,0.15)" stroke="#34d399" stroke-width="1.2"/>
+            <text x="322" y="164" fill="#34d399" font-size="10" text-anchor="middle" font-style="italic">yes</text>
+            <!-- middle_aged leaf -->
+            <ellipse cx="170" cy="160" rx="24" ry="14" fill="rgba(52,211,153,0.15)" stroke="#34d399" stroke-width="1.2"/>
+            <text x="170" y="164" fill="#34d399" font-size="10" text-anchor="middle" font-style="italic">yes</text>
+            <line x1="170" y1="110" x2="170" y2="146" stroke="#4a6280" stroke-width="1.2" marker-end="url(#dt-arrow)"/>
+            <!-- caption -->
+            <text x="170" y="218" fill="#6b7f99" font-size="9" text-anchor="middle">각 분기에서 max I(X;Y) → 최고 정보이득 피처 선택</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="section" id="sec12">
+    <div class="section-header">
+      <span class="sec-num">12</span>
+      <h2>핵심 요약</h2>
+    </div>
+    <div class="summary-grid" style="margin-top:14px;">
+      <div class="sum-card">
+        <div class="sum-icon">📐</div>
+        <div class="sum-label">Self-Information</div>
+        <div class="sum-formula">I(x) = −log₂ P(x)</div>
+        <div class="sum-desc">단일 사건의 정보량. 확률이 낮을수록 정보량 증가. 비음수·단조·가산성 만족.</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon">📊</div>
+        <div class="sum-label">Entropy</div>
+        <div class="sum-formula">H(X) = −Σ p(x)log p(x)</div>
+        <div class="sum-desc">확률 분포 전체의 평균 불확실성. 균등 분포일 때 최대, 결정적일 때 0.</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon">🔀</div>
+        <div class="sum-label">Conditional Entropy</div>
+        <div class="sum-formula">H(Y|X) = Σ p(x)H(Y|X=x)</div>
+        <div class="sum-desc">X를 관측한 후 Y의 나머지 불확실성. Chain Rule: H(X,Y)=H(X)+H(Y|X).</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon">🔗</div>
+        <div class="sum-label">Mutual Information</div>
+        <div class="sum-formula">I(X;Y) = H(Y) − H(Y|X)</div>
+        <div class="sum-desc">두 변수가 공유하는 정보량. I≥0, 독립이면 I=0, 완전결정이면 I=H(Y).</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon">📈</div>
+        <div class="sum-label">Information Gain</div>
+        <div class="sum-formula">IG = H(Y) − H(Y|X)</div>
+        <div class="sum-desc">피처로 분할 후 엔트로피 감소량. Decision Tree의 최적 분기 기준으로 활용.</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon">🌳</div>
+        <div class="sum-label">Decision Tree</div>
+        <div class="sum-formula">X* = argmax I(X;Y)</div>
+        <div class="sum-desc">정보이론 관점: 상호 정보 최대화 = 불확실성 반복 감소 과정.</div>
+      </div>
+    </div>
+
+    <!-- Comparison table -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-title">핵심 개념 비교</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>개념</th>
+            <th>수식</th>
+            <th>측정 대상</th>
+            <th>값 범위</th>
+            <th>활용</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Self-Information</td>
+            <td>−log P(x)</td>
+            <td>단일 사건의 정보량</td>
+            <td>[0, ∞)</td>
+            <td>정보량 기초</td>
+          </tr>
+          <tr>
+            <td>Entropy H(X)</td>
+            <td>−Σ p log p</td>
+            <td>분포 전체의 불확실성</td>
+            <td>[0, log n]</td>
+            <td>불순도 측정</td>
+          </tr>
+          <tr>
+            <td>Cond. Entropy H(Y|X)</td>
+            <td>Σ p(x) H(Y|X=x)</td>
+            <td>X 관측 후 Y의 불확실성</td>
+            <td>[0, H(Y)]</td>
+            <td>잔여 불확실성</td>
+          </tr>
+          <tr>
+            <td>Mutual Info I(X;Y)</td>
+            <td>H(Y)−H(Y|X)</td>
+            <td>두 변수의 공유 정보</td>
+            <td>[0, min(H(X),H(Y))]</td>
+            <td>피처 선택</td>
+          </tr>
+          <tr>
+            <td>Information Gain</td>
+            <td>H(Y)−H(Y|X)</td>
+            <td>분할 후 엔트로피 감소</td>
+            <td>[0, H(Y)]</td>
+            <td>결정 트리 분기</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+// Active TOC highlighting
+const sections = document.querySelectorAll('.section');
+const links = document.querySelectorAll('.toc-nav a');
+
+function updateTOC() {
+  let current = '';
+  sections.forEach(sec => {
+    const top = sec.getBoundingClientRect().top;
+    if (top <= 120) current = sec.id;
+  });
+  links.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) {
+      link.classList.add('active');
+    }
+  });
+}
+window.addEventListener('scroll', updateTOC, { passive: true });
+updateTOC();
+</script>
+</body>
+</html>
