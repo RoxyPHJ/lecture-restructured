@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기계학습 4강 — 기초통계 및 확률이론</title>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --surface3: #1e2a3e;
+  --border: #2a3a55;
+  --accent: #3b82f6;
+  --accent2: #60a5fa;
+  --accent3: #93c5fd;
+  --gold: #f59e0b;
+  --green: #10b981;
+  --red: #ef4444;
+  --purple: #8b5cf6;
+  --cyan: #06b6d4;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --code-bg: #0d1724;
+  --formula-bg: #0f1e2e;
+  --toc-w: 260px;
+  --font-body: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+  --font-code: 'Menlo', 'Courier New', monospace;
+  --font-head: 'Impact', 'Arial Narrow', 'Arial', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.7;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── TOC ── */
+#toc {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--toc-w);
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  z-index: 100;
+  padding: 24px 0 40px;
+}
+#toc::-webkit-scrollbar { width: 4px; }
+#toc::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.toc-header {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.toc-title {
+  font-family: var(--font-head);
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.toc-subtitle {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.4;
+}
+
+.toc-item {
+  display: block;
+  padding: 8px 20px;
+  text-decoration: none;
+  color: var(--text2);
+  font-size: 12.5px;
+  transition: all .2s;
+  border-left: 3px solid transparent;
+  line-height: 1.4;
+}
+.toc-item:hover {
+  color: var(--accent2);
+  background: rgba(59,130,246,.08);
+  border-left-color: var(--accent);
+}
+.toc-item.active {
+  color: var(--accent2);
+  background: rgba(59,130,246,.12);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.toc-num {
+  font-family: var(--font-head);
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 1px;
+}
+
+/* ── MAIN ── */
+#main {
+  margin-left: var(--toc-w);
+  flex: 1;
+  max-width: 1000px;
+  padding: 48px 48px 80px;
+}
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(135deg, #0a1628 0%, #0f2040 40%, #0a1628 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px;
+  margin-bottom: 48px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 240px; height: 240px;
+  background: radial-gradient(circle, rgba(59,130,246,.15) 0%, transparent 70%);
+}
+.hero-label {
+  font-family: var(--font-head);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.hero-title {
+  font-family: var(--font-head);
+  font-size: 36px;
+  letter-spacing: 1px;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.hero-title span { color: var(--accent2); }
+.hero-sub {
+  font-size: 14px;
+  color: var(--text2);
+  margin-bottom: 24px;
+}
+.hero-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+.tag {
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+.tag-blue { border-color: var(--accent); color: var(--accent2); background: rgba(59,130,246,.1); }
+.tag-gold { border-color: var(--gold); color: var(--gold); background: rgba(245,158,11,.1); }
+.tag-green { border-color: var(--green); color: var(--green); background: rgba(16,185,129,.1); }
+
+/* ── SECTION ── */
+.section {
+  margin-bottom: 56px;
+  scroll-margin-top: 24px;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.section-num {
+  font-family: var(--font-head);
+  font-size: 32px;
+  color: var(--border);
+  letter-spacing: -1px;
+  line-height: 1;
+  min-width: 48px;
+}
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+.section-title span { color: var(--accent2); }
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+.card-title.blue { color: var(--accent2); }
+.card-title.green { color: var(--green); }
+.card-title.red { color: var(--red); }
+.card-title.purple { color: var(--purple); }
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.split-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 700px) {
+  .split, .split-3 { grid-template-columns: 1fr; }
+  #main { padding: 24px; }
+}
+
+/* ── FORMULA ── */
+.formula {
+  background: var(--formula-bg);
+  border: 1px solid #1e3a5f;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: var(--font-code);
+  font-size: 14px;
+  color: #93c5fd;
+  overflow-x: auto;
+  line-height: 1.8;
+}
+.formula .comment { color: var(--text3); font-size: 12px; }
+.formula .var { color: var(--gold); }
+.formula .op { color: #f97316; }
+
+/* ── TABLE ── */
+.tbl-wrap { overflow-x: auto; margin: 12px 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+th {
+  background: var(--surface2);
+  color: var(--accent2);
+  font-weight: 700;
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  letter-spacing: .5px;
+}
+td {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+
+/* ── HIGHLIGHT BOX ── */
+.highlight {
+  background: linear-gradient(135deg, rgba(59,130,246,.08), rgba(59,130,246,.03));
+  border: 1px solid rgba(59,130,246,.3);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-size: 14px;
+}
+.highlight.gold {
+  background: linear-gradient(135deg, rgba(245,158,11,.08), rgba(245,158,11,.03));
+  border-color: rgba(245,158,11,.3);
+  border-left-color: var(--gold);
+}
+.highlight.green {
+  background: linear-gradient(135deg, rgba(16,185,129,.08), rgba(16,185,129,.03));
+  border-color: rgba(16,185,129,.3);
+  border-left-color: var(--green);
+}
+.highlight.red {
+  background: linear-gradient(135deg, rgba(239,68,68,.08), rgba(239,68,68,.03));
+  border-color: rgba(239,68,68,.3);
+  border-left-color: var(--red);
+}
+
+/* ── LIST ── */
+ul.def { list-style: none; }
+ul.def li {
+  padding: 5px 0 5px 20px;
+  position: relative;
+  color: var(--text);
+  font-size: 14px;
+}
+ul.def li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 11px;
+  top: 8px;
+}
+
+/* ── SVG GRAPH WRAPPER ── */
+.graph-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.graph-desc { font-size: 13.5px; color: var(--text); }
+.graph-desc p { margin-bottom: 8px; }
+svg.graph {
+  width: 100%;
+  display: block;
+  background: var(--code-bg);
+  border-radius: 8px;
+}
+
+/* ── BADGE ── */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  margin-right: 4px;
+}
+.badge-blue { background: rgba(59,130,246,.2); color: var(--accent2); }
+.badge-gold { background: rgba(245,158,11,.2); color: var(--gold); }
+.badge-green { background: rgba(16,185,129,.2); color: var(--green); }
+.badge-red { background: rgba(239,68,68,.2); color: var(--red); }
+.badge-purple { background: rgba(139,92,246,.2); color: var(--purple); }
+
+/* ── SUMMARY ── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+.summary-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+.summary-item .si-num {
+  font-family: var(--font-head);
+  font-size: 28px;
+  color: var(--border);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.summary-item .si-title { font-size: 13px; font-weight: 700; color: var(--accent2); margin-bottom: 6px; }
+.summary-item .si-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+.chain-box {
+  background: var(--formula-bg);
+  border: 1px solid #1e3a5f;
+  border-radius: 8px;
+  padding: 18px 22px;
+  margin: 12px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ TOC ══════════════ -->
+<nav id="toc">
+  <div class="toc-header">
+    <div class="toc-title">기계학습 4강</div>
+    <div class="toc-subtitle">기초통계 및 확률이론</div>
+  </div>
+  <a class="toc-item" href="#s01"><span class="toc-num">01</span>기초통계 개요</a>
+  <a class="toc-item" href="#s02"><span class="toc-num">02</span>통계 파라미터</a>
+  <a class="toc-item" href="#s03"><span class="toc-num">03</span>바이어스 &amp; Bias-Variance Tradeoff</a>
+  <a class="toc-item" href="#s04"><span class="toc-num">04</span>공분산 &amp; 상관계수</a>
+  <a class="toc-item" href="#s05"><span class="toc-num">05</span>왜도 &amp; 첨도</a>
+  <a class="toc-item" href="#s06"><span class="toc-num">06</span>회귀 분석 (최소제곱법)</a>
+  <a class="toc-item" href="#s07"><span class="toc-num">07</span>정규분포 &amp; 중심극한정리</a>
+  <a class="toc-item" href="#s08"><span class="toc-num">08</span>MLE 수식 유도</a>
+  <a class="toc-item" href="#s09"><span class="toc-num">09</span>MAP 추정 &amp; 정규화</a>
+  <a class="toc-item" href="#s10"><span class="toc-num">10</span>확률 분포</a>
+  <a class="toc-item" href="#s11"><span class="toc-num">11</span>생성 vs 판별 모델</a>
+  <a class="toc-item" href="#s12"><span class="toc-num">12</span>핵심 요약</a>
+</nav>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main id="main">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">Machine Learning · Lecture 4</div>
+  <div class="hero-title">기초 통계 및<br><span>확률 이론</span></div>
+  <div class="hero-sub">컴퓨터공학부 · 김인수 · 2026 1학기</div>
+  <div class="hero-tags">
+    <span class="tag tag-blue">기초통계</span>
+    <span class="tag tag-blue">확률이론</span>
+    <span class="tag tag-gold">MLE</span>
+    <span class="tag tag-gold">MAP</span>
+    <span class="tag tag-green">Gaussian</span>
+    <span class="tag tag-green">Bias-Variance</span>
+  </div>
+</div>
+
+<!-- ──────── 01 기초통계 개요 ──────── -->
+<section class="section" id="s01">
+  <div class="section-header">
+    <div class="section-num">01</div>
+    <div class="section-title">기초통계 개요</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">통계학 (Statistics)</div>
+    <ul class="def">
+      <li>자료를 정보화하여 <strong>객관적 의사결정</strong>을 연구하는 학문</li>
+      <li>기계학습에서는 데이터의 <strong>통계적 속성</strong>이 모델 설계와 학습의 핵심 근거</li>
+    </ul>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>용어</th>
+          <th>정의</th>
+          <th>기계학습 연결</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>모집단</strong> (Population)</td><td>관심 대상 전체 데이터</td><td>학습 데이터가 추출된 실제 분포</td></tr>
+        <tr><td><strong>표본</strong> (Sample)</td><td>모집단의 일부 수집 데이터</td><td>학습 데이터셋 (Training Set)</td></tr>
+        <tr><td><strong>요약</strong> (Summary)</td><td>데이터를 정보 손실 최소화하여 정리</td><td>특징 벡터 추출, 통계량 계산</td></tr>
+        <tr><td><strong>추정</strong> (Estimation)</td><td>표본으로 모집단 특성 유도</td><td>모델 파라미터 학습 (MLE, MAP)</td></tr>
+        <tr><td><strong>표본 분포</strong></td><td>표본 통계량들의 확률 분포</td><td>배치 평균·분산의 분포 (미니배치 학습)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ──────── 02 통계 파라미터 ──────── -->
+<section class="section" id="s02">
+  <div class="section-header">
+    <div class="section-num">02</div>
+    <div class="section-title">통계 파라미터</div>
+  </div>
+
+  <div class="split">
+    <div class="card">
+      <div class="card-title">평균 (Mean)</div>
+      <ul class="def">
+        <li>자료의 총합을 자료의 개수로 나눈 것</li>
+        <li>자료의 분포를 질점계로 보면 <strong>무게 중심</strong>에 해당</li>
+      </ul>
+      <div class="formula">
+        x̄ = <span class="op">(1/n)</span> · Σᵢ xᵢ
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">분산 (Variance)</div>
+      <ul class="def">
+        <li>평균값과의 차이에 대한 <strong>제곱값의 평균</strong></li>
+        <li>자료의 흩어진 정도를 나타냄</li>
+      </ul>
+      <div class="formula">
+        s² = <span class="op">(1/(n-1))</span> · Σᵢ (xᵢ - x̄)²
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">표준편차 (Standard Deviation)</div>
+    <ul class="def">
+      <li>분산의 제곱근을 취하여 <strong>자료의 단위와 일치</strong>시킨 것</li>
+    </ul>
+    <div class="formula">
+      s = √[ <span class="op">(1/(n-1))</span> · Σᵢ (xᵢ - x̄)² ]
+    </div>
+  </div>
+
+  <!-- Variance visualization SVG -->
+  <div class="graph-card">
+    <div class="graph-desc">
+      <p><span class="badge badge-gold">핵심</span> 세 통계량의 관계</p>
+      <ul class="def">
+        <li><strong>평균</strong>: 데이터의 중심 위치</li>
+        <li><strong>분산</strong>: 중심에서 퍼진 정도 (단위² )</li>
+        <li><strong>표준편차</strong>: 분산의 제곱근 (원래 단위)</li>
+        <li>분모 <strong>n-1</strong>: 불편추정량 (Bessel 보정)</li>
+      </ul>
+    </div>
+    <svg class="graph" viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg">
+      <!-- axes -->
+      <line x1="40" y1="180" x2="340" y2="180" stroke="#2a3a55" stroke-width="1.5"/>
+      <line x1="40" y1="30" x2="40" y2="180" stroke="#2a3a55" stroke-width="1.5"/>
+      <!-- y axis ticks & labels -->
+      <text x="32" y="34" fill="#64748b" font-size="10" text-anchor="end">1.0</text>
+      <line x1="38" y1="33" x2="40" y2="33" stroke="#2a3a55"/>
+      <text x="32" y="107" fill="#64748b" font-size="10" text-anchor="end">0.5</text>
+      <line x1="38" y1="106" x2="40" y2="106" stroke="#2a3a55"/>
+      <text x="32" y="181" fill="#64748b" font-size="10" text-anchor="end">0</text>
+      <!-- x axis ticks -->
+      <text x="40" y="194" fill="#64748b" font-size="10" text-anchor="middle">-4</text>
+      <text x="115" y="194" fill="#64748b" font-size="10" text-anchor="middle">-2</text>
+      <text x="190" y="194" fill="#64748b" font-size="10" text-anchor="middle">0</text>
+      <text x="265" y="194" fill="#64748b" font-size="10" text-anchor="middle">2</text>
+      <text x="340" y="194" fill="#64748b" font-size="10" text-anchor="middle">4</text>
+      <!-- Gaussian σ=1 -->
+      <path d="M40,179 C60,178 80,170 100,148 C115,132 130,100 150,75 C160,63 175,41 190,38 C205,41 220,63 230,75 C250,100 265,132 280,148 C300,170 320,178 340,179" fill="none" stroke="#3b82f6" stroke-width="2"/>
+      <!-- σ annotation -->
+      <line x1="190" y1="38" x2="190" y2="180" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="152" y1="75" x2="228" y2="75" stroke="#10b981" stroke-width="1" stroke-dasharray="3,2"/>
+      <text x="192" y="56" fill="#f59e0b" font-size="10">μ (평균)</text>
+      <text x="200" y="90" fill="#10b981" font-size="10">σ (표준편차)</text>
+      <!-- arrows for σ -->
+      <line x1="152" y1="75" x2="190" y2="75" stroke="#10b981" stroke-width="1.5"/>
+      <polygon points="188,72 194,75 188,78" fill="#10b981"/>
+      <text x="162" y="72" fill="#10b981" font-size="9">1σ</text>
+      <!-- label -->
+      <text x="190" y="215" fill="#64748b" font-size="10" text-anchor="middle">x</text>
+      <text x="26" y="112" fill="#64748b" font-size="10" text-anchor="middle" transform="rotate(-90,26,112)">f(x)</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ──────── 03 바이어스 & Bias-Variance Tradeoff ──────── -->
+<section class="section" id="s03">
+  <div class="section-header">
+    <div class="section-num">03</div>
+    <div class="section-title">바이어스 &amp; <span>Bias–Variance Tradeoff</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">바이어스 (Bias)</div>
+    <p style="font-size:14px; margin-bottom:12px;">데이터의 <strong>편향된 정도</strong>를 나타냄</p>
+    <!-- 4-target SVG -->
+    <svg viewBox="0 0 560 220" width="100%" display="block" xmlns="http://www.w3.org/2000/svg">
+      <!-- (a) 높은 바이어스, 낮은 분산 -->
+      <g transform="translate(70,110)">
+        <circle cx="0" cy="0" r="60" fill="none" stroke="#1e3a5f" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="40" fill="none" stroke="#2a5080" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="20" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="6" fill="#3b82f6"/>
+        <!-- offset cluster -->
+        <circle cx="-28" cy="-28" r="4" fill="#ef4444" opacity=".9"/>
+        <circle cx="-26" cy="-25" r="4" fill="#ef4444" opacity=".9"/>
+        <circle cx="-30" cy="-30" r="4" fill="#ef4444" opacity=".9"/>
+        <text x="0" y="82" fill="#94a3b8" font-size="11" text-anchor="middle">(a) 높은 바이어스, 낮은 분산</text>
+      </g>
+      <!-- (b) 낮은 바이어스, 높은 분산 -->
+      <g transform="translate(210,110)">
+        <circle cx="0" cy="0" r="60" fill="none" stroke="#1e3a5f" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="40" fill="none" stroke="#2a5080" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="20" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="6" fill="#3b82f6"/>
+        <!-- scattered near center -->
+        <circle cx="8" cy="-18" r="4" fill="#ef4444" opacity=".9"/>
+        <circle cx="-15" cy="12" r="4" fill="#ef4444" opacity=".9"/>
+        <circle cx="20" cy="15" r="4" fill="#ef4444" opacity=".9"/>
+        <circle cx="-10" cy="-30" r="4" fill="#ef4444" opacity=".9"/>
+        <circle cx="30" cy="-8" r="4" fill="#ef4444" opacity=".9"/>
+        <text x="0" y="82" fill="#94a3b8" font-size="11" text-anchor="middle">(b) 낮은 바이어스, 높은 분산</text>
+      </g>
+      <!-- (c) 높은 바이어스, 높은 분산 -->
+      <g transform="translate(350,110)">
+        <circle cx="0" cy="0" r="60" fill="none" stroke="#1e3a5f" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="40" fill="none" stroke="#2a5080" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="20" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="6" fill="#3b82f6"/>
+        <circle cx="-25" cy="-35" r="4" fill="#ef4444" opacity=".9"/>
+        <circle cx="-40" cy="-10" r="4" fill="#ef4444" opacity=".9"/>
+        <circle cx="-15" cy="-45" r="4" fill="#ef4444" opacity=".9"/>
+        <circle cx="-45" cy="-25" r="4" fill="#ef4444" opacity=".9"/>
+        <text x="0" y="82" fill="#94a3b8" font-size="11" text-anchor="middle">(c) 높은 바이어스, 높은 분산</text>
+      </g>
+      <!-- (d) 낮은 바이어스, 낮은 분산 -->
+      <g transform="translate(490,110)">
+        <circle cx="0" cy="0" r="60" fill="none" stroke="#1e3a5f" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="40" fill="none" stroke="#2a5080" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="20" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="6" fill="#3b82f6"/>
+        <circle cx="3" cy="-5" r="4" fill="#10b981" opacity=".9"/>
+        <circle cx="-4" cy="4" r="4" fill="#10b981" opacity=".9"/>
+        <circle cx="5" cy="6" r="4" fill="#10b981" opacity=".9"/>
+        <text x="0" y="82" fill="#94a3b8" font-size="11" text-anchor="middle">(d) 낮은 바이어스, 낮은 분산</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title blue">Bias–Variance Tradeoff</div>
+    <div class="highlight gold" style="margin-bottom:14px;">
+      <strong>기대 오차 분해:</strong><br>
+      E[(y - f̂(x))²] = (E[f̂(x)] - f(x))² + E[(f̂(x) - E[f̂(x)])²] + δ
+      <br><span style="color:var(--text3);font-size:12px;">= Bias² + Variance + Noise</span>
+    </div>
+    <div class="split-3">
+      <div class="card" style="background:var(--surface2);">
+        <div class="card-title red">Bias²</div>
+        <p style="font-size:13px;">모델 평균 예측값이 실제 정답에서 얼마나 벗어나는가. 모델이 너무 단순할 때 높아짐 → <strong>Underfitting</strong></p>
+      </div>
+      <div class="card" style="background:var(--surface2);">
+        <div class="card-title blue">Variance</div>
+        <p style="font-size:13px;">학습 데이터가 바뀔 때 예측값이 얼마나 흔들리는가. 노이즈까지 외울 때 높아짐 → <strong>Overfitting</strong></p>
+      </div>
+      <div class="card" style="background:var(--surface2);">
+        <div class="card-title" style="color:var(--text2);">Noise</div>
+        <p style="font-size:13px;">데이터 자체에 내재된 불확실성. <strong>어떤 모델로도 줄일 수 없는</strong> 하한값</p>
+      </div>
+    </div>
+
+    <!-- Tradeoff curve SVG -->
+    <div style="margin-top:16px;">
+      <svg class="graph" viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg">
+        <!-- axes -->
+        <line x1="50" y1="180" x2="460" y2="180" stroke="#2a3a55" stroke-width="1.5"/>
+        <line x1="50" y1="20" x2="50" y2="180" stroke="#2a3a55" stroke-width="1.5"/>
+        <!-- x ticks -->
+        <text x="50" y="196" fill="#64748b" font-size="10" text-anchor="middle">Low</text>
+        <text x="460" y="196" fill="#64748b" font-size="10" text-anchor="middle">High</text>
+        <text x="255" y="210" fill="#64748b" font-size="11" text-anchor="middle">Model Complexity</text>
+        <!-- y label -->
+        <text x="18" y="100" fill="#64748b" font-size="11" text-anchor="middle" transform="rotate(-90,18,100)">Error</text>
+        <!-- Bias² curve (decreasing) -->
+        <path d="M50,35 C100,40 160,65 220,100 C280,135 340,160 460,175" fill="none" stroke="#ef4444" stroke-width="2"/>
+        <text x="100" y="55" fill="#ef4444" font-size="11">Bias²</text>
+        <!-- Variance curve (increasing) -->
+        <path d="M50,175 C120,172 180,160 240,130 C300,100 360,65 460,32" fill="none" stroke="#3b82f6" stroke-width="2"/>
+        <text x="390" y="55" fill="#3b82f6" font-size="11">Variance</text>
+        <!-- Total error curve -->
+        <path d="M50,80 C100,72 160,68 220,70 C260,72 300,80 340,95 C380,112 420,135 460,160" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+        <text x="180" y="62" fill="#f59e0b" font-size="11">Total Error</text>
+        <!-- optimal point -->
+        <circle cx="218" cy="70" r="5" fill="#10b981"/>
+        <line x1="218" y1="70" x2="218" y2="180" stroke="#10b981" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="222" y="90" fill="#10b981" font-size="10">최적 복잡도</text>
+        <!-- Noise floor -->
+        <line x1="50" y1="155" x2="460" y2="155" stroke="#64748b" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="460" y="152" fill="#64748b" font-size="10" text-anchor="end">Noise</text>
+      </svg>
+    </div>
+    <div class="highlight" style="margin-top:12px;">
+      <strong>핵심:</strong> Model Complexity ↑ → Bias ↓, Variance ↑ → 두 오차 사이에는 <strong>Trade-off</strong> 관계가 있다.
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 04 공분산 & 상관계수 ──────── -->
+<section class="section" id="s04">
+  <div class="section-header">
+    <div class="section-num">04</div>
+    <div class="section-title">공분산 &amp; <span>상관계수</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">공분산 (Covariance)</div>
+    <p style="font-size:14px; margin-bottom:10px;">두 개 이상의 확률변수가 주어질 경우 각 변수 간의 <strong>변화하는 양상</strong>을 나타내는 통계적 척도</p>
+    <div class="formula">
+      x̄ = (1/n)Σxᵢ,  ȳ = (1/n)Σyᵢ
+      <br><br>
+      C(x,y) = <span class="op">1/(n-1)</span> · Σᵢ (xᵢ - x̄)(yᵢ - ȳ)
+      <br><br>
+      = <span class="op">1/(n-1)</span> · (Σxᵢyᵢ - Σxᵢȳ - Σx̄yᵢ + nx̄ȳ)
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">상관계수 (Correlation Coefficient)</div>
+    <ul class="def" style="margin-bottom:12px;">
+      <li>두 확률변수 X, Y 사이의 상관관계 정도를 나타내는 수치: <strong>0 ≤ |ρ| ≤ 1</strong></li>
+      <li>σₓ, σᵧ는 변량 x, y의 표준편차값</li>
+    </ul>
+    <div class="formula">
+      ρ = C(x,y) / (σₓ · σᵧ) = C(x,y) / (√V(x) · √V(y))
+    </div>
+    <div class="highlight" style="margin-top:12px;">
+      <strong>작은 상관계수</strong>는 선형적으로 두 성분 간의 관련성이 거의 없음을 나타낸다.
+    </div>
+    <div style="margin-top:14px;">
+      <div style="font-size:12px; color:var(--text2); margin-bottom:6px;">예시 데이터 (x₁: 도서관 시간, x₂: ML 점수, x₃: 결석 시간)</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>x₁</th><th>x₂</th><th>x₃</th></tr></thead>
+          <tbody>
+            <tr><td>35</td><td>11</td><td>0.5</td></tr>
+            <tr><td>5</td><td>12</td><td>0</td></tr>
+            <tr><td>0</td><td>5</td><td>10</td></tr>
+            <tr><td>20</td><td>9</td><td>4.5</td></tr>
+            <tr><td>15</td><td>8</td><td>5</td></tr>
+            <tr><td style="color:var(--gold);">평균: 15</td><td style="color:var(--gold);">평균: 9</td><td style="color:var(--gold);">평균: 4</td></tr>
+            <tr><td style="color:var(--accent2);">분산: 187.5</td><td style="color:var(--accent2);">분산: 7.5</td><td style="color:var(--accent2);">분산: 16.37</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="formula" style="margin-top:10px;">
+        ρ₁₂ = (35-15)(11-9)+(5-15)(12-9)+(0-15)(5-9) / (4·√187.5·√7.5) = <span style="color:#10b981;">0.4667</span>
+        <br>ρ₂₃ = (11-9)(0.5-4)+(12-9)(0-4)+(5-9)(10-4)+(8-9)(5-4) / (4·√7.5·√16.37) = <span style="color:#ef4444;">-0.9926</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 05 왜도 & 첨도 ──────── -->
+<section class="section" id="s05">
+  <div class="section-header">
+    <div class="section-num">05</div>
+    <div class="section-title">왜도 &amp; <span>첨도</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">왜도 (Skewness)</div>
+    <ul class="def" style="margin-bottom:12px;">
+      <li>확률 분포가 어느 한쪽으로 치우친 <strong>비대칭(asymmetry) 정도</strong>를 나타내는 척도</li>
+      <li>오른쪽으로 더 길면 <strong>양의 값</strong>, 왼쪽으로 더 길면 <strong>음의 값</strong>, 좌우 대칭이면 <strong>0</strong></li>
+    </ul>
+    <div class="formula">
+      Skewness = Σᵢ(xᵢ - x̄)³ / [Σᵢ(xᵢ - x̄)²]^(3/2)
+    </div>
+
+    <svg viewBox="0 0 700 180" width="100%" display="block" style="margin-top:14px;" xmlns="http://www.w3.org/2000/svg">
+      <!-- (a) 음수 왜도 -->
+      <g transform="translate(10,0)">
+        <text x="115" y="165" fill="#94a3b8" font-size="11" text-anchor="middle">(a) 왜도 = 음수</text>
+        <line x1="20" y1="145" x2="210" y2="145" stroke="#2a3a55" stroke-width="1"/>
+        <path d="M20,144 C40,143 70,130 95,95 C110,73 120,50 135,44 C150,50 160,73 175,95 C195,125 205,140 210,144" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" stroke-width="2"/>
+        <line x1="135" y1="44" x2="135" y2="145" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="138" y="60" fill="#ef4444" font-size="9">mode</text>
+        <text x="155" y="120" fill="#f59e0b" font-size="9">긴 꼬리 →</text>
+      </g>
+      <!-- (b) 왜도 0 -->
+      <g transform="translate(240,0)">
+        <text x="115" y="165" fill="#94a3b8" font-size="11" text-anchor="middle">(b) 왜도 = 0</text>
+        <line x1="20" y1="145" x2="210" y2="145" stroke="#2a3a55" stroke-width="1"/>
+        <path d="M20,144 C50,142 80,120 100,80 C110,60 118,48 125,44 C132,48 140,60 150,80 C170,120 195,142 210,144" fill="rgba(16,185,129,0.15)" stroke="#10b981" stroke-width="2"/>
+        <line x1="115" y1="44" x2="115" y2="145" stroke="#10b981" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="118" y="60" fill="#10b981" font-size="9">μ = mode</text>
+      </g>
+      <!-- (c) 양수 왜도 -->
+      <g transform="translate(470,0)">
+        <text x="115" y="165" fill="#94a3b8" font-size="11" text-anchor="middle">(c) 왜도 = 양수</text>
+        <line x1="20" y1="145" x2="210" y2="145" stroke="#2a3a55" stroke-width="1"/>
+        <path d="M20,144 C30,143 50,125 65,95 C75,73 85,50 95,44 C110,50 130,80 155,110 C175,130 200,143 210,144" fill="rgba(245,158,11,0.15)" stroke="#f59e0b" stroke-width="2"/>
+        <line x1="95" y1="44" x2="95" y2="145" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="60" y="60" fill="#ef4444" font-size="9">mode</text>
+        <text x="30" y="120" fill="#f59e0b" font-size="9">← 긴 꼬리</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="card">
+    <div class="card-title">첨도 (Kurtosis)</div>
+    <ul class="def" style="margin-bottom:12px;">
+      <li>분포의 <strong>뾰족한(peakedness) 정도</strong>를 나타내는 통계적 척도</li>
+    </ul>
+    <div class="formula">
+      Kurtosis = Σᵢ(xᵢ - x̄)⁴ / [Σᵢ(xᵢ - x̄)²]²
+    </div>
+    <div class="split-3" style="margin-top:12px;">
+      <div class="highlight" style="text-align:center;">
+        <div style="font-size:20px; color:var(--accent2); font-weight:700; margin-bottom:4px;">&lt; 3</div>
+        <div style="font-size:12px;">평편한 분포<br>(Platykurtic)</div>
+      </div>
+      <div class="highlight green" style="text-align:center;">
+        <div style="font-size:20px; color:var(--green); font-weight:700; margin-bottom:4px;">= 3</div>
+        <div style="font-size:12px;">정규분포<br>(Mesokurtic)</div>
+      </div>
+      <div class="highlight gold" style="text-align:center;">
+        <div style="font-size:20px; color:var(--gold); font-weight:700; margin-bottom:4px;">&gt; 3</div>
+        <div style="font-size:12px;">뾰족한 분포<br>(Leptokurtic)</div>
+      </div>
+    </div>
+
+    <svg viewBox="0 0 700 180" width="100%" display="block" style="margin-top:14px;" xmlns="http://www.w3.org/2000/svg">
+      <!-- (a) 첨도 < 3 -->
+      <g transform="translate(10,0)">
+        <text x="115" y="165" fill="#94a3b8" font-size="11" text-anchor="middle">(a) 첨도 &lt; 3 (평편)</text>
+        <line x1="20" y1="145" x2="210" y2="145" stroke="#2a3a55" stroke-width="1"/>
+        <rect x="40" y="60" width="150" height="85" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" stroke-width="2" rx="2"/>
+      </g>
+      <!-- (b) 첨도 = 3 -->
+      <g transform="translate(240,0)">
+        <text x="115" y="165" fill="#94a3b8" font-size="11" text-anchor="middle">(b) 첨도 = 3 (정규)</text>
+        <line x1="20" y1="145" x2="210" y2="145" stroke="#2a3a55" stroke-width="1"/>
+        <path d="M20,144 C50,142 80,120 100,80 C110,60 118,48 125,44 C132,48 140,60 150,80 C170,120 195,142 210,144" fill="rgba(16,185,129,0.15)" stroke="#10b981" stroke-width="2"/>
+      </g>
+      <!-- (c) 첨도 > 3 -->
+      <g transform="translate(470,0)">
+        <text x="115" y="165" fill="#94a3b8" font-size="11" text-anchor="middle">(c) 첨도 &gt; 3 (뾰족)</text>
+        <line x1="20" y1="145" x2="210" y2="145" stroke="#2a3a55" stroke-width="1"/>
+        <path d="M20,144 C55,143 90,138 105,115 C112,100 118,70 122,50 C123.5,40 124.5,35 125,32 C125.5,35 126.5,40 128,50 C132,70 138,100 145,115 C160,138 195,143 210,144" fill="rgba(245,158,11,0.15)" stroke="#f59e0b" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- ──────── 06 회귀 분석 ──────── -->
+<section class="section" id="s06">
+  <div class="section-header">
+    <div class="section-num">06</div>
+    <div class="section-title">회귀 분석 <span>(최소제곱법)</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">회귀직선 & 최소제곱법</div>
+    <ul class="def" style="margin-bottom:12px;">
+      <li>표본을 대표하는 직선 <strong>ŷ = θ₀ + θ₁x</strong> 를 찾는 것</li>
+    </ul>
+    <div class="split">
+      <div>
+        <div class="formula">
+          <span class="comment">// 비용 함수 (MSE)</span><br>
+          J(θ) = (1/N) · Σᵢ (ŷᵢ - yᵢ)²
+        </div>
+        <div class="formula" style="margin-top:8px;">
+          <span class="comment">// 정규방정식 (Normal Equation)</span><br>
+          θ = (XᵀX)⁻¹ Xᵀy
+        </div>
+        <div class="highlight red" style="margin-top:8px; font-size:13px;">
+          XᵀX가 특이행렬(singular)이면 역행렬 불가<br>
+          → Ridge 정규화: <strong>(XᵀX + λI)⁻¹Xᵀy</strong>
+        </div>
+      </div>
+      <!-- Regression line SVG -->
+      <svg class="graph" viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg">
+        <line x1="30" y1="170" x2="260" y2="170" stroke="#2a3a55" stroke-width="1.5"/>
+        <line x1="30" y1="20" x2="30" y2="170" stroke="#2a3a55" stroke-width="1.5"/>
+        <!-- axis labels -->
+        <text x="145" y="188" fill="#64748b" font-size="10" text-anchor="middle">x</text>
+        <text x="16" y="95" fill="#64748b" font-size="10" text-anchor="middle" transform="rotate(-90,16,95)">y</text>
+        <!-- x ticks -->
+        <text x="30" y="183" fill="#64748b" font-size="9" text-anchor="middle">0</text>
+        <text x="85" y="183" fill="#64748b" font-size="9" text-anchor="middle">1</text>
+        <text x="140" y="183" fill="#64748b" font-size="9" text-anchor="middle">2</text>
+        <text x="195" y="183" fill="#64748b" font-size="9" text-anchor="middle">3</text>
+        <text x="250" y="183" fill="#64748b" font-size="9" text-anchor="middle">4</text>
+        <!-- y ticks -->
+        <text x="24" y="172" fill="#64748b" font-size="9" text-anchor="end">0</text>
+        <text x="24" y="128" fill="#64748b" font-size="9" text-anchor="end">1</text>
+        <text x="24" y="84" fill="#64748b" font-size="9" text-anchor="end">2</text>
+        <text x="24" y="40" fill="#64748b" font-size="9" text-anchor="end">3</text>
+        <!-- regression line -->
+        <line x1="30" y1="158" x2="260" y2="28" stroke="#3b82f6" stroke-width="2"/>
+        <text x="200" y="42" fill="#3b82f6" font-size="10">ŷ=θ₀+θ₁x</text>
+        <!-- data points -->
+        <circle cx="60" cy="145" r="4" fill="#f59e0b"/>
+        <circle cx="100" cy="125" r="4" fill="#f59e0b"/>
+        <circle cx="130" cy="100" r="4" fill="#f59e0b"/>
+        <circle cx="160" cy="95" r="4" fill="#f59e0b"/>
+        <circle cx="190" cy="72" r="4" fill="#f59e0b"/>
+        <circle cx="220" cy="60" r="4" fill="#f59e0b"/>
+        <circle cx="245" cy="48" r="4" fill="#f59e0b"/>
+        <!-- residuals -->
+        <line x1="60" y1="145" x2="60" y2="131" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <line x1="130" y1="100" x2="130" y2="108" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <line x1="190" y1="72" x2="190" y2="80" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="70" y="140" fill="#ef4444" font-size="8">잔차</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title blue">기계학습 관점에서의 회귀</div>
+    <div class="split">
+      <ul class="def">
+        <li>최소제곱법 = MSE 손실의 <strong>해석적 해(closed-form)</strong></li>
+        <li>딥러닝에서는 <strong>경사하강법(Gradient Descent)</strong>으로 근사</li>
+        <li>다항 회귀: 비선형 관계를 고차원 특징으로 선형 표현 → <strong>과적합(overfitting) 위험</strong></li>
+      </ul>
+      <div class="formula">
+        <span class="comment">// 신경망의 출력층 = 회귀의 일반화</span><br>
+        ŷ = f(x; θ)
+        <br><span class="comment">// f: 비선형 함수 구성</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 07 정규분포 & 중심극한정리 ──────── -->
+<section class="section" id="s07">
+  <div class="section-header">
+    <div class="section-num">07</div>
+    <div class="section-title">정규분포 &amp; <span>중심극한정리</span></div>
+  </div>
+
+  <div class="graph-card">
+    <div class="graph-desc">
+      <div class="card-title green">정규분포 (Normal/Gaussian)</div>
+      <ul class="def">
+        <li>기계학습에서 가장 광범위하게 사용되는 <strong>연속 확률 분포</strong></li>
+        <li><strong>μ</strong>: 평균 (분포의 위치)</li>
+        <li><strong>σ²</strong>: 분산 (분포의 너비)</li>
+      </ul>
+      <div class="formula" style="margin-top:10px; font-size:13px;">
+        N(x;μ,σ²) = (1/√(2πσ²)) · exp(-(x-μ)² / 2σ²)
+      </div>
+      <div class="highlight green" style="margin-top:10px; font-size:12px;">
+        <strong>68-95-99.7 규칙</strong><br>
+        P(μ±σ) ≈ 68%<br>
+        P(μ±2σ) ≈ 95%<br>
+        P(μ±3σ) ≈ 99.7%
+      </div>
+    </div>
+    <svg class="graph" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
+      <!-- axes -->
+      <line x1="30" y1="185" x2="300" y2="185" stroke="#2a3a55" stroke-width="1.5"/>
+      <line x1="30" y1="25" x2="30" y2="185" stroke="#2a3a55" stroke-width="1.5"/>
+      <!-- x ticks -->
+      <text x="30" y="198" fill="#64748b" font-size="9" text-anchor="middle">-3σ</text>
+      <text x="75" y="198" fill="#64748b" font-size="9" text-anchor="middle">-2σ</text>
+      <text x="120" y="198" fill="#64748b" font-size="9" text-anchor="middle">-σ</text>
+      <text x="165" y="198" fill="#64748b" font-size="9" text-anchor="middle">μ</text>
+      <text x="210" y="198" fill="#64748b" font-size="9" text-anchor="middle">+σ</text>
+      <text x="255" y="198" fill="#64748b" font-size="9" text-anchor="middle">+2σ</text>
+      <text x="300" y="198" fill="#64748b" font-size="9" text-anchor="middle">+3σ</text>
+      <!-- shading 3σ -->
+      <path d="M30,184 C50,183 65,178 80,165 C95,148 108,118 120,90 C135,62 150,42 165,37 C180,42 195,62 210,90 C222,118 235,148 250,165 C265,178 280,183 300,184 Z" fill="rgba(59,130,246,0.08)"/>
+      <!-- shading 2σ -->
+      <path d="M75,184 C90,181 105,165 120,138 C135,110 150,75 165,67 C180,75 195,110 210,138 C225,165 240,181 255,184 Z" fill="rgba(59,130,246,0.1)"/>
+      <!-- shading 1σ -->
+      <path d="M120,184 C130,180 142,158 155,128 C160,113 163,100 165,90 C167,100 170,113 175,128 C188,158 200,180 210,184 Z" fill="rgba(59,130,246,0.15)"/>
+      <!-- curve -->
+      <path d="M30,184 C50,183 65,178 80,165 C95,148 108,118 120,90 C135,62 150,42 165,37 C180,42 195,62 210,90 C222,118 235,148 250,165 C265,178 280,183 300,184" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+      <!-- μ line -->
+      <line x1="165" y1="37" x2="165" y2="185" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3"/>
+      <!-- annotations -->
+      <text x="140" y="148" fill="#64748b" font-size="8" text-anchor="middle">68%</text>
+      <text x="100" y="168" fill="#64748b" font-size="8" text-anchor="middle">95%</text>
+      <text x="60" y="177" fill="#64748b" font-size="8" text-anchor="middle">99.7%</text>
+    </svg>
+  </div>
+
+  <div class="card">
+    <div class="card-title purple">중심극한정리 (Central Limit Theorem)</div>
+    <ul class="def" style="margin-bottom:12px;">
+      <li>X₁, X₂, ... Xₙ ~ p(x), E[Xᵢ]=μ, Var[Xᵢ]=σ² 이고, Xᵢ들이 독립 단일 분포에서 샘플링되었을 때</li>
+      <li>표본평균 X̄ₙ = (1/n)·Σᵢ Xᵢ 는 n→∞ 이면 <strong>N(μ, σ²/n)</strong>을 따름</li>
+      <li>원래 분포의 형태에 <strong>무관</strong>하게 성립</li>
+      <li>보통 <strong>n ≥ 30</strong> 부터 정규분포를 따른다고 볼 수 있음</li>
+    </ul>
+    <div class="formula">
+      X̄ₙ = (1/n) · Σᵢ Xᵢ  →  N(μ, σ²/n)  <span class="comment">(n→∞)</span>
+    </div>
+    <div class="highlight gold" style="margin-top:10px; font-size:13px;">
+      <strong>ML 활용:</strong> 오차 모델링의 근거 / 미니배치 학습에서 배치 평균의 분포 보장
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 08 MLE ──────── -->
+<section class="section" id="s08">
+  <div class="section-header">
+    <div class="section-num">08</div>
+    <div class="section-title"><span>MLE</span> — 최대우도추정 수식 유도</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">MLE의 Parameter θ</div>
+    <ul class="def" style="margin-bottom:12px;">
+      <li><strong>θ</strong>: 원본 확률 분포를 계산(근사)하기 위해 추정하는 파라미터</li>
+      <li>여러 확률 밀도 함수 중 관측 x₁, x₂, ..., xₙ 과 <strong>제일 부합하는 함수를 찾는 과정</strong></li>
+      <li>원본 분포가 Gaussian일 때: <strong>θ = (μ, σ²)</strong></li>
+      <li>딥러닝 네트워크: <strong>θ = 인공지능 네트워크의 가중치</strong></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title blue">① 우도 함수 (Likelihood Function)</div>
+    <div class="formula">
+      L(θ; X) = p(x₁, x₂, ..., xₙ | θ)
+             = <span class="op">∏ᵢ</span> p(xᵢ | θ)
+      <br><span class="comment">← i.i.d. 가정으로 곱 분리</span>
+    </div>
+    <div class="highlight" style="font-size:13px; margin-top:8px;">
+      <strong>i.i.d.</strong> (independent identically distributed): 샘플한 확률 변수들이 서로 같은 확률 분포에서 독립적으로 샘플링되었다는 가정
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title blue">② 로그 우도 (Log-Likelihood)</div>
+    <div class="formula">
+      ℓ(θ) = log L(θ; X)
+           = <span class="op">Σᵢ</span> log p(xᵢ | θ)
+      <br><span class="comment">← log는 단조 증가 → argmax 보존, 곱 → 합, 수치 안정성 ↑</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title blue">③ MLE 추정량</div>
+    <div class="formula">
+      θ̂ₘₗₑ = <span class="op">argmax</span>_θ ℓ(θ)
+      <br><br>
+      <span class="comment">// 필요조건 (1계 미분 = 0)</span><br>
+      ∇_θ ℓ(θ) = 0
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title green">④ Gaussian에 MLE 적용 — 표본 평균·분산이 MLE 추정량</div>
+    <div class="formula">
+      ℓ(μ,σ²) = -(n/2)·log(2πσ²) - Σ(xᵢ-μ)² / (2σ²)
+      <br><br>
+      ∂ℓ/∂μ = 0  →  μ̄ = (1/n)·Σxᵢ  <span class="comment">(표본 평균)</span>
+      <br>
+      ∂ℓ/∂σ² = 0  →  σ̄² = (1/n)·Σ(xᵢ - μ̄)²  <span class="comment">(표본 분산)</span>
+    </div>
+    <div class="highlight green" style="margin-top:10px; font-size:13px;">
+      정규분포 하의 <strong>MSE 최소화 = MLE</strong>와 동치 (log-likelihood 최대화)
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 09 MAP ──────── -->
+<section class="section" id="s09">
+  <div class="section-header">
+    <div class="section-num">09</div>
+    <div class="section-title">MAP 추정 &amp; <span>정규화</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title gold">MAP (Maximum A Posteriori)</div>
+    <div class="formula">
+      θ_MAP = argmax P(θ|X)
+            = argmax [log P(X|θ) + log P(θ)]
+      <br><span class="comment">           = likelihood   +   prior</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">MLE vs MAP 비교</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th></th><th>MLE</th><th>MAP</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>목적함수</strong></td><td>argmax Σ log p(xᵢ|θ)</td><td>argmax [Σ log p(xᵢ|θ) + log P(θ)]</td></tr>
+          <tr><td><strong>Prior 사용</strong></td><td><span style="color:var(--red);">✗ 사용 안 함</span></td><td><span style="color:var(--green);">✓ Prior P(θ) 반영</span></td></tr>
+          <tr><td><strong>데이터 적을 때</strong></td><td>불안정 (과적합 위험)</td><td>Prior가 안전장치 역할</td></tr>
+          <tr><td><strong>Prior → 0</strong></td><td>—</td><td>MAP = MLE (Prior 무관)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title purple">MAP = 정규화 (Regularization)의 수학적 근거</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Prior P(θ)</th><th>log P(θ)</th><th>MAP 목적함수</th><th>동치인 정규화</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Gaussian N(0, 1/λ)</td>
+            <td>-λ/2 · ||θ||²</td>
+            <td>Σ log p(xᵢ|θ) - λ||θ||²</td>
+            <td><span class="badge badge-blue">L2 정규화 (Ridge)</span></td>
+          </tr>
+          <tr>
+            <td>Laplace L(0, 1/λ)</td>
+            <td>-λ · ||θ||₁</td>
+            <td>Σ log p(xᵢ|θ) - λ||θ||₁</td>
+            <td><span class="badge badge-gold">L1 정규화 (Lasso)</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 10 확률 분포 ──────── -->
+<section class="section" id="s10">
+  <div class="section-header">
+    <div class="section-num">10</div>
+    <div class="section-title">확률 분포 <span>(이산 / 연속)</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">주요 이산 확률 분포</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>분포</th><th>PMF</th><th>E[X] / Var[X]</th><th>ML 활용</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-blue">베르누이</span> Ber(p)</td>
+            <td>P(X=1)=p, P(X=0)=1-p</td>
+            <td>E=p, Var=p(1-p)</td>
+            <td>이진 분류 출력 / Sigmoid 함수</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">이항</span> Bin(n,p)</td>
+            <td>C(n,k)·pᵏ·(1-p)ⁿ⁻ᵏ</td>
+            <td>E=np, Var=np(1-p)</td>
+            <td>베르누이 분포의 n회 독립 시행 성공 횟수</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-gold">카테고리형</span> Cat(π)</td>
+            <td>P(X=k)=πₖ, Σπₖ=1</td>
+            <td>E[1ₓ₌ₖ]=πₖ</td>
+            <td>다중 클래스 분류 / Softmax 출력</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-purple">포아송</span> Poi(λ)</td>
+            <td>P(X=k)=λᵏe⁻λ/k!</td>
+            <td>E=λ, Var=λ</td>
+            <td>단위 시간당 이벤트 발생 횟수</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title green">정규분포 (Gaussian) N(μ, σ²) — ML에서 가장 중요</div>
+    <div class="formula">
+      f(x; μ,σ²) = (1/√(2πσ²)) · exp(-(x-μ)² / (2σ²))
+    </div>
+    <div class="highlight green" style="margin-top:10px; font-size:13px;">
+      <strong>최대 엔트로피 분포</strong>: 평균·분산이 고정될 때 가장 불확실한 분포 / CLT에 의해 자연·공학 전반에 등장
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">기타 주요 연속 분포</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>분포</th><th>PDF 핵심</th><th>ML 활용</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>균등 Uniform U(a,b)</strong></td>
+            <td>f(x) = 1/(b-a) · [a,b] 구간</td>
+            <td>무정보 사전 분포 / 초기 난수 생성</td>
+          </tr>
+          <tr>
+            <td><strong>라플라스 L(μ,b)</strong></td>
+            <td>f(x) = exp(-|x-μ|/b) / (2b)</td>
+            <td>L1 정규화 = Laplace Prior MAP / 희소 가중치 유도</td>
+          </tr>
+          <tr>
+            <td><strong>다변량 Gaussian N(μ,Σ)</strong></td>
+            <td>exp(-½(x-μ)ᵀΣ⁻¹(x-μ)) / |2πΣ|^½</td>
+            <td>GAN·VAE·GMM 클러스터링 / 공분산 행렬 Σ 포함</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Distribution comparison SVG -->
+  <div class="graph-card">
+    <div class="graph-desc">
+      <p><span class="badge badge-green">비교</span> 주요 분포 형태 비교</p>
+      <ul class="def">
+        <li><span style="color:#3b82f6;">■</span> Gaussian (μ=0, σ=1)</li>
+        <li><span style="color:#f59e0b;">■</span> Laplace (μ=0, b=1)</li>
+        <li><span style="color:#10b981;">■</span> Uniform (-2, 2)</li>
+      </ul>
+      <div class="highlight" style="margin-top:10px; font-size:12px;">
+        Laplace는 Gaussian보다 꼬리가 두껍고 중심이 뾰족해 <strong>희소성(sparsity)</strong>을 유도
+      </div>
+    </div>
+    <svg class="graph" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
+      <line x1="30" y1="185" x2="300" y2="185" stroke="#2a3a55" stroke-width="1.5"/>
+      <line x1="30" y1="20" x2="30" y2="185" stroke="#2a3a55" stroke-width="1.5"/>
+      <text x="165" y="200" fill="#64748b" font-size="9" text-anchor="middle">x</text>
+      <!-- x ticks -->
+      <text x="30" y="197" fill="#64748b" font-size="8" text-anchor="middle">-4</text>
+      <text x="97" y="197" fill="#64748b" font-size="8" text-anchor="middle">-2</text>
+      <text x="165" y="197" fill="#64748b" font-size="8" text-anchor="middle">0</text>
+      <text x="232" y="197" fill="#64748b" font-size="8" text-anchor="middle">2</text>
+      <text x="300" y="197" fill="#64748b" font-size="8" text-anchor="middle">4</text>
+      <!-- y ticks -->
+      <text x="24" y="186" fill="#64748b" font-size="8" text-anchor="end">0</text>
+      <text x="24" y="134" fill="#64748b" font-size="8" text-anchor="end">.2</text>
+      <text x="24" y="82" fill="#64748b" font-size="8" text-anchor="end">.4</text>
+      <text x="24" y="30" fill="#64748b" font-size="8" text-anchor="end">.6</text>
+      <!-- Gaussian σ=1 -->
+      <path d="M30,184 C55,183 75,178 97,162 C112,150 125,125 140,100 C150,82 158,65 165,57 C172,65 180,82 190,100 C205,125 218,150 233,162 C255,178 275,183 300,184" fill="none" stroke="#3b82f6" stroke-width="2"/>
+      <!-- Laplace -->
+      <path d="M30,182 C55,181 85,175 110,165 C130,156 148,135 158,110 C162,97 164,85 165,75 C166,85 168,97 172,110 C182,135 200,156 220,165 C245,175 275,181 300,182" fill="none" stroke="#f59e0b" stroke-width="2"/>
+      <!-- Uniform -->
+      <line x1="30" y1="184" x2="97" y2="184" stroke="#10b981" stroke-width="2"/>
+      <line x1="97" y1="184" x2="97" y2="157" stroke="#10b981" stroke-width="2"/>
+      <line x1="97" y1="157" x2="233" y2="157" stroke="#10b981" stroke-width="2"/>
+      <line x1="233" y1="157" x2="233" y2="184" stroke="#10b981" stroke-width="2"/>
+      <line x1="233" y1="184" x2="300" y2="184" stroke="#10b981" stroke-width="2"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ──────── 11 생성 vs 판별 모델 ──────── -->
+<section class="section" id="s11">
+  <div class="section-header">
+    <div class="section-num">11</div>
+    <div class="section-title">생성 vs 판별 모델 &amp; <span>베이즈 정리</span></div>
+  </div>
+
+  <div class="split">
+    <div class="card" style="border-top:3px solid var(--accent);">
+      <div class="card-title blue">판별 모델 (Discriminative)</div>
+      <div class="highlight" style="margin-bottom:12px; font-size:13px;">
+        학습 목표: <strong>P(y|x)</strong> 조건부 분포 직접 학습
+      </div>
+      <ul class="def">
+        <li>결정 경계만 학습 → <strong>분류 정확도 높음</strong></li>
+        <li>새로운 데이터 <strong>생성 불가</strong></li>
+      </ul>
+      <div style="margin-top:10px; font-size:12px; color:var(--text2);">예시:</div>
+      <div style="font-size:13px; margin-top:4px;">
+        <span class="badge badge-blue">Logistic Regression</span>
+        <span class="badge badge-blue">SVM</span>
+        <span class="badge badge-blue">신경망 분류기</span>
+        <span class="badge badge-blue">Transformer</span>
+      </div>
+    </div>
+    <div class="card" style="border-top:3px solid var(--gold);">
+      <div class="card-title gold">생성 모델 (Generative)</div>
+      <div class="highlight gold" style="margin-bottom:12px; font-size:13px;">
+        학습 목표: <strong>P(x,y) = P(x|y)·P(y)</strong> 결합 분포 학습
+      </div>
+      <ul class="def">
+        <li>데이터 생성 분포 자체를 모델링</li>
+        <li>새로운 데이터 <strong>생성 가능</strong></li>
+      </ul>
+      <div style="margin-top:10px; font-size:12px; color:var(--text2);">예시:</div>
+      <div style="font-size:13px; margin-top:4px;">
+        <span class="badge badge-gold">Naive Bayes</span>
+        <span class="badge badge-gold">GMM</span>
+        <span class="badge badge-gold">VAE</span>
+        <span class="badge badge-gold">GAN</span>
+        <span class="badge badge-gold">Diffusion</span>
+        <span class="badge badge-gold">LLM</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title purple">연쇄 법칙 (Chain Rule) — 언어 모델의 핵심</div>
+    <div class="chain-box">
+      <p style="font-size:13.5px; color:var(--accent2); font-family:var(--font-code);">P(x₁,x₂,...,xₙ) = P(x₁)·P(x₂|x₁)·P(x₃|x₁,x₂)···P(xₙ|x₁,...,xₙ₋₁)</p>
+    </div>
+    <div class="highlight gold" style="margin-top:10px; font-size:13px;">
+      <strong>LLM의 자기회귀 생성:</strong><br>
+      P(w₁,...,wₜ) = ∏ₜ P(wₜ|w₁,...,wₜ₋₁) → 이전 토큰들을 조건으로 다음 토큰 예측
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">베이즈 정리와 기계학습 — MLE·MAP·베이지안 학습</div>
+    <div class="formula" style="text-align:center;">
+      P(θ|X) = P(X|θ)·P(θ) / P(X) = Likelihood × Prior / Evidence
+    </div>
+    <div class="split-3" style="margin-top:14px;">
+      <div class="card" style="background:var(--surface2); border-top:2px solid var(--accent);">
+        <div class="card-title blue">MLE (최대 우도)</div>
+        <div class="formula" style="font-size:12px; padding:10px;">θ̂ = argmax P(X|θ)</div>
+        <ul class="def" style="font-size:12px;">
+          <li>Prior 무시</li>
+          <li>데이터가 많을수록 효과적</li>
+          <li>L(θ) = ∏p(xᵢ|θ) 최대화</li>
+        </ul>
+      </div>
+      <div class="card" style="background:var(--surface2); border-top:2px solid var(--green);">
+        <div class="card-title green">MAP (최대 사후 확률)</div>
+        <div class="formula" style="font-size:12px; padding:10px;">θ̂ = argmax P(X|θ)·P(θ)</div>
+        <ul class="def" style="font-size:12px;">
+          <li>Prior 반영 → 정규화 효과</li>
+          <li>Gaussian Prior → L2</li>
+          <li>Laplace Prior → L1</li>
+        </ul>
+      </div>
+      <div class="card" style="background:var(--surface2); border-top:2px solid var(--red);">
+        <div class="card-title red">베이지안 추론</div>
+        <div class="formula" style="font-size:12px; padding:10px;">전체 분포 P(θ|X) 활용</div>
+        <ul class="def" style="font-size:12px;">
+          <li>분포 전체 유지</li>
+          <li>불확실성 정량화 가능</li>
+          <li>계산 비용 높음 (MCMC)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="highlight gold" style="margin-top:12px; font-size:13px;">
+      <strong>실제 ML에서의 선택:</strong> 대부분의 딥러닝 = MLE (데이터 충분) / 정규화 필요 = MAP / 불확실성 중요 = 베이지안 신경망
+    </div>
+  </div>
+</section>
+
+<!-- ──────── 12 핵심 요약 ──────── -->
+<section class="section" id="s12">
+  <div class="section-header">
+    <div class="section-num">12</div>
+    <div class="section-title">핵심 <span>요약</span></div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-item">
+      <div class="si-num">01</div>
+      <div class="si-title">평균·분산·표준편차</div>
+      <div class="si-desc">데이터의 중심과 퍼짐 정도. 분모 n-1로 불편추정량 계산.</div>
+    </div>
+    <div class="summary-item">
+      <div class="si-num">02</div>
+      <div class="si-title">Bias-Variance Tradeoff</div>
+      <div class="si-desc">총 오차 = Bias² + Variance + Noise. 복잡도 ↑ → Bias↓ Variance↑</div>
+    </div>
+    <div class="summary-item">
+      <div class="si-num">03</div>
+      <div class="si-title">공분산·상관계수</div>
+      <div class="si-desc">변수 간 관계. ρ ∈ [-1,1]. 부호는 방향, 크기는 선형 관계 강도.</div>
+    </div>
+    <div class="summary-item">
+      <div class="si-num">04</div>
+      <div class="si-title">왜도·첨도</div>
+      <div class="si-desc">왜도: 비대칭 정도 (0=대칭). 첨도: 뾰족한 정도 (정규분포=3)</div>
+    </div>
+    <div class="summary-item">
+      <div class="si-num">05</div>
+      <div class="si-title">회귀 / 최소제곱법</div>
+      <div class="si-desc">θ=(XᵀX)⁻¹Xᵀy. MSE 최소화 = MLE. 딥러닝에서는 경사하강법 사용.</div>
+    </div>
+    <div class="summary-item">
+      <div class="si-num">06</div>
+      <div class="si-title">정규분포 & CLT</div>
+      <div class="si-desc">N(μ,σ²). 중심극한정리: n≥30이면 표본평균이 정규분포 따름.</div>
+    </div>
+    <div class="summary-item">
+      <div class="si-num">07</div>
+      <div class="si-title">MLE</div>
+      <div class="si-desc">θ_MLE = argmax Σ log p(xᵢ|θ). i.i.d. 가정. Gaussian → 표본평균·분산.</div>
+    </div>
+    <div class="summary-item">
+      <div class="si-num">08</div>
+      <div class="si-title">MAP & 정규화</div>
+      <div class="si-desc">Prior 추가. Gaussian Prior → L2(Ridge). Laplace Prior → L1(Lasso).</div>
+    </div>
+    <div class="summary-item">
+      <div class="si-num">09</div>
+      <div class="si-title">확률 분포</div>
+      <div class="si-desc">Bernoulli→sigmoid, Categorical→softmax, Gaussian→연속 출력, Laplace→sparsity</div>
+    </div>
+    <div class="summary-item">
+      <div class="si-num">10</div>
+      <div class="si-title">생성 vs 판별 모델</div>
+      <div class="si-desc">판별: P(y|x) 학습 (분류 정확). 생성: P(x,y) 학습 (데이터 생성). LLM: 연쇄법칙.</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// Active TOC highlight on scroll
+const sections = document.querySelectorAll('.section');
+const tocItems = document.querySelectorAll('.toc-item');
+
+function updateTOC() {
+  let current = '';
+  sections.forEach(section => {
+    const sectionTop = section.offsetTop - 60;
+    if (window.scrollY >= sectionTop) {
+      current = section.getAttribute('id');
+    }
+  });
+  tocItems.forEach(item => {
+    item.classList.remove('active');
+    if (item.getAttribute('href') === '#' + current) {
+      item.classList.add('active');
+    }
+  });
+}
+
+window.addEventListener('scroll', updateTOC);
+updateTOC();
+</script>
+</body>
+</html>
