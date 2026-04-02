@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML 실전 25제: 선형 회귀 & 이진 분류</title>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f0f2f5; }
+        .quiz-container { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; text-align: center; font-size: 2em; margin-bottom: 30px; border-bottom: 3px solid #e8f0fe; padding-bottom: 15px; }
+        .question-card { margin-bottom: 30px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background: #fff; transition: transform 0.2s; }
+        .question-card:hover { transform: translateY(-2px); border-color: #1a73e8; }
+        .q-text { font-weight: 700; font-size: 1.15em; margin-bottom: 15px; display: block; }
+        .options-list { list-style: none; padding: 0; }
+        .option-item { margin: 10px 0; padding: 10px; border-radius: 8px; background: #f8f9fa; cursor: pointer; display: flex; align-items: center; }
+        .option-item:hover { background: #e8f0fe; }
+        input[type="radio"], input[type="text"] { margin-right: 15px; }
+        input[type="text"] { width: calc(100% - 30px); padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; }
+        .essay-area { width: calc(100% - 30px); height: 100px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; resize: vertical; }
+        .btn-submit { display: block; width: 100%; padding: 20px; background: #1a73e8; color: white; border: none; border-radius: 12px; font-size: 1.2em; font-weight: bold; cursor: pointer; margin-top: 40px; transition: background 0.3s; }
+        .btn-submit:hover { background: #1557b0; }
+        .feedback { display: none; margin-top: 30px; padding: 25px; border-radius: 15px; }
+        .correct-ans { background-color: #e6f4ea; border: 1px solid #34a853; color: #137333; margin-bottom: 20px; }
+        .wrong-ans { background-color: #fce8e6; border: 1px solid #d93025; color: #a50e0e; margin-bottom: 20px; }
+        .explain-box { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; font-size: 0.95em; color: #555; white-space: pre-wrap; }
+        .math { font-family: 'Times New Roman', serif; font-style: italic; color: #d93025; }
+    </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h1>🚀 ML Slide 5 집중 공략 (25문항)</h1>
+    
+    <div id="quiz-content">
+        </div>
+
+    <button class="btn-submit" onclick="gradeQuiz()">제출 및 정답 확인</button>
+
+    <div id="final-result" class="feedback">
+        <h2 style="text-align: center;">최종 점수: <span id="final-score">0</span> / 25</h2>
+        <div id="feedback-list"></div>
+    </div>
+</div>
+
+<script>
+const quizData = [
+    // 1~10 객관식
+    { type: 'mc', q: "다항 회귀(Polynomial Regression)에서 차수(k)를 무한히 높일 경우 발생하는 현상은?", options: ["과소적합(Underfitting)", "학습 속도 저하만 발생", "과적합(Overfitting) 및 높은 분산", "모델의 단순화"], ans: 2, explain: "차수가 높아지면 모델의 유연성이 지나치게 커져 데이터의 노이즈까지 암기하게 됩니다.\n\n이는 훈련 데이터에는 완벽하지만 새로운 데이터에는 엉뚱한 답을 내는 과적합(Overfitting) 상태를 만듭니다." },
+    { type: 'mc', q: "선형 회귀의 비용 함수 J(θ)를 최소화하기 위해 사용되는 가장 대표적인 최적화 알고리즘은?", options: ["교차 엔트로피", "경사 하강법(Gradient Descent)", "시그모이드 함수", "라쏘(Lasso)"], ans: 1, explain: "비용 함수의 기울기(Gradient)를 따라 최솟값을 찾아가는 경사 하강법이 가장 널리 쓰입니다.\n\n매 단계마다 가중치 θ를 기울기의 반대 방향으로 조금씩 업데이트합니다." },
+    { type: 'mc', q: "학습률(Learning Rate, α)이 너무 클 경우 발생하는 치명적인 문제는?", options: ["학습 속도가 너무 느려짐", "최솟값에 도달하지 못하고 발산함", "과적합이 발생함", "데이터가 손실됨"], ans: 1, explain: "학습률이 너무 크면 보폭이 너무 넓어 골짜기의 최저점을 지나쳐버리고 반대편으로 튀어 오르게 됩니다.\n\n결국 비용 함수 값이 줄어들지 않고 무한히 커지는 발산 현상이 일어납니다." },
+    { type: 'mc', q: "이진 분류에서 선형 회귀(MSE)를 손실 함수로 쓰지 않는 가장 큰 통계적 이유는?", options: ["계산이 너무 복잡해서", "라벨이 0과 1인 베르누이 분포를 따르기 때문", "시그모이드 미분이 불가능해서", "학습 데이터가 부족해서"], ans: 1, explain: "선형 회귀는 오차가 정규분포를 따른다고 가정하지만, 분류 문제는 정답이 0 또는 1인 베르누이 분포입니다.\n\n따라서 데이터의 본질적인 확률 분포에 맞는 Cross-Entropy를 쓰는 것이 타당합니다." },
+    { type: 'mc', q: "시그모이드 함수의 미분값 σ'(z)의 최댓값은 얼마인가?", options: ["1.0", "0.5", "0.25", "0.0"], ans: 2, explain: "시그모이드 미분 공식인 σ(z)(1-σ(z))에서 σ(z)=0.5일 때 최대가 됩니다.\n\n0.5 * (1 - 0.5) = 0.25가 최대 미분값이며, 이는 깊은 신경망에서 기울기 소실의 원인이 됩니다." },
+    { type: 'mc', q: "L2 정규화(Ridge)가 모델에 주는 영향은?", options: ["가중치를 완전히 0으로 만듦", "가중치를 골고루 작게 유지함", "데이터의 차원을 늘림", "학습률을 자동으로 조절함"], ans: 1, explain: "L2 정규화는 가중치의 제곱합을 패널티로 주어 특정 가중치가 폭주하지 못하게 막습니다.\n\n가중치를 0 근처로 작게 유도하여 모델을 부드럽게(smooth) 만듭니다." },
+    { type: 'mc', q: "로지스틱 회귀에서 결정 경계(Decision Boundary)가 직선이 되는 지점은?", options: ["σ(z) = 1 인 지점", "σ(z) = 0 인 지점", "θᵀx = 0 인 지점", "θᵀx = 1 인 지점"], ans: 2, explain: "θᵀx = 0 일 때 시그모이드 확률값이 딱 0.5가 됩니다.\n\n이 지점이 바로 클래스 0과 1을 가르는 기준선(결정 경계)이 됩니다." },
+    { type: 'mc', q: "MLE(최대 우도 추정)의 관점에서 MSE 손실 함수를 최소화하는 것은 어떤 가정 하에 이루어지는가?", options: ["노이즈가 베르누이 분포를 따름", "노이즈가 가우시안(정규) 분포를 따름", "노이즈가 전혀 없음", "학습률이 고정되어 있음"], ans: 1, explain: "데이터의 오차(노이즈)가 정규분포를 따른다고 가정하고 우도를 최대화하면 MSE 식이 유도됩니다.\n\n이것이 선형 회귀 손실 함수가 제곱 형태를 띠는 수학적 근거입니다." },
+    { type: 'mc', q: "다음 중 과소적합(Underfitting)을 해결하기 위한 방법으로 적절한 것은?", options: ["모델의 차수를 낮춘다", "정규화 강도(λ)를 높인다", "모델에 더 복잡한 특징(feature)을 추가한다", "데이터 수를 줄인다"], ans: 2, explain: "과소적합은 모델이 너무 멍청한 상태입니다. 따라서 차수를 높이거나 특징을 추가해야 합니다.\n\n반대로 정규화 강도를 높이는 것은 모델을 더 단순하게 만드므로 해결책이 아닙니다." },
+    { type: 'mc', q: "Softmax 함수에 대한 설명으로 틀린 것은?", options: ["다중 클래스 분류에 사용됨", "출력값의 총합은 항상 1임", "큰 점수는 더 크게, 작은 점수는 더 작게 강조함", "이진 분류에만 사용 가능함"], ans: 3, explain: "소프트맥스는 시그모이드를 3개 이상의 클래스로 확장한 개념입니다.\n\n따라서 '이진 분류에만 사용 가능하다'는 설명은 틀린 것입니다." },
+
+    // 11~18 OX
+    { type: 'ox', q: "시그모이드 함수의 출력은 항상 0과 1 사이의 값을 가진다.", ans: "O", explain: "공식 1 / (1 + e⁻ᶻ)에 의해 z가 어떤 실수든 결과는 (0, 1) 범위에 갇힙니다.\n\n이 특성 때문에 결과값을 확률로 해석할 수 있습니다." },
+    { type: 'ox', q: "L1 정규화(Lasso)는 불필요한 특징의 가중치를 완전히 0으로 만들 수 있다.", ans: "O", explain: "L1 정규화는 마름모꼴 형태의 패널티를 주어 가중치를 축(axis)으로 몰아버립니다.\n\n이 과정에서 일부 가중치가 0이 되어 변수 선택 효과가 발생합니다." },
+    { type: 'ox', q: "경사 하강법은 언제나 전역 최솟값(Global Minimum)에 도달함을 보장한다.", ans: "X", explain: "비용 함수가 Convex(볼록)하지 않은 경우 로컬 미니멈에 빠질 수 있습니다.\n\n다만 로지스틱 회귀의 Cross-Entropy는 Convex 함수이므로 보장됩니다." },
+    { type: 'ox', q: "데이터 개수 N이 많아질수록 과적합(Overfitting)의 위험은 줄어든다.", ans: "O", explain: "데이터가 많으면 모델이 특정 소수 데이터의 노이즈에 집착하기 어려워집니다.\n\n따라서 풍부한 데이터는 과적합을 막는 가장 좋은 약입니다." },
+    { type: 'ox', q: "MLE(최대 우도 추정)는 미래의 확률을 예측하는 과학자의 관점이다.", ans: "X", explain: "MLE는 이미 일어난 데이터(결과)를 보고 원인(파라미터 θ)을 추리하는 탐정의 관점입니다.\n\n미래를 예측하는 것은 일반적인 '확률'의 관점입니다." },
+    { type: 'ox', q: "정규화 강도 λ(람다)가 커질수록 모델의 결정 경계는 더 복잡하고 구불구불해진다.", ans: "X", explain: "λ가 커지면 가중치에 대한 처벌이 강해져서 모델이 매우 단순해집니다.\n\n결국 경계는 복잡해지는 게 아니라 직선에 가깝게 단순해집니다." },
+    { type: 'ox', q: "시뮬레이티드 어닐링과 학습률 스케줄링은 처음에는 대담하게 탐험하고 나중에 신중해진다는 철학이 같다.", ans: "O", explain: "두 기법 모두 초반에는 큰 변화를 주고 후반에는 미세 조정을 합니다.\n\n이러한 전략은 전역 최솟값을 찾는 데 매우 유리합니다." },
+    { type: 'ox', q: "로지스틱 회귀에서 손실 함수로 Cross-Entropy를 쓰면 비용 함수가 Non-convex 해진다.", ans: "X", explain: "반대입니다. MSE를 쓰면 Non-convex 해지지만, Cross-Entropy를 쓰면 Convex 해집니다.\n\n이것이 분류 문제에서 Cross-Entropy를 쓰는 강력한 이유 중 하나입니다." },
+
+    // 19~23 단답형
+    { type: 'sa', q: "가중치(θ) 업데이트 시 보폭을 결정하는 파라미터(α)를 무엇이라 하는가?", ans: ["학습률", "learning rate"], explain: "학습률 α는 경사 하강법에서 θ를 한 번에 얼마나 크게 바꿀지 결정합니다.\n\n너무 크면 발산하고 너무 작으면 학습이 영원히 끝나지 않습니다." },
+    { type: 'sa', q: "정답이 1인 경우 예측값이 0에 가까워질수록 로그 함수를 이용해 무한대의 벌금을 주는 손실 함수는?", ans: ["교차 엔트로피", "cross entropy", "크로스 엔트로피"], explain: "이진 분류에서 정답이 1일 때 -log(y_hat)을 통해 오차를 계산합니다.\n\n틀린 확신을 가질수록 벌금이 기하급수적으로 커집니다." },
+    { type: 'sa', q: "데이터들이 서로 독립적이고 동일한 분포에서 나왔다는 확률적 가정을 뜻하는 약어는?", ans: ["iid", "i.i.d"], explain: "Independent and Identically Distributed의 약자입니다.\n\n이 가정이 있어야 전체 데이터의 우도를 개별 확률의 곱으로 표현할 수 있습니다." },
+    { type: 'sa', q: "가우시안 MLE 유도 결과, 가장 확률 높은 평균(μ)은 데이터의 무엇과 일치하는가?", ans: ["산술평균", "표본평균", "평균", "mean"], explain: "수학적 유도 결과, MLE 평균 추정량은 모든 데이터를 더해 n으로 나눈 값입니다.\n\n우리가 평소에 쓰는 평균 계산법이 통계적으로 가장 타당하다는 증거입니다." },
+    { type: 'sa', q: "모델이 훈련 데이터에는 너무 잘 맞지만 새로운 데이터에는 성적이 낮은 상태를 무엇이라 하는가?", ans: ["과적합", "overfitting"], explain: "훈련 데이터의 특수한 노이즈까지 다 외워버린 상태입니다.\n\n일반화 성능(Generalization)이 매우 낮은 상태를 의미합니다." },
+
+    // 24~25 서술형
+    { type: 'essay', q: "분류 문제에서 MSE 대신 Cross-Entropy를 손실 함수로 사용해야 하는 이유를 두 가지 측면(범위/최적화)에서 서술하시오.", ans: "확인 완료", explain: "첫째(범위 측면): 선형 회귀는 결과가 0~1 범위를 벗어날 수 있어 확률로 해석하기 어렵지만, 로지스틱 회귀는 시그모이드를 통해 확률적 해석이 가능합니다.\n\n둘째(최적화 측면): 분류에 MSE를 쓰면 비용 함수가 비볼록(Non-convex)해져 로컬 미니멈에 빠지기 쉽지만, Cross-Entropy는 볼록(Convex) 함수가 되어 전역 최솟값을 안정적으로 찾을 수 있습니다." },
+    { type: 'essay', q: "MLE(최대 우도 추정) 계산 시 로그(Log)를 취하는 이유 두 가지를 서술하시오.", ans: "확인 완료", explain: "첫째(수치적 안정성): 확률은 매우 작은 값이라 수만 개를 곱하면 0으로 수렴(Underflow)해버리지만, 로그를 취하면 덧셈으로 바뀌어 컴퓨터가 안정적으로 계산할 수 있습니다.\n\n둘째(계산 편의성): 지수 함수가 포함된 확률 밀도 함수에서 로그를 취하면 지수 연산이 사라지고 곱셈 미분보다 쉬운 덧셈 미분이 가능해져 최적화가 훨씬 쉬워집니다." }
+];
+
+function renderQuiz() {
+    const container = document.getElementById('quiz-content');
+    quizData.forEach((item, idx) => {
+        let html = `<div class="question-card" id="q-card-${idx}">
+            <span class="q-text">${idx + 1}. ${item.q}</span>`;
+        
+        if (item.type === 'mc') {
+            html += `<ul class="options-list">`;
+            item.options.forEach((opt, oIdx) => {
+                html += `<li class="option-item">
+                    <input type="radio" name="q${idx}" id="q${idx}_${oIdx}" value="${oIdx}">
+                    <label for="q${idx}_${oIdx}">${opt}</label>
+                </li>`;
+            });
+            html += `</ul>`;
+        } else if (item.type === 'ox') {
+            html += `<ul class="options-list">
+                <li class="option-item"><input type="radio" name="q${idx}" id="q${idx}_o" value="O"><label for="q${idx}_o">O</label></li>
+                <li class="option-item"><input type="radio" name="q${idx}" id="q${idx}_x" value="X"><label for="q${idx}_x">X</label></li>
+            </ul>`;
+        } else if (item.type === 'sa') {
+            html += `<input type="text" id="q${idx}_input" placeholder="정답을 입력하세요">`;
+        } else if (item.type === 'essay') {
+            html += `<textarea class="essay-area" id="q${idx}_input" placeholder="답안을 서술하세요... (제출 후 해설과 비교해보세요)"></textarea>`;
+        }
+        
+        html += `<div id="feedback-${idx}" class="feedback"></div></div>`;
+        container.innerHTML += html;
+    });
+}
+
+function gradeQuiz() {
+    let score = 0;
+    quizData.forEach((item, idx) => {
+        let isCorrect = false;
+        let userVal = "";
+        const feedbackDiv = document.getElementById(`feedback-${idx}`);
+        
+        if (item.type === 'mc') {
+            const selected = document.querySelector(`input[name="q${idx}"]:checked`);
+            if (selected && parseInt(selected.value) === item.ans) isCorrect = true;
+        } else if (item.type === 'ox') {
+            const selected = document.querySelector(`input[name="q${idx}"]:checked`);
+            if (selected && selected.value === item.ans) isCorrect = true;
+        } else if (item.type === 'sa') {
+            userVal = document.getElementById(`q${idx}_input`).value.trim().toLowerCase();
+            if (item.ans.some(a => userVal.includes(a.toLowerCase()))) isCorrect = true;
+        } else if (item.type === 'essay') {
+            isCorrect = true; // 서술형은 자가 채점으로 무조건 패스
+        }
+
+        if (isCorrect && item.type !== 'essay') score++;
+        
+        feedbackDiv.style.display = "block";
+        feedbackDiv.className = isCorrect ? "feedback correct-ans" : "feedback wrong-ans";
+        feedbackDiv.innerHTML = `<strong>${isCorrect ? (item.type==='essay'?'확인':'정답!') : '오답'}</strong>
+            <div class="explain-box">${item.explain}</div>`;
+    });
+
+    document.getElementById('final-score').innerText = score;
+    document.getElementById('final-result').style.display = "block";
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+window.onload = renderQuiz;
+</script>
+</body>
+</html>
