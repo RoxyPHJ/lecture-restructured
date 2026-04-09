@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Tree (1) — Quiz 30</title>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --surface3: #1e2d45;
+  --border: #1f2d45;
+  --accent: #38bdf8;
+  --accent2: #a78bfa;
+  --accent3: #34d399;
+  --accent4: #fb923c;
+  --danger: #f87171;
+  --yellow: #fbbf24;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --correct: #34d399;
+  --wrong: #f87171;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;
+  line-height:1.7; min-height:100vh;
+}
+
+/* ── HEADER ── */
+.header {
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:0 48px;
+  position:sticky; top:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  height:60px;
+}
+.header-left { display:flex; align-items:center; gap:14px; }
+.header-badge {
+  font-family:'Menlo','Courier New',monospace;
+  font-size:10px; letter-spacing:0.12em;
+  background:rgba(56,189,248,0.12); color:var(--accent);
+  border:1px solid rgba(56,189,248,0.3);
+  padding:3px 10px; border-radius:4px;
+}
+.header-title {
+  font-family:'Impact','Arial Narrow',sans-serif;
+  font-size:18px; letter-spacing:0.05em;
+}
+.score-pill {
+  font-family:'Menlo','Courier New',monospace; font-size:12px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:20px; padding:5px 18px; color:var(--text-muted);
+}
+.score-pill span { color:var(--accent); font-weight:700; }
+
+/* ── PROGRESS BAR ── */
+.progress-wrap {
+  position:sticky; top:60px; z-index:99;
+  height:3px; background:var(--surface2);
+}
+.progress-bar {
+  height:100%; background:linear-gradient(to right,var(--accent),var(--accent2));
+  width:0%; transition:width 0.4s ease;
+}
+
+/* ── MAIN ── */
+main { max-width:860px; margin:0 auto; padding:48px 24px 100px; }
+
+/* ── HERO ── */
+.hero { text-align:center; margin-bottom:52px; }
+.hero-title {
+  font-family:'Impact','Arial Narrow',sans-serif;
+  font-size:50px; letter-spacing:0.04em; margin-bottom:8px;
+}
+.hero-title span { color:var(--accent); }
+.hero-sub { font-size:14px; color:var(--text-muted); margin-bottom:28px; }
+.hero-stats { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom:28px; }
+.stat-box {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:10px; padding:14px 22px; text-align:center;
+}
+.stat-num { font-size:28px; font-weight:700; font-family:'Menlo','Courier New',monospace; }
+.stat-label { font-size:11px; color:var(--text-dim); letter-spacing:0.08em; text-transform:uppercase; margin-top:2px; }
+
+/* ── FILTER ── */
+.filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:40px; justify-content:center; }
+.filter-btn {
+  font-size:12px; padding:6px 18px; border-radius:20px;
+  border:1px solid var(--border); background:var(--surface);
+  color:var(--text-muted); cursor:pointer; transition:all 0.2s;
+  font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+.filter-btn:hover { color:var(--text); border-color:var(--text-muted); }
+.filter-btn.active { font-weight:700; color:var(--bg); }
+.filter-btn.active.all  { background:var(--accent);  border-color:var(--accent);  }
+.filter-btn.active.mc   { background:var(--accent2); border-color:var(--accent2); }
+.filter-btn.active.sa   { background:var(--yellow);  border-color:var(--yellow);  }
+.filter-btn.active.cf   { background:var(--accent4); border-color:var(--accent4); }
+.filter-btn.active.es   { background:var(--danger);  border-color:var(--danger);  }
+
+/* ── QUESTION CARD ── */
+.q-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; margin-bottom:20px; overflow:hidden;
+  transition:border-color 0.25s, transform 0.15s;
+}
+.q-card:hover { transform:translateY(-1px); }
+.q-card.answered-correct { border-color:var(--correct); }
+.q-card.answered-wrong   { border-color:var(--wrong); }
+
+.q-header {
+  display:flex; align-items:center; gap:10px;
+  padding:18px 24px 14px;
+}
+.q-num {
+  font-family:'Menlo','Courier New',monospace; font-size:11px;
+  color:var(--text-dim); background:var(--surface2);
+  border:1px solid var(--border); padding:3px 10px; border-radius:4px; flex-shrink:0;
+}
+.q-type-badge {
+  font-size:10px; font-weight:700; letter-spacing:0.08em;
+  text-transform:uppercase; padding:3px 10px; border-radius:4px; flex-shrink:0;
+}
+.type-mc { background:rgba(167,139,250,0.12); color:var(--accent2); border:1px solid rgba(167,139,250,0.3); }
+.type-sa { background:rgba(251,191,36,0.12);  color:var(--yellow);  border:1px solid rgba(251,191,36,0.3); }
+.type-cf { background:rgba(251,146,60,0.12);  color:var(--accent4); border:1px solid rgba(251,146,60,0.3); }
+.type-es { background:rgba(248,113,113,0.12); color:var(--danger);  border:1px solid rgba(248,113,113,0.3); }
+
+.q-diff { font-size:13px; flex-shrink:0; }
+.q-slide { font-size:10px; color:var(--text-dim); font-family:'Menlo','Courier New',monospace; margin-left:auto; flex-shrink:0; }
+
+.q-body { padding:0 24px 22px; }
+.q-text { font-size:15px; color:var(--text); margin-bottom:18px; line-height:1.65; }
+.q-text code {
+  font-family:'Menlo','Courier New',monospace; font-size:13px;
+  background:#0d1117; border:1px solid var(--border);
+  padding:1px 6px; border-radius:4px; color:#79c0ff;
+}
+
+/* MC */
+.mc-options { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+.mc-option {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:12px 16px; background:var(--surface2);
+  border:1px solid var(--border); border-radius:8px;
+  cursor:pointer; transition:all 0.15s;
+  font-size:14px; color:var(--text-muted); user-select:none;
+}
+.mc-option:hover:not(.locked) { border-color:var(--accent2); color:var(--text); background:var(--surface3); }
+.mc-option.selected  { border-color:var(--accent2); color:var(--text); background:rgba(167,139,250,0.08); }
+.mc-option.correct-ans { border-color:var(--correct) !important; background:rgba(52,211,153,0.08) !important; color:var(--correct) !important; }
+.mc-option.wrong-ans   { border-color:var(--wrong)   !important; background:rgba(248,113,113,0.08) !important; color:var(--wrong) !important; }
+.mc-label { font-family:'Menlo','Courier New',monospace; font-size:12px; font-weight:700; min-width:20px; color:inherit; }
+
+/* SA */
+.sa-input-wrap { display:flex; gap:10px; margin-bottom:16px; }
+.sa-input {
+  flex:1; background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; padding:12px 16px; font-size:14px; color:var(--text);
+  font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  transition:border-color 0.2s;
+}
+.sa-input:focus { outline:none; border-color:var(--yellow); }
+.sa-input.correct-input { border-color:var(--correct) !important; background:rgba(52,211,153,0.06); }
+.sa-input.wrong-input   { border-color:var(--wrong)   !important; background:rgba(248,113,113,0.06); }
+
+/* Code block */
+.code-block {
+  background:#0d1117; border:1px solid var(--border);
+  border-radius:8px; padding:18px 20px;
+  font-family:'Menlo','Courier New',monospace; font-size:13px;
+  line-height:2.1; margin-bottom:14px; overflow-x:auto;
+  white-space:pre-wrap;
+}
+.blank-input {
+  display:inline-block; background:var(--surface3);
+  border:1px solid var(--accent4); border-radius:4px;
+  padding:2px 8px; font-family:'Menlo','Courier New',monospace;
+  font-size:12px; color:var(--text); vertical-align:middle;
+}
+.blank-input:focus { outline:none; border-color:var(--yellow); }
+.blank-input.correct-input { border-color:var(--correct) !important; background:rgba(52,211,153,0.1); color:var(--correct); }
+.blank-input.wrong-input   { border-color:var(--wrong)   !important; background:rgba(248,113,113,0.1); color:var(--wrong); }
+.kw { color:#ff7b72; } .fn { color:#79c0ff; } .co { color:#8b949e; font-style:italic; }
+.st { color:#a5d6ff; } .nu { color:#fbbf24; } .va { color:#e3b341; }
+
+/* Essay */
+.essay-area {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; padding:14px 16px; font-size:14px; color:var(--text);
+  font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  resize:vertical; min-height:110px; line-height:1.7; margin-bottom:12px;
+  transition:border-color 0.2s;
+}
+.essay-area:focus { outline:none; border-color:var(--accent2); }
+
+/* Buttons */
+.submit-btn {
+  padding:10px 20px; background:var(--surface3);
+  border:1px solid var(--border); border-radius:8px;
+  color:var(--text-muted); font-size:13px; cursor:pointer;
+  transition:all 0.15s; margin-bottom:14px;
+  font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+.submit-btn:hover:not(:disabled) { background:var(--accent); color:var(--bg); border-color:var(--accent); font-weight:700; }
+.submit-btn:disabled { opacity:0.4; cursor:default; }
+
+/* Answer toggle */
+.ans-toggle {
+  display:flex; align-items:center; gap:8px;
+  padding:10px 16px; background:var(--surface2);
+  border:1px solid var(--border); border-radius:8px;
+  cursor:pointer; transition:all 0.15s;
+  font-size:13px; color:var(--text-muted); user-select:none;
+}
+.ans-toggle:hover { border-color:var(--accent); color:var(--text); }
+.ans-toggle .arr { transition:transform 0.2s; font-size:11px; }
+.ans-toggle.open .arr { transform:rotate(180deg); }
+.ans-box {
+  display:none; margin-top:12px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-left:3px solid var(--accent3); border-radius:8px;
+  padding:18px 20px;
+}
+.ans-box.visible { display:block; }
+.ans-label { font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent3); margin-bottom:10px; }
+.ans-text { font-size:14px; color:var(--text-muted); line-height:1.75; }
+.ans-text strong { color:var(--text); }
+.ans-text .hl  { color:var(--accent); }
+.ans-text .hl2 { color:var(--accent2); }
+.ans-text .hl3 { color:var(--accent3); }
+.ans-text .hly { color:var(--yellow); }
+.ans-text code { font-family:'Menlo','Courier New',monospace; font-size:12px; background:#0d1117; border:1px solid var(--border); padding:1px 6px; border-radius:4px; color:#79c0ff; }
+.ans-formula {
+  background:#0d1117; border:1px solid var(--border); border-radius:6px;
+  padding:10px 14px; font-family:'Menlo','Courier New',monospace;
+  font-size:12.5px; color:#c9d1d9; margin:8px 0; line-height:1.9;
+}
+
+/* Result */
+.q-result { display:none; margin-top:10px; padding:10px 14px; border-radius:6px; font-size:13px; font-weight:700; }
+.q-result.correct { display:flex; align-items:center; gap:8px; background:rgba(52,211,153,0.1); color:var(--correct); border:1px solid rgba(52,211,153,0.3); }
+.q-result.wrong   { display:flex; align-items:center; gap:8px; background:rgba(248,113,113,0.1); color:var(--wrong);   border:1px solid rgba(248,113,113,0.3); }
+
+/* Section divider */
+.section-divider {
+  display:flex; align-items:center; gap:16px;
+  margin:44px 0 28px;
+}
+.section-divider-num {
+  font-family:'Menlo','Courier New',monospace; font-size:11px;
+  background:rgba(56,189,248,0.1); color:var(--accent);
+  border:1px solid rgba(56,189,248,0.25); padding:3px 12px; border-radius:3px;
+  letter-spacing:0.1em; flex-shrink:0;
+}
+.section-divider-title {
+  font-family:'Impact','Arial Narrow',sans-serif;
+  font-size:22px; letter-spacing:0.04em;
+}
+.section-divider-line { flex:1; height:1px; background:linear-gradient(to right,var(--border),transparent); }
+
+/* Final Score */
+.final-score-section {
+  margin-top:56px; background:var(--surface);
+  border:1px solid var(--border); border-radius:16px; padding:44px; text-align:center;
+}
+.final-score-title { font-family:'Impact','Arial Narrow',sans-serif; font-size:28px; letter-spacing:0.04em; margin-bottom:24px; }
+.score-ring { width:150px; height:150px; margin:0 auto 28px; position:relative; }
+.score-ring svg { transform:rotate(-90deg); }
+.score-ring-bg { fill:none; stroke:var(--surface2); stroke-width:10; }
+.score-ring-fg { fill:none; stroke:var(--accent); stroke-width:10; stroke-linecap:round; stroke-dasharray:408; stroke-dashoffset:408; transition:stroke-dashoffset 1s ease; }
+.score-ring-text { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
+.score-big { font-size:38px; font-weight:700; font-family:'Menlo','Courier New',monospace; color:var(--accent); line-height:1; }
+.score-denom { font-size:13px; color:var(--text-muted); margin-top:2px; }
+.score-msg { font-size:16px; color:var(--text-muted); margin-bottom:28px; }
+.score-breakdown { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:28px; }
+.score-breakdown-item { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 16px; font-size:13px; color:var(--text-muted); }
+.score-breakdown-item span.c { color:var(--correct); font-weight:700; }
+.score-breakdown-item span.w { color:var(--wrong);   font-weight:700; }
+.score-breakdown-item span.s { color:var(--text-dim); }
+.btn-row { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+.reset-btn { padding:12px 32px; background:var(--accent); border:none; border-radius:8px; color:var(--bg); font-size:14px; font-weight:700; cursor:pointer; transition:all 0.15s; font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif; }
+.reset-btn:hover { background:#7dd3fc; }
+.check-all-btn { padding:12px 28px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-size:14px; cursor:pointer; transition:all 0.15s; font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif; }
+.check-all-btn:hover { border-color:var(--accent4); color:var(--accent4); }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <span class="header-badge">QUIZ · 30Q</span>
+    <span class="header-title">Decision Tree (1)</span>
+  </div>
+  <div class="score-pill">채점: <span id="live-score">0 / 0</span></div>
+</header>
+<div class="progress-wrap"><div class="progress-bar" id="prog-bar"></div></div>
+
+<main>
+
+<!-- HERO -->
+<div class="hero">
+  <h1 class="hero-title">Decision <span>Tree</span> Quiz</h1>
+  <p class="hero-sub">Data Mining (FE06064001) · CSE · Incheon National University · Jangho Lee</p>
+  <div class="hero-stats">
+    <div class="stat-box"><div class="stat-num" style="color:var(--accent2)">15</div><div class="stat-label">객관식</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--yellow)">8</div><div class="stat-label">단답형</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--accent4)">4</div><div class="stat-label">코드완성</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--danger)">3</div><div class="stat-label">서술형</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--accent)">30</div><div class="stat-label">총 문항</div></div>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active all" onclick="filterQuiz('all',this)">전체 (30)</button>
+    <button class="filter-btn mc"  onclick="filterQuiz('mc',this)">객관식 (15)</button>
+    <button class="filter-btn sa"  onclick="filterQuiz('sa',this)">단답형 (8)</button>
+    <button class="filter-btn cf"  onclick="filterQuiz('cf',this)">코드완성 (4)</button>
+    <button class="filter-btn es"  onclick="filterQuiz('es',this)">서술형 (3)</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SECTION A · 객관식 15문항
+     ═══════════════════════════════════ -->
+<div class="section-divider">
+  <span class="section-divider-num">SECTION A</span>
+  <span class="section-divider-title" style="color:var(--accent2)">객관식</span>
+  <div class="section-divider-line"></div>
+</div>
+
+<!-- Q01 -->
+<div class="q-card" data-qtype="mc" data-qid="1" data-answer="b">
+  <div class="q-header"><span class="q-num">Q01</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐</span><span class="q-slide">Slide 2/16</span></div>
+  <div class="q-body">
+    <p class="q-text">분류(Classification)에 대한 설명으로 <strong>올바른</strong> 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'1','a')"><span class="mc-label">A</span>출력이 연속적인 수치 값이다.</div>
+      <div class="mc-option" onclick="selectMC(this,'1','b')"><span class="mc-label">B</span>범주형(이산형) 클래스 레이블을 예측하는 데이터 분석 태스크이다.</div>
+      <div class="mc-option" onclick="selectMC(this,'1','c')"><span class="mc-label">C</span>레이블 없는 데이터에서 패턴을 발견하는 비지도학습이다.</div>
+      <div class="mc-option" onclick="selectMC(this,'1','d')"><span class="mc-label">D</span>훈련 데이터 없이도 모델을 구성할 수 있다.</div>
+    </div>
+    <div class="q-result" id="result-1"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-1',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-1"><div class="ans-label">정답: B</div><div class="ans-text">분류는 <strong class="hl">범주형(categorical) 클래스 레이블</strong>을 예측합니다. 예: 대출 승인(safe/risky), 스팸(spam/not spam). 연속값 예측은 수치 예측(회귀)이며, 분류는 레이블된 데이터를 사용하는 지도학습입니다.</div></div>
+  </div>
+</div>
+
+<!-- Q02 -->
+<div class="q-card" data-qtype="mc" data-qid="2" data-answer="c">
+  <div class="q-header"><span class="q-num">Q02</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐</span><span class="q-slide">Slide 3/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Classification과 Regression(수치 예측)의 차이를 가장 잘 설명한 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'2','a')"><span class="mc-label">A</span>Classification은 비지도학습, Regression은 지도학습이다.</div>
+      <div class="mc-option" onclick="selectMC(this,'2','b')"><span class="mc-label">B</span>Classification은 훈련 데이터가 필요 없고, Regression은 필요하다.</div>
+      <div class="mc-option" onclick="selectMC(this,'2','c')"><span class="mc-label">C</span>Classification은 이산(discrete) 클래스를 출력하고, Regression은 연속(continuous) 값을 출력한다.</div>
+      <div class="mc-option" onclick="selectMC(this,'2','d')"><span class="mc-label">D</span>둘 다 동일한 알고리즘을 사용하므로 차이가 없다.</div>
+    </div>
+    <div class="q-result" id="result-2"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-2',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-2"><div class="ans-label">정답: C</div><div class="ans-text">핵심 차이: <strong class="hl">Classification → Discrete</strong> (yes/no, A/B/C), <strong class="hl2">Regression → Continuous</strong> (house price, income). 두 방법 모두 레이블된 데이터를 사용하는 지도학습입니다.</div></div>
+  </div>
+</div>
+
+<!-- Q03 -->
+<div class="q-card" data-qtype="mc" data-qid="3" data-answer="d">
+  <div class="q-header"><span class="q-num">Q03</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐</span><span class="q-slide">Slide 4/16</span></div>
+  <div class="q-body">
+    <p class="q-text">지도학습(Supervised Learning)의 학습 목표를 수식으로 올바르게 표현한 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'3','a')"><span class="mc-label">A</span>f: y → x (레이블에서 피처로의 매핑)</div>
+      <div class="mc-option" onclick="selectMC(this,'3','b')"><span class="mc-label">B</span>f: D → D' (데이터셋 변환)</div>
+      <div class="mc-option" onclick="selectMC(this,'3','c')"><span class="mc-label">C</span>f: x → x (피처 간 매핑)</div>
+      <div class="mc-option" onclick="selectMC(this,'3','d')"><span class="mc-label">D</span>f: x → y (피처 벡터에서 레이블로의 매핑)</div>
+    </div>
+    <div class="q-result" id="result-3"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-3',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-3"><div class="ans-label">정답: D</div><div class="ans-text">지도학습의 핵심은 <strong class="hl">f: x → y</strong> 매핑을 학습하는 것입니다. 입력 feature vector <strong>x</strong>로부터 label <strong>y</strong>를 예측하는 함수 f를 훈련 데이터 D = {(x₁,y₁), …, (xₙ,yₙ)}로부터 학습합니다.</div></div>
+  </div>
+</div>
+
+<!-- Q04 -->
+<div class="q-card" data-qtype="mc" data-qid="4" data-answer="b">
+  <div class="q-header"><span class="q-num">Q04</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐</span><span class="q-slide">Slide 5/16</span></div>
+  <div class="q-body">
+    <p class="q-text">분류 모델의 일반적인 프로세스를 순서대로 올바르게 나열한 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'4','a')"><span class="mc-label">A</span>예측 → 모델 평가 → 모델 구축</div>
+      <div class="mc-option" onclick="selectMC(this,'4','b')"><span class="mc-label">B</span>모델 구축 → 모델 평가 → 예측</div>
+      <div class="mc-option" onclick="selectMC(this,'4','c')"><span class="mc-label">C</span>모델 평가 → 모델 구축 → 예측</div>
+      <div class="mc-option" onclick="selectMC(this,'4','d')"><span class="mc-label">D</span>모델 구축 → 예측 → 모델 평가</div>
+    </div>
+    <div class="q-result" id="result-4"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-4',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-4"><div class="ans-label">정답: B</div><div class="ans-text"><strong>Step 1: 모델 구축</strong> — 훈련 데이터로 분류기 학습<br><strong>Step 2: 모델 평가</strong> — 미확인(unseen) 데이터로 정확도 테스트, 허용 가능하면 배포<br><strong>Step 3: 예측</strong> — 새 데이터에 모델 적용</div></div>
+  </div>
+</div>
+
+<!-- Q05 -->
+<div class="q-card" data-qtype="mc" data-qid="5" data-answer="c">
+  <div class="q-header"><span class="q-num">Q05</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 6/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Decision Tree에 대한 설명으로 <strong>올바르지 않은</strong> 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'5','a')"><span class="mc-label">A</span>도메인 지식이나 파라미터 튜닝이 불필요하다.</div>
+      <div class="mc-option" onclick="selectMC(this,'5','b')"><span class="mc-label">B</span>다차원 데이터를 처리할 수 있다.</div>
+      <div class="mc-option" onclick="selectMC(this,'5','c')"><span class="mc-label">C</span>훈련 데이터에 절대 과적합(overfit)되지 않는다.</div>
+      <div class="mc-option" onclick="selectMC(this,'5','d')"><span class="mc-label">D</span>일련의 간단한 decision rule을 사용하여 예측한다.</div>
+    </div>
+    <div class="q-result" id="result-5"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-5',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-5"><div class="ans-label">정답: C</div><div class="ans-text">Decision Tree의 대표적인 <strong class="hl">한계</strong>가 바로 <strong>훈련 데이터에 과적합(overfit)될 수 있다</strong>는 것입니다. 또한 일부 브랜치가 노이즈나 이상값을 반영할 수 있습니다. 이를 해결하기 위해 가지치기(Pruning)가 사용됩니다.</div></div>
+  </div>
+</div>
+
+<!-- Q06 -->
+<div class="q-card" data-qtype="mc" data-qid="6" data-answer="a">
+  <div class="q-header"><span class="q-num">Q06</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 7/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Decision Tree에서 새로운 인스턴스를 분류하는 과정으로 올바른 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'6','a')"><span class="mc-label">A</span>Root Node에서 시작 → 각 노드에서 테스트 조건 평가 → Branch 따라 이동 → Leaf Node 도달 → 레이블 출력</div>
+      <div class="mc-option" onclick="selectMC(this,'6','b')"><span class="mc-label">B</span>Leaf Node에서 시작 → Branch 역방향 이동 → Root Node 도달 → 레이블 출력</div>
+      <div class="mc-option" onclick="selectMC(this,'6','c')"><span class="mc-label">C</span>모든 Leaf Node를 탐색 → 가장 유사한 레이블 선택</div>
+      <div class="mc-option" onclick="selectMC(this,'6','d')"><span class="mc-label">D</span>Internal Node를 무작위로 선택 → Leaf Node 도달 시 레이블 출력</div>
+    </div>
+    <div class="q-result" id="result-6"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-6',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-6"><div class="ans-label">정답: A</div><div class="ans-text">분류는 <strong class="hl">Root → Leaf 경로 탐색(path traversal)</strong>입니다. Root Node에서 시작해 각 Internal Node의 attribute test를 평가하고, feature 값에 따라 해당 Branch로 이동하며, 최종적으로 Leaf Node에 저장된 클래스 레이블이 예측값이 됩니다.</div></div>
+  </div>
+</div>
+
+<!-- Q07 -->
+<div class="q-card" data-qtype="mc" data-qid="7" data-answer="b">
+  <div class="q-header"><span class="q-num">Q07</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 8/16</span></div>
+  <div class="q-body">
+    <p class="q-text">다음 중 <strong>ID3, C4.5, CART</strong> 세 알고리즘의 공통 특징이 <strong>아닌</strong> 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'7','a')"><span class="mc-label">A</span>Greedy(non-backtracking) 전략을 사용한다.</div>
+      <div class="mc-option" onclick="selectMC(this,'7','b')"><span class="mc-label">B</span>모두 사후 가지치기(post-pruning)를 수행한다.</div>
+      <div class="mc-option" onclick="selectMC(this,'7','c')"><span class="mc-label">C</span>Top-down 재귀적 방식으로 트리를 구성한다.</div>
+      <div class="mc-option" onclick="selectMC(this,'7','d')"><span class="mc-label">D</span>각 노드에서 순수한(pure) 분할을 목표로 한다.</div>
+    </div>
+    <div class="q-result" id="result-7"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-7',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-7"><div class="ans-label">정답: B</div><div class="ans-text"><strong class="hl">ID3는 가지치기를 수행하지 않습니다.</strong> C4.5는 post-pruning을 포함하고, CART도 가지치기를 지원합니다. 세 알고리즘의 공통점은 Greedy 전략, Top-down 재귀적 구성, 순수 분할 목표입니다.</div></div>
+  </div>
+</div>
+
+<!-- Q08 -->
+<div class="q-card" data-qtype="mc" data-qid="8" data-answer="d">
+  <div class="q-header"><span class="q-num">Q08</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 8/16</span></div>
+  <div class="q-body">
+    <p class="q-text">CART 알고리즘의 특징을 모두 올바르게 기술한 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'8','a')"><span class="mc-label">A</span>다지 분할(multiway split)을 사용하며 Information Gain으로 분할한다.</div>
+      <div class="mc-option" onclick="selectMC(this,'8','b')"><span class="mc-label">B</span>이진 트리만 생성하며 Information Gain을 사용하고 범주형 속성만 처리한다.</div>
+      <div class="mc-option" onclick="selectMC(this,'8','c')"><span class="mc-label">C</span>Gain Ratio를 사용하며 연속형 속성을 지원하고 post-pruning을 수행한다.</div>
+      <div class="mc-option" onclick="selectMC(this,'8','d')"><span class="mc-label">D</span>이진 트리만 생성하며, 분류에는 Gini Index, 회귀에는 MSE/RSS를 사용한다.</div>
+    </div>
+    <div class="q-result" id="result-8"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-8',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-8"><div class="ans-label">정답: D</div><div class="ans-text">CART(Classification And Regression Trees): <strong class="hl">이진 트리(Binary Tree)만</strong> 생성, 분류 → <strong class="hl2">Gini Index</strong>, 회귀 → <strong class="hl3">MSE/RSS</strong>. A는 ID3 설명 일부, B는 ID3, C는 C4.5 설명입니다.</div></div>
+  </div>
+</div>
+
+<!-- Q09 -->
+<div class="q-card" data-qtype="mc" data-qid="9" data-answer="c">
+  <div class="q-header"><span class="q-num">Q09</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 9/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Generate_decision_tree 알고리즘에서 <code>attribute_list</code>가 비어있을 때(empty)의 처리로 올바른 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'9','a')"><span class="mc-label">A</span>알고리즘을 종료하고 null을 반환한다.</div>
+      <div class="mc-option" onclick="selectMC(this,'9','b')"><span class="mc-label">B</span>Root Node를 생성하고 다시 시작한다.</div>
+      <div class="mc-option" onclick="selectMC(this,'9','c')"><span class="mc-label">C</span>D에서 다수결(majority voting) 클래스로 레이블된 Leaf Node를 반환한다.</div>
+      <div class="mc-option" onclick="selectMC(this,'9','d')"><span class="mc-label">D</span>무작위 클래스로 레이블된 Leaf Node를 반환한다.</div>
+    </div>
+    <div class="q-result" id="result-9"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-9',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-9"><div class="ans-label">정답: C</div><div class="ans-text">알고리즘 4–5번 줄: <strong>if attribute_list is empty then return N as a leaf node labeled with the majority class in D</strong>. 더 이상 분할할 속성이 없으면 현재 데이터 D의 <strong class="hl">다수결 클래스(majority voting)</strong>를 레이블로 사용합니다.</div></div>
+  </div>
+</div>
+
+<!-- Q10 -->
+<div class="q-card" data-qtype="mc" data-qid="10" data-answer="a">
+  <div class="q-header"><span class="q-num">Q10</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 10/16</span></div>
+  <div class="q-body">
+    <p class="q-text">연속형(continuous) 속성에 적용하는 분할 방식은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'10','a')"><span class="mc-label">A</span>임계값 분할(threshold split): A ≤ split_point / A > split_point</div>
+      <div class="mc-option" onclick="selectMC(this,'10','b')"><span class="mc-label">B</span>다지 분할(multi-way split): 각 값마다 별도 branch</div>
+      <div class="mc-option" onclick="selectMC(this,'10','c')"><span class="mc-label">C</span>집합 분할(subset split): A ∈ S_A vs A ∉ S_A</div>
+      <div class="mc-option" onclick="selectMC(this,'10','d')"><span class="mc-label">D</span>연속형 속성은 Decision Tree에서 처리 불가능하다.</div>
+    </div>
+    <div class="q-result" id="result-10"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-10',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-10"><div class="ans-label">정답: A</div><div class="ans-text">연속형 속성은 <strong class="hl">임계값 분할(threshold split)</strong>로 처리합니다. 특정 split_point를 기준으로 ≤ 와 > 두 개의 branch로 이진 분할합니다. 예: income ≤ 42,000 / income > 42,000. 다지 분할은 범주형, 집합 분할은 범주형의 이진 분할입니다.</div></div>
+  </div>
+</div>
+
+<!-- Q11 -->
+<div class="q-card" data-qtype="mc" data-qid="11" data-answer="b">
+  <div class="q-header"><span class="q-num">Q11</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐⭐⭐</span><span class="q-slide">Slide 11/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Entropy(엔트로피) 공식에서 <strong>pᵢ</strong>가 의미하는 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'11','a')"><span class="mc-label">A</span>속성 A의 분할 수</div>
+      <div class="mc-option" onclick="selectMC(this,'11','b')"><span class="mc-label">B</span>D에서 클래스 Cᵢ에 속하는 튜플의 비율 (|Cᵢ,D| / |D|)</div>
+      <div class="mc-option" onclick="selectMC(this,'11','c')"><span class="mc-label">C</span>전체 데이터셋 D의 크기</div>
+      <div class="mc-option" onclick="selectMC(this,'11','d')"><span class="mc-label">D</span>파티션 Dⱼ에 속하는 클래스의 수</div>
+    </div>
+    <div class="q-result" id="result-11"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-11',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-11"><div class="ans-label">정답: B</div><div class="ans-text">엔트로피 공식: <strong>Info(D) = −Σᵢ pᵢ · log₂(pᵢ)</strong></div><div class="ans-formula">pᵢ = |Cᵢ,D| / |D|</div><div class="ans-text">pᵢ는 <strong class="hl">데이터셋 D에서 클래스 Cᵢ에 속하는 튜플의 비율</strong>입니다. 예: yes=9, no=5, 전체=14이면 p(yes)=9/14, p(no)=5/14.</div></div>
+  </div>
+</div>
+
+<!-- Q12 -->
+<div class="q-card" data-qtype="mc" data-qid="12" data-answer="d">
+  <div class="q-header"><span class="q-num">Q12</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐⭐⭐</span><span class="q-slide">Slide 13/16</span></div>
+  <div class="q-body">
+    <p class="q-text">14-tuple 데이터셋(yes=9, no=5)에서 4개 속성의 Information Gain을 계산했을 때, <strong>루트 노드 분할 속성</strong>으로 선택되는 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'12','a')"><span class="mc-label">A</span>income (Gain = 0.029 bits)</div>
+      <div class="mc-option" onclick="selectMC(this,'12','b')"><span class="mc-label">B</span>credit_rating (Gain = 0.048 bits)</div>
+      <div class="mc-option" onclick="selectMC(this,'12','c')"><span class="mc-label">C</span>student (Gain = 0.151 bits)</div>
+      <div class="mc-option" onclick="selectMC(this,'12','d')"><span class="mc-label">D</span>age (Gain = 0.246 bits)</div>
+    </div>
+    <div class="q-result" id="result-12"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-12',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-12"><div class="ans-label">정답: D — age</div><div class="ans-text">Information Gain이 <strong class="hl">가장 높은 속성</strong>이 분할 속성으로 선택됩니다:<br>age(0.246) > student(0.151) > credit_rating(0.048) > income(0.029)<br>따라서 <strong>age</strong>가 루트 노드 속성으로 선택됩니다. middle_aged 파티션(4yes, 0no)은 entropy=0이므로 즉시 Leaf Node가 됩니다.</div></div>
+  </div>
+</div>
+
+<!-- Q13 -->
+<div class="q-card" data-qtype="mc" data-qid="13" data-answer="c">
+  <div class="q-header"><span class="q-num">Q13</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐⭐⭐</span><span class="q-slide">Slide 15/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Information Gain이 고유 식별자(product_ID)와 같이 값이 매우 많은 속성을 과도하게 선호하는 이유는?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'13','a')"><span class="mc-label">A</span>각 값이 모든 클래스를 포함하여 엔트로피가 최대가 되기 때문이다.</div>
+      <div class="mc-option" onclick="selectMC(this,'13','b')"><span class="mc-label">B</span>Split Information이 0이 되어 Gain Ratio가 무한대가 되기 때문이다.</div>
+      <div class="mc-option" onclick="selectMC(this,'13','c')"><span class="mc-label">C</span>각 값이 하나의 튜플만 포함하여 각 파티션의 entropy가 0이 되고, 결과적으로 gain이 최대(Info(D))가 되기 때문이다.</div>
+      <div class="mc-option" onclick="selectMC(this,'13','d')"><span class="mc-label">D</span>연속형 속성이기 때문에 임계값 분할이 적용되기 때문이다.</div>
+    </div>
+    <div class="q-result" id="result-13"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-13',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-13"><div class="ans-label">정답: C</div><div class="ans-text">고유 식별자처럼 값이 많은 속성은 각 값이 <strong>단 하나의 튜플</strong>만 포함하는 파티션을 만듭니다. 단일 튜플 파티션은 <strong class="hl">entropy = 0 (완전히 순수)</strong>이므로 조건부 엔트로피 Info_A(D) ≈ 0이 되고, Gain = Info(D) − 0 = <strong class="hl">최대값</strong>이 됩니다. 하지만 이는 실제로 유용한 분할이 아닙니다.</div></div>
+  </div>
+</div>
+
+<!-- Q14 -->
+<div class="q-card" data-qtype="mc" data-qid="14" data-answer="a">
+  <div class="q-header"><span class="q-num">Q14</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐⭐⭐</span><span class="q-slide">Slide 15/16</span></div>
+  <div class="q-body">
+    <p class="q-text">income 속성의 분포가 high=4, medium=6, low=4 (총 14)일 때, <strong>SplitInfo_income(D)</strong> 값에 가장 가까운 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'14','a')"><span class="mc-label">A</span>1.557</div>
+      <div class="mc-option" onclick="selectMC(this,'14','b')"><span class="mc-label">B</span>0.029</div>
+      <div class="mc-option" onclick="selectMC(this,'14','c')"><span class="mc-label">C</span>0.940</div>
+      <div class="mc-option" onclick="selectMC(this,'14','d')"><span class="mc-label">D</span>0.019</div>
+    </div>
+    <div class="q-result" id="result-14"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-14',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-14"><div class="ans-label">정답: A — 1.557</div><div class="ans-formula">SplitInfo_income(D)<br>= −(4/14)·log₂(4/14) − (6/14)·log₂(6/14) − (4/14)·log₂(4/14)<br>= −0.2857·(−1.807) − 0.4286·(−1.222) − 0.2857·(−1.807)<br>= 0.516 + 0.524 + 0.516 = <strong>1.557</strong></div><div class="ans-text">0.029는 Gain(income), 0.940은 Info(D), 0.019는 GainRatio(income) = 0.029/1.557입니다.</div></div>
+  </div>
+</div>
+
+<!-- Q15 -->
+<div class="q-card" data-qtype="mc" data-qid="15" data-answer="b">
+  <div class="q-header"><span class="q-num">Q15</span><span class="q-type-badge type-mc">객관식</span><span class="q-diff">⭐⭐⭐</span><span class="q-slide">Slide 16/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Gini Impurity에 대한 설명으로 <strong>올바른</strong> 것은?</p>
+    <div class="mc-options">
+      <div class="mc-option" onclick="selectMC(this,'15','a')"><span class="mc-label">A</span>Gini = 1이면 완전히 순수한 상태를 의미한다.</div>
+      <div class="mc-option" onclick="selectMC(this,'15','b')"><span class="mc-label">B</span>클래스 분포에 따라 무작위 레이블을 선택할 때의 오분류 확률로 해석할 수 있다.</div>
+      <div class="mc-option" onclick="selectMC(this,'15','c')"><span class="mc-label">C</span>Gini Index는 ID3 알고리즘에서 사용하는 분할 기준이다.</div>
+      <div class="mc-option" onclick="selectMC(this,'15','d')"><span class="mc-label">D</span>Gini(D) = Σᵢ pᵢ²로 계산한다.</div>
+    </div>
+    <div class="q-result" id="result-15"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-15',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-15"><div class="ans-label">정답: B</div><div class="ans-text">Gini는 <strong class="hl">오분류 확률</strong>로 해석됩니다. 예: yes=0.7, no=0.3이면 정확 예측 확률 = 0.7²+0.3² = 0.58, 오분류 확률 = 1−0.58 = 0.42.<br>A: Gini=<strong>0</strong>이 완전히 순수. C: Gini는 <strong>CART</strong>에서 사용. D: 올바른 공식은 <strong>1 − Σᵢ pᵢ²</strong>.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SECTION B · 단답형 8문항
+     ═══════════════════════════════════ -->
+<div class="section-divider">
+  <span class="section-divider-num">SECTION B</span>
+  <span class="section-divider-title" style="color:var(--yellow)">단답형</span>
+  <div class="section-divider-line"></div>
+</div>
+
+<!-- Q16 -->
+<div class="q-card" data-qtype="sa" data-qid="16" data-answer="0.940,0.94">
+  <div class="q-header"><span class="q-num">Q16</span><span class="q-type-badge type-sa">단답형</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 13/16</span></div>
+  <div class="q-body">
+    <p class="q-text">14개 튜플로 구성된 데이터셋 D에서 yes=9, no=5일 때, <strong>Info(D)</strong>의 값을 소수점 3자리로 쓰시오.</p>
+    <div class="sa-input-wrap">
+      <input class="sa-input" id="sa-16" type="text" placeholder="예: 0.000" onkeydown="if(event.key==='Enter')checkSA('16')">
+      <button class="submit-btn" id="sa-submit-16" onclick="checkSA('16')">확인</button>
+    </div>
+    <div class="q-result" id="result-16"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-16',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-16"><div class="ans-label">정답: 0.940 bits</div><div class="ans-formula">Info(D) = −(9/14)·log₂(9/14) − (5/14)·log₂(5/14)<br>= −0.6429·(−0.637) − 0.3571·(−1.485)<br>= 0.409 + 0.530 = <strong>0.940 bits</strong></div></div>
+  </div>
+</div>
+
+<!-- Q17 -->
+<div class="q-card" data-qtype="sa" data-qid="17" data-answer="0.246">
+  <div class="q-header"><span class="q-num">Q17</span><span class="q-type-badge type-sa">단답형</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 13/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Info(D) = 0.940, Info_age(D) = 0.694일 때, <strong>Gain(age)</strong> 값을 소수점 3자리로 쓰시오.</p>
+    <div class="sa-input-wrap">
+      <input class="sa-input" id="sa-17" type="text" placeholder="예: 0.000" onkeydown="if(event.key==='Enter')checkSA('17')">
+      <button class="submit-btn" id="sa-submit-17" onclick="checkSA('17')">확인</button>
+    </div>
+    <div class="q-result" id="result-17"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-17',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-17"><div class="ans-label">정답: 0.246 bits</div><div class="ans-formula">Gain(age) = Info(D) − Info_age(D) = 0.940 − 0.694 = <strong>0.246 bits</strong></div><div class="ans-text">4개 속성 중 Gain(age)이 가장 높아 루트 노드 분할 속성으로 선택됩니다.</div></div>
+  </div>
+</div>
+
+<!-- Q18 -->
+<div class="q-card" data-qtype="sa" data-qid="18" data-answer="0.459">
+  <div class="q-header"><span class="q-num">Q18</span><span class="q-type-badge type-sa">단답형</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 16/16</span></div>
+  <div class="q-body">
+    <p class="q-text">14-tuple 데이터셋(yes=9, no=5)에서 <strong>Gini(D)</strong>의 값을 소수점 3자리로 쓰시오.</p>
+    <div class="sa-input-wrap">
+      <input class="sa-input" id="sa-18" type="text" placeholder="예: 0.000" onkeydown="if(event.key==='Enter')checkSA('18')">
+      <button class="submit-btn" id="sa-submit-18" onclick="checkSA('18')">확인</button>
+    </div>
+    <div class="q-result" id="result-18"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-18',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-18"><div class="ans-label">정답: 0.459</div><div class="ans-formula">Gini(D) = 1 − (9/14)² − (5/14)²<br>= 1 − 0.4133 − 0.1276 = <strong>0.459</strong></div></div>
+  </div>
+</div>
+
+<!-- Q19 -->
+<div class="q-card" data-qtype="sa" data-qid="19" data-answer="0.019,0.0187">
+  <div class="q-header"><span class="q-num">Q19</span><span class="q-type-badge type-sa">단답형</span><span class="q-diff">⭐⭐⭐</span><span class="q-slide">Slide 15/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Gain(income) = 0.029, SplitInfo_income(D) = 1.557일 때, <strong>GainRatio(income)</strong>의 값을 소수점 3자리로 쓰시오.</p>
+    <div class="sa-input-wrap">
+      <input class="sa-input" id="sa-19" type="text" placeholder="예: 0.000" onkeydown="if(event.key==='Enter')checkSA('19')">
+      <button class="submit-btn" id="sa-submit-19" onclick="checkSA('19')">확인</button>
+    </div>
+    <div class="q-result" id="result-19"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-19',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-19"><div class="ans-label">정답: 0.019</div><div class="ans-formula">GainRatio(income) = Gain(income) / SplitInfo_income(D)<br>= 0.029 / 1.557 ≈ <strong>0.019</strong></div><div class="ans-text">Gain Ratio는 정규화를 통해 값이 많은 속성의 편향을 줄입니다.</div></div>
+  </div>
+</div>
+
+<!-- Q20 -->
+<div class="q-card" data-qtype="sa" data-qid="20" data-answer="cart,classification and regression trees">
+  <div class="q-header"><span class="q-num">Q20</span><span class="q-type-badge type-sa">단답형</span><span class="q-diff">⭐</span><span class="q-slide">Slide 8/16</span></div>
+  <div class="q-body">
+    <p class="q-text">이진 트리(Binary Tree)만 생성하며, 분류(Classification)와 회귀(Regression)를 모두 지원하는 Decision Tree 알고리즘의 이름(약어)을 쓰시오.</p>
+    <div class="sa-input-wrap">
+      <input class="sa-input" id="sa-20" type="text" placeholder="약어 또는 풀네임" onkeydown="if(event.key==='Enter')checkSA('20')">
+      <button class="submit-btn" id="sa-submit-20" onclick="checkSA('20')">확인</button>
+    </div>
+    <div class="q-result" id="result-20"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-20',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-20"><div class="ans-label">정답: CART</div><div class="ans-text"><strong class="hl">CART</strong>(Classification And Regression Trees). Breiman et al. 1984. 분류: Gini Index, 회귀: MSE/RSS를 분할 기준으로 사용하며, 항상 이진 트리를 생성합니다.</div></div>
+  </div>
+</div>
+
+<!-- Q21 -->
+<div class="q-card" data-qtype="sa" data-qid="21" data-answer="0,zero">
+  <div class="q-header"><span class="q-num">Q21</span><span class="q-type-badge type-sa">단답형</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 13/16</span></div>
+  <div class="q-body">
+    <p class="q-text">age=middle_aged인 튜플이 모두 yes(4개)이고 no가 0개일 때, <strong>Info(middle_aged)</strong>의 값은 얼마인가?</p>
+    <div class="sa-input-wrap">
+      <input class="sa-input" id="sa-21" type="text" placeholder="숫자로 입력" onkeydown="if(event.key==='Enter')checkSA('21')">
+      <button class="submit-btn" id="sa-submit-21" onclick="checkSA('21')">확인</button>
+    </div>
+    <div class="q-result" id="result-21"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-21',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-21"><div class="ans-label">정답: 0</div><div class="ans-formula">Info(middle_aged) = −(4/4)·log₂(4/4) − 0<br>= −1·log₂(1) = −1·0 = <strong>0</strong></div><div class="ans-text">모든 튜플이 동일한 클래스(yes)에 속하므로 <strong class="hl3">완전히 순수(pure)</strong>한 파티션입니다. 엔트로피 = 0 → 즉시 Leaf Node가 됩니다.</div></div>
+  </div>
+</div>
+
+<!-- Q22 -->
+<div class="q-card" data-qtype="sa" data-qid="22" data-answer="splitsplitinformation,splitinformation,split information,분할정보">
+  <div class="q-header"><span class="q-num">Q22</span><span class="q-type-badge type-sa">단답형</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 15/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Gain Ratio에서 Information Gain을 나누는 분모에 해당하는 값의 이름은? (영문으로 쓰시오)</p>
+    <div class="sa-input-wrap">
+      <input class="sa-input" id="sa-22" type="text" placeholder="영문으로 입력" onkeydown="if(event.key==='Enter')checkSA('22')">
+      <button class="submit-btn" id="sa-submit-22" onclick="checkSA('22')">확인</button>
+    </div>
+    <div class="q-result" id="result-22"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-22',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-22"><div class="ans-label">정답: Split Information</div><div class="ans-formula">GainRatio(A) = Gain(A) / <strong>SplitInfo_A(D)</strong><br>SplitInfo_A(D) = −Σⱼ (|Dⱼ|/|D|)·log₂(|Dⱼ|/|D|)</div><div class="ans-text">Split Information은 속성 A가 데이터를 얼마나 고르게 분할하는지 측정합니다. 클래스 기반이 아닌 <strong class="hl">분할 방식 자체</strong>의 정보량입니다.</div></div>
+  </div>
+</div>
+
+<!-- Q23 -->
+<div class="q-card" data-qtype="sa" data-qid="23" data-answer="0.443">
+  <div class="q-header"><span class="q-num">Q23</span><span class="q-type-badge type-sa">단답형</span><span class="q-diff">⭐⭐⭐</span><span class="q-slide">Slide 16/16</span></div>
+  <div class="q-body">
+    <p class="q-text">income 속성을 {low, medium} vs {high}로 이진 분할할 때:<br>D₁(low+medium): 10튜플 (yes=7, no=3), D₂(high): 4튜플 (yes=2, no=2)<br>이 분할 후 <strong>가중 Gini</strong>의 값을 소수점 3자리로 쓰시오.</p>
+    <div class="sa-input-wrap">
+      <input class="sa-input" id="sa-23" type="text" placeholder="예: 0.000" onkeydown="if(event.key==='Enter')checkSA('23')">
+      <button class="submit-btn" id="sa-submit-23" onclick="checkSA('23')">확인</button>
+    </div>
+    <div class="q-result" id="result-23"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-23',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-23"><div class="ans-label">정답: 0.443</div><div class="ans-formula">Gini(D₁) = 1 − (7/10)² − (3/10)² = 1 − 0.49 − 0.09 = 0.42<br>Gini(D₂) = 1 − (2/4)² − (2/4)² = 1 − 0.25 − 0.25 = 0.50<br>가중 Gini = (10/14)·0.42 + (4/14)·0.50<br>= 0.300 + 0.143 = <strong>0.443</strong></div><div class="ans-text">분할 전 Gini(D)=0.459 → 분할 후 0.443으로 감소: 더 나은 분할임을 확인.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SECTION C · 코드 완성형 4문항
+     ═══════════════════════════════════ -->
+<div class="section-divider">
+  <span class="section-divider-num">SECTION C</span>
+  <span class="section-divider-title" style="color:var(--accent4)">코드 완성형</span>
+  <div class="section-divider-line"></div>
+</div>
+
+<!-- Q24 -->
+<div class="q-card" data-qtype="cf" data-qid="24">
+  <div class="q-header"><span class="q-num">Q24</span><span class="q-type-badge type-cf">코드완성</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 9/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Generate_decision_tree 알고리즘의 기저 조건 두 가지를 채우시오.</p>
+    <div class="code-block"><span class="co">// 기저 조건 1: 모든 튜플이 동일 클래스</span>
+<span class="kw">if</span> tuples in D are all of the same class, C, <span class="kw">then</span>
+    <span class="kw">return</span> N as a <input class="blank-input" id="cf-24a" placeholder="????" style="width:90px"> node labeled with class C;
+
+<span class="co">// 기저 조건 2: 분할할 속성이 없음</span>
+<span class="kw">if</span> attribute_list <span class="kw">is</span> <input class="blank-input" id="cf-24b" placeholder="?????" style="width:80px"> <span class="kw">then</span>
+    <span class="kw">return</span> N as a leaf node labeled with <span class="fn">majority_class</span>(D);</div>
+    <button class="submit-btn" onclick="checkCF24()">확인</button>
+    <div class="q-result" id="result-24"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-24',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-24"><div class="ans-label">정답: leaf / empty</div><div class="ans-text">① <strong class="hl">leaf</strong> node — 단일 클래스 파티션은 Leaf Node 반환 (기저 조건 1)<br>② <strong class="hl">empty</strong> — attribute_list가 비어있으면 다수결 클래스로 Leaf Node 반환 (기저 조건 2)</div></div>
+  </div>
+</div>
+
+<!-- Q25 -->
+<div class="q-card" data-qtype="cf" data-qid="25">
+  <div class="q-header"><span class="q-num">Q25</span><span class="q-type-badge type-cf">코드완성</span><span class="q-diff">⭐⭐</span><span class="q-slide">Slide 11/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Information Gain 계산 공식의 빈칸을 채우시오.</p>
+    <div class="code-block"><span class="co">// 속성 A의 Information Gain</span>
+Gain(A) = <input class="blank-input" id="cf-25a" placeholder="Info(D)" style="width:90px"> − <input class="blank-input" id="cf-25b" placeholder="Info_A(D)" style="width:100px">
+
+<span class="co">// 조건부 엔트로피 (Conditional Entropy)</span>
+Info_A(D) = Σⱼ (<span class="nu">|Dⱼ|</span>/<span class="nu">|D|</span>) × <input class="blank-input" id="cf-25c" placeholder="Info(Dⱼ)" style="width:100px"></div>
+    <button class="submit-btn" onclick="checkCF25()">확인</button>
+    <div class="q-result" id="result-25"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-25',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-25"><div class="ans-label">정답: Info(D) / Info_A(D) / Info(Dⱼ)</div><div class="ans-formula">Gain(A) = Info(D) − Info_A(D)<br>Info_A(D) = Σⱼ (|Dⱼ|/|D|) × Info(Dⱼ)</div><div class="ans-text">Info(D)는 분할 전 전체 엔트로피, Info_A(D)는 속성 A로 분할 후 가중 평균 엔트로피입니다. 그 차이가 정보 이득입니다.</div></div>
+  </div>
+</div>
+
+<!-- Q26 -->
+<div class="q-card" data-qtype="cf" data-qid="26">
+  <div class="q-header"><span class="q-num">Q26</span><span class="q-type-badge type-cf">코드완성</span><span class="q-diff">⭐⭐⭐</span><span class="q-slide">Slide 11/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Gini Impurity 공식과 Gain Ratio 공식의 빈칸을 채우시오.</p>
+    <div class="code-block"><span class="co">// Gini Impurity</span>
+Gini(D) = <input class="blank-input" id="cf-26a" placeholder="?" style="width:30px"> − Σᵢ pᵢ<span class="nu">²</span>   <span class="co">where pᵢ = |Cᵢ,D| / |D|</span>
+
+<span class="co">// Gain Ratio</span>
+GainRatio(A) = Gain(A) / <input class="blank-input" id="cf-26b" placeholder="?????????" style="width:130px">
+
+<span class="co">// Split Information</span>
+SplitInfo_A(D) = −Σⱼ (|Dⱼ|/|D|) · <span class="fn">log</span><span class="nu">₂</span>(<input class="blank-input" id="cf-26c" placeholder="????????" style="width:120px">)</div>
+    <button class="submit-btn" onclick="checkCF26()">확인</button>
+    <div class="q-result" id="result-26"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-26',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-26"><div class="ans-label">정답: 1 / SplitInfo_A(D) / |Dⱼ|/|D|</div><div class="ans-formula">Gini(D) = <strong>1</strong> − Σᵢ pᵢ²<br>GainRatio(A) = Gain(A) / <strong>SplitInfo_A(D)</strong><br>SplitInfo_A(D) = −Σⱼ (|Dⱼ|/|D|) · log₂(<strong>|Dⱼ|/|D|</strong>)</div></div>
+  </div>
+</div>
+
+<!-- Q27 -->
+<div class="q-card" data-qtype="cf" data-qid="27">
+  <div class="q-header"><span class="q-num">Q27</span><span class="q-type-badge type-cf">코드완성</span><span class="q-diff">⭐⭐⭐</span><span class="q-slide">Slide 9/16</span></div>
+  <div class="q-body">
+    <p class="q-text">알고리즘의 재귀 호출 부분을 채우시오. 파티션 D_j가 비어있지 않을 때의 처리입니다.</p>
+    <div class="code-block"><span class="kw">for each</span> outcome j <span class="kw">of</span> splitting_criterion:
+    <span class="kw">let</span> D_j = tuples satisfying outcome j;
+    <span class="kw">if</span> D_j <span class="kw">is</span> empty <span class="kw">then</span>
+        attach leaf with <input class="blank-input" id="cf-27a" placeholder="????????" style="width:130px"> class in D;
+    <span class="kw">else</span>
+        attach node returned by
+        <input class="blank-input" id="cf-27b" placeholder="?????????????????" style="width:240px">(D_j, attribute_list);</div>
+    <button class="submit-btn" onclick="checkCF27()">확인</button>
+    <div class="q-result" id="result-27"></div>
+    <div class="ans-toggle" onclick="toggleAns('ans-27',this)"><span>📖 정답 및 해설 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-27"><div class="ans-label">정답: majority / Generate_decision_tree</div><div class="ans-text">① <strong class="hl">majority</strong> class — D_j가 비어있을 때 부모 D의 다수결 클래스 사용<br>② <strong class="hl">Generate_decision_tree</strong> — 재귀 호출로 서브트리 생성. 이것이 Decision Tree 귀납 알고리즘의 핵심 재귀 구조입니다.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SECTION D · 서술형 3문항
+     ═══════════════════════════════════ -->
+<div class="section-divider">
+  <span class="section-divider-num">SECTION D</span>
+  <span class="section-divider-title" style="color:var(--danger)">서술형</span>
+  <div class="section-divider-line"></div>
+</div>
+
+<!-- Q28 -->
+<div class="q-card" data-qtype="es" data-qid="28">
+  <div class="q-header"><span class="q-num">Q28</span><span class="q-type-badge type-es">서술형</span><span class="q-diff">⭐⭐⭐</span><span class="q-slide">Slide 8/16</span></div>
+  <div class="q-body">
+    <p class="q-text">ID3, C4.5, CART 세 알고리즘을 <strong>① 분할 기준, ② 속성 타입 지원, ③ 트리 형태, ④ 가지치기 여부</strong> 4가지 항목으로 비교하여 서술하시오.</p>
+    <textarea class="essay-area" placeholder="여기에 답을 작성하세요..."></textarea>
+    <div class="ans-toggle" onclick="toggleAns('ans-28',this)"><span>📖 모범 답안 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-28">
+      <div class="ans-label">모범 답안</div>
+      <div class="ans-text">
+        <strong>ID3</strong> (Quinlan 1986)<br>
+        ① 분할 기준: <span class="hl">Information Gain</span><br>
+        ② 속성 타입: 범주형(categorical)만 처리<br>
+        ③ 트리 형태: 다지(multi-way) 분할<br>
+        ④ 가지치기: 수행하지 않음<br><br>
+
+        <strong>C4.5</strong> (Quinlan 1993, ID3의 확장)<br>
+        ① 분할 기준: <span class="hl2">Gain Ratio</span> (정보 이득을 Split Information으로 정규화)<br>
+        ② 속성 타입: 범주형 + <span class="hl3">연속형(continuous)</span> 모두 지원<br>
+        ③ 트리 형태: 다지 분할<br>
+        ④ 가지치기: <span class="hl3">Post-pruning</span> 수행<br><br>
+
+        <strong>CART</strong> (Breiman et al. 1984)<br>
+        ① 분할 기준: 분류 → <span class="hl">Gini Index</span>, 회귀 → MSE/RSS<br>
+        ② 속성 타입: 범주형 + 연속형 모두 지원<br>
+        ③ 트리 형태: <span class="hly">이진 트리(Binary Tree)만</span> 생성<br>
+        ④ 가지치기: 수행<br><br>
+
+        <strong>공통 특징:</strong> Greedy 전략(비역추적), Top-down 재귀적 구성, 순수(pure) 파티션 목표
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Q29 -->
+<div class="q-card" data-qtype="es" data-qid="29">
+  <div class="q-header"><span class="q-num">Q29</span><span class="q-type-badge type-es">서술형</span><span class="q-diff">⭐⭐⭐</span><span class="q-slide">Slide 11–15/16</span></div>
+  <div class="q-body">
+    <p class="q-text">14-tuple 고객 데이터셋(yes=9, no=5)에서 <strong>age 속성의 Information Gain 계산 과정</strong>을 5단계로 서술하고, 왜 age가 루트 노드 속성으로 선택되는지 설명하시오.</p>
+    <textarea class="essay-area" placeholder="여기에 답을 작성하세요..." style="min-height:140px;"></textarea>
+    <div class="ans-toggle" onclick="toggleAns('ans-29',this)"><span>📖 모범 답안 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-29">
+      <div class="ans-label">모범 답안</div>
+      <div class="ans-text">
+        <strong>Step 1: Info(D) 계산</strong><br>
+        Info(D) = −(9/14)·log₂(9/14) − (5/14)·log₂(5/14) = <span class="hl">0.940 bits</span><br><br>
+
+        <strong>Step 2: age 파티션 구성</strong><br>
+        youth: 5튜플 (yes=2, no=3)<br>
+        middle_aged: 4튜플 (yes=4, no=0)<br>
+        senior: 5튜플 (yes=3, no=2)<br><br>
+
+        <strong>Step 3: 각 파티션 엔트로피</strong><br>
+        Info(youth) = −(2/5)·log₂(2/5) − (3/5)·log₂(3/5) = 0.971<br>
+        Info(middle_aged) = −(4/4)·log₂(4/4) = <span class="hl3">0</span> (pure!)<br>
+        Info(senior) = −(3/5)·log₂(3/5) − (2/5)·log₂(2/5) = 0.971<br><br>
+
+        <strong>Step 4: 조건부 엔트로피</strong><br>
+        Info_age(D) = (5/14)·0.971 + (4/14)·0 + (5/14)·0.971 = <span class="hl">0.694 bits</span><br><br>
+
+        <strong>Step 5: Information Gain</strong><br>
+        Gain(age) = 0.940 − 0.694 = <span class="hl">0.246 bits</span><br><br>
+
+        <strong>루트 노드 선택 이유:</strong><br>
+        Gain(age)=0.246 > Gain(student)=0.151 > Gain(credit_rating)=0.048 > Gain(income)=0.029<br>
+        ID3는 <strong class="hl">최대 Information Gain을 가진 속성</strong>을 선택하므로 age가 루트 노드가 됩니다. middle_aged 파티션은 entropy=0(순수)이므로 즉시 Leaf Node(yes)가 됩니다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Q30 -->
+<div class="q-card" data-qtype="es" data-qid="30">
+  <div class="q-header"><span class="q-num">Q30</span><span class="q-type-badge type-es">서술형</span><span class="q-diff">⭐⭐⭐</span><span class="q-slide">Slide 6–15/16</span></div>
+  <div class="q-body">
+    <p class="q-text">Decision Tree의 <strong>Attribute Selection Measure(속성 선택 측도)</strong>로 사용되는 Entropy, Information Gain, Gain Ratio, Gini Index를 각각의 <strong>공식과 특징</strong>을 중심으로 비교 서술하고, 각 측도가 어떤 알고리즘에서 사용되는지 명시하시오.</p>
+    <textarea class="essay-area" placeholder="여기에 답을 작성하세요..." style="min-height:160px;"></textarea>
+    <div class="ans-toggle" onclick="toggleAns('ans-30',this)"><span>📖 모범 답안 보기</span><span class="arr">▼</span></div>
+    <div class="ans-box" id="ans-30">
+      <div class="ans-label">모범 답안</div>
+      <div class="ans-text">
+        <strong>① Entropy (엔트로피)</strong><br>
+        공식: <code>Info(D) = −Σᵢ pᵢ·log₂(pᵢ)</code>, where pᵢ = |Cᵢ,D| / |D|<br>
+        데이터셋 D의 불순도(impurity)를 측정. 값이 클수록 혼합, 0이면 완전 순수.<br>
+        Information Gain 계산의 기반.<br><br>
+
+        <strong>② Information Gain</strong> — <span class="hl">ID3</span><br>
+        공식: <code>Gain(A) = Info(D) − Info_A(D)</code><br>
+        속성 A로 분할 후 불확실성이 얼마나 감소하는지 측정.<br>
+        <span class="hly">단점:</span> 값이 많은 속성(product_ID 등)에 편향됨 → 항상 최대 Gain을 가짐.<br><br>
+
+        <strong>③ Gain Ratio</strong> — <span class="hl2">C4.5</span><br>
+        공식: <code>GainRatio(A) = Gain(A) / SplitInfo_A(D)</code><br>
+        SplitInfo = −Σⱼ (|Dⱼ|/|D|)·log₂(|Dⱼ|/|D|) (분할 방식의 정보량)<br>
+        정규화를 통해 많은 값을 가진 속성의 편향 완화. ID3보다 나은 일반화.<br><br>
+
+        <strong>④ Gini Index</strong> — <span class="hl3">CART</span><br>
+        공식: <code>Gini(D) = 1 − Σᵢ pᵢ²</code><br>
+        클래스 분포에 따라 무작위 레이블 선택 시 오분류 확률로 해석.<br>
+        Gini=0: 완전 순수, 값이 클수록 혼합. 이진 분할에 최적화.<br><br>
+
+        <strong>공통 목표:</strong> 가능한 한 <span class="hl3">순수(pure)</span>한 파티션을 생성하는 속성을 선택.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL SCORE -->
+<div class="final-score-section">
+  <div class="final-score-title">📊 최종 채점 결과</div>
+  <div class="score-ring">
+    <svg width="150" height="150" viewBox="0 0 150 150">
+      <circle class="score-ring-bg" cx="75" cy="75" r="65"/>
+      <circle class="score-ring-fg" id="ring-fg" cx="75" cy="75" r="65"/>
+    </svg>
+    <div class="score-ring-text">
+      <div class="score-big" id="final-num">0</div>
+      <div class="score-denom">/ 27</div>
+    </div>
+  </div>
+  <p class="score-msg" id="score-msg">문제를 풀고 채점해보세요!</p>
+  <div class="score-breakdown">
+    <div class="score-breakdown-item">객관식 <span id="mc-score" class="c">0</span>/<span class="s">15</span></div>
+    <div class="score-breakdown-item">단답형 <span id="sa-score" class="c">0</span>/<span class="s">8</span></div>
+    <div class="score-breakdown-item">코드완성 <span id="cf-score" class="c">0</span>/<span class="s">4</span></div>
+    <div class="score-breakdown-item">오답 <span id="wrong-count" class="w">0</span>문항</div>
+  </div>
+  <div class="btn-row">
+    <button class="check-all-btn" onclick="showFinalMsg()">📝 최종 결과 확인</button>
+    <button class="reset-btn" onclick="resetAll()">🔄 다시 풀기</button>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ── State ──
+const state = { answered:{}, correct:{}, type:{} };
+document.querySelectorAll('.q-card').forEach(c => { state.type[c.dataset.qid] = c.dataset.qtype; });
+
+// ── Progress ──
+const SCORABLE = 27; // 30 - 3 essay
+function updateProgress() {
+  const done = Object.keys(state.answered).length;
+  document.getElementById('prog-bar').style.width = (done / SCORABLE * 100) + '%';
+}
+
+// ── Live score ──
+function updateLive() {
+  const c = Object.values(state.correct).filter(Boolean).length;
+  const t = Object.keys(state.answered).length;
+  document.getElementById('live-score').textContent = `${c} / ${t}`;
+  updateBreakdown();
+  updateProgress();
+}
+
+// ── MC ──
+function selectMC(el, qid, choice) {
+  const card = el.closest('.q-card');
+  if (card.classList.contains('answered-correct') || card.classList.contains('answered-wrong')) return;
+  card.querySelectorAll('.mc-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  const correct = card.dataset.answer;
+  const isCorrect = choice === correct;
+  card.querySelectorAll('.mc-option').forEach(o => {
+    o.classList.add('locked');
+    const label = o.querySelector('.mc-label').textContent.toLowerCase();
+    if (label === correct) o.classList.add('correct-ans');
+    else if (label === choice && !isCorrect) o.classList.add('wrong-ans');
+  });
+  const r = document.getElementById(`result-${qid}`);
+  r.className = isCorrect ? 'q-result correct' : 'q-result wrong';
+  r.innerHTML = isCorrect ? '✅ 정답입니다!' : `❌ 오답입니다. 정답: ${correct.toUpperCase()}`;
+  card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+  state.answered[qid] = true; state.correct[qid] = isCorrect;
+  updateLive();
+}
+
+// ── SA ──
+function checkSA(qid) {
+  const input = document.getElementById(`sa-${qid}`);
+  const card = input.closest('.q-card');
+  if (card.classList.contains('answered-correct') || card.classList.contains('answered-wrong')) return;
+  const answers = card.dataset.answer.split(',').map(a => a.trim().toLowerCase().replace(/\s/g,''));
+  const val = input.value.trim().toLowerCase().replace(/\s/g,'');
+  if (!val) return;
+  const isCorrect = answers.includes(val);
+  input.classList.add(isCorrect ? 'correct-input' : 'wrong-input');
+  input.disabled = true;
+  document.getElementById(`sa-submit-${qid}`).disabled = true;
+  const r = document.getElementById(`result-${qid}`);
+  r.className = isCorrect ? 'q-result correct' : 'q-result wrong';
+  r.innerHTML = isCorrect ? '✅ 정답입니다!' : '❌ 오답입니다. 정답 보기를 확인하세요.';
+  card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+  state.answered[qid] = true; state.correct[qid] = isCorrect;
+  updateLive();
+}
+
+// ── CF helpers ──
+function cfMatch(val, ...keys) {
+  const v = val.trim().toLowerCase().replace(/\s|-/g,'');
+  return keys.some(k => v === k.toLowerCase().replace(/\s|-/g,'') || v.includes(k.toLowerCase().replace(/\s|-/g,'')) || k.toLowerCase().replace(/\s|-/g,'').includes(v));
+}
+function setCFResult(qid, isCorrect) {
+  const card = document.getElementById(`result-${qid}`).closest('.q-card');
+  const r = document.getElementById(`result-${qid}`);
+  r.className = isCorrect ? 'q-result correct' : 'q-result wrong';
+  r.innerHTML = isCorrect ? '✅ 정답입니다!' : '❌ 오답입니다. 정답 보기를 확인하세요.';
+  card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+  state.answered[qid] = true; state.correct[qid] = isCorrect;
+  updateLive();
+}
+
+function checkCF24() {
+  const a = document.getElementById('cf-24a').value;
+  const b = document.getElementById('cf-24b').value;
+  const ok = cfMatch(a,'leaf','leafnode') && cfMatch(b,'empty');
+  ['cf-24a','cf-24b'].forEach(id => {
+    const el = document.getElementById(id);
+    el.disabled = true;
+    el.classList.add(ok ? 'correct-input' : 'wrong-input');
+  });
+  setCFResult('24', ok);
+}
+function checkCF25() {
+  const a = document.getElementById('cf-25a').value;
+  const b = document.getElementById('cf-25b').value;
+  const c = document.getElementById('cf-25c').value;
+  const ok = cfMatch(a,'info(d)','infod') && cfMatch(b,'info_a(d)','infoad','info_a') && cfMatch(c,'info(dj)','infodj','info(dⱼ)');
+  ['cf-25a','cf-25b','cf-25c'].forEach(id => {
+    const el = document.getElementById(id); el.disabled = true;
+    el.classList.add(ok ? 'correct-input' : 'wrong-input');
+  });
+  setCFResult('25', ok);
+}
+function checkCF26() {
+  const a = document.getElementById('cf-26a').value;
+  const b = document.getElementById('cf-26b').value;
+  const c = document.getElementById('cf-26c').value;
+  const ok = cfMatch(a,'1') && cfMatch(b,'splitinfo','splitinfoad','splitinfo_a','splitinfoa(d)') && cfMatch(c,'|dj|/|d|','dj/d','|dⱼ|/|d|');
+  ['cf-26a','cf-26b','cf-26c'].forEach(id => {
+    const el = document.getElementById(id); el.disabled = true;
+    el.classList.add(ok ? 'correct-input' : 'wrong-input');
+  });
+  setCFResult('26', ok);
+}
+function checkCF27() {
+  const a = document.getElementById('cf-27a').value;
+  const b = document.getElementById('cf-27b').value;
+  const ok = cfMatch(a,'majority','majorityclass') && cfMatch(b,'generate_decision_tree','generatedecisiontree','generatedecision');
+  ['cf-27a','cf-27b'].forEach(id => {
+    const el = document.getElementById(id); el.disabled = true;
+    el.classList.add(ok ? 'correct-input' : 'wrong-input');
+  });
+  setCFResult('27', ok);
+}
+
+// ── Answer toggle ──
+function toggleAns(id, btn) {
+  const box = document.getElementById(id);
+  const open = box.classList.toggle('visible');
+  btn.classList.toggle('open', open);
+  const sp = btn.querySelector('span:first-child');
+  if (open) sp.textContent = '📖 정답 닫기';
+  else sp.textContent = sp.textContent.includes('모범') ? '📖 모범 답안 보기' : '📖 정답 및 해설 보기';
+}
+
+// ── Filter ──
+function filterQuiz(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.q-card').forEach(card => {
+    card.style.display = (type==='all' || card.dataset.qtype===type) ? 'block' : 'none';
+  });
+}
+
+// ── Breakdown ──
+function updateBreakdown() {
+  ['mc','sa','cf'].forEach(t => {
+    const c = Object.keys(state.correct).filter(id => state.type[id]===t && state.correct[id]).length;
+    document.getElementById(`${t}-score`).textContent = c;
+  });
+  const totalC = Object.values(state.correct).filter(Boolean).length;
+  const totalA = Object.keys(state.answered).length;
+  document.getElementById('final-num').textContent = totalC;
+  document.getElementById('wrong-count').textContent = totalA - totalC;
+  // Ring
+  const pct = totalC / SCORABLE;
+  const circ = 408;
+  document.getElementById('ring-fg').style.strokeDashoffset = circ * (1 - pct);
+  const ringEl = document.getElementById('ring-fg');
+  if (pct >= 0.9) ringEl.style.stroke = 'var(--accent3)';
+  else if (pct >= 0.7) ringEl.style.stroke = 'var(--accent)';
+  else if (pct >= 0.5) ringEl.style.stroke = 'var(--yellow)';
+  else ringEl.style.stroke = 'var(--danger)';
+  // msg
+  const msgs = [[90,'🏆 완벽! Decision Tree 완전 정복!'],[70,'🎯 훌륭해요! 거의 다 왔어요.'],[50,'📚 절반 이상! 오답 복습하면 완벽해져요.'],[0,'💪 더 복습이 필요합니다. 강의 노트를 다시 확인하세요!']];
+  const p = pct * 100;
+  for (const [th, msg] of msgs) { if (p >= th) { document.getElementById('score-msg').textContent = msg; break; } }
+}
+
+function showFinalMsg() { updateBreakdown(); }
+function resetAll() { if (confirm('모든 답변을 초기화하시겠습니까?')) location.reload(); }
+updateLive();
+</script>
+</body>
+</html>
