@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>데이터통신 중간고사 퀴즈</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --surface3: #1e2d42;
+    --border: #2a3a55;
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --accent-glow: rgba(59,130,246,0.15);
+    --green: #10b981;
+    --green-glow: rgba(16,185,129,0.15);
+    --red: #ef4444;
+    --red-glow: rgba(239,68,68,0.1);
+    --yellow: #f59e0b;
+    --purple: #8b5cf6;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --radius: 12px;
+    --font-body: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+    --font-code: 'Menlo', 'Courier New', monospace;
+    --font-header: 'Impact', 'Arial Narrow', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    line-height: 1.7;
+  }
+
+  /* ─── HEADER ─── */
+  .site-header {
+    background: linear-gradient(135deg, #0d1528 0%, #0a0e1a 60%, #0d1a2e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 2rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .site-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 50% 0%, rgba(59,130,246,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-badge {
+    display: inline-block;
+    background: var(--accent-glow);
+    border: 1px solid rgba(59,130,246,0.3);
+    color: var(--accent2);
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    padding: 0.25rem 0.9rem;
+    border-radius: 99px;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+  .site-header h1 {
+    font-family: var(--font-header);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    letter-spacing: 0.04em;
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+  .site-header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* ─── SCORE BOARD ─── */
+  .scoreboard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    margin: 1.5rem auto 0;
+    flex-wrap: wrap;
+  }
+  .score-item {
+    text-align: center;
+  }
+  .score-num {
+    font-family: var(--font-header);
+    font-size: 2rem;
+    color: var(--accent2);
+    display: block;
+    line-height: 1;
+  }
+  .score-label {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ─── CONTROLS ─── */
+  .controls {
+    max-width: 900px;
+    margin: 1.5rem auto 0;
+    padding: 0 1.5rem;
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .btn {
+    padding: 0.55rem 1.4rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.18s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent2); }
+  .btn-green {
+    background: var(--green);
+    color: #fff;
+  }
+  .btn-green:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  /* ─── MAIN LAYOUT ─── */
+  .main {
+    max-width: 900px;
+    margin: 2rem auto 4rem;
+    padding: 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+
+  /* ─── QUIZ CARD ─── */
+  .qcard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .qcard:hover { border-color: #3a4f70; }
+  .qcard.answered-correct { border-color: var(--green); }
+  .qcard.answered-wrong { border-color: var(--red); }
+
+  .qcard-header {
+    padding: 1rem 1.4rem 0.8rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .qnum {
+    font-family: var(--font-header);
+    font-size: 1.3rem;
+    color: var(--accent);
+    min-width: 2.2rem;
+    line-height: 1.2;
+  }
+  .qmeta {
+    flex: 1;
+  }
+  .qtype-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.35rem;
+  }
+  .tag {
+    font-size: 0.68rem;
+    padding: 0.18rem 0.6rem;
+    border-radius: 99px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .tag-type { background: rgba(59,130,246,0.18); color: var(--accent2); border: 1px solid rgba(59,130,246,0.25); }
+  .tag-applied { background: rgba(139,92,246,0.18); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+  .tag-topic { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+  .tag-ref { background: rgba(100,116,139,0.15); color: var(--text-dim); border: 1px solid rgba(100,116,139,0.2); }
+  .stars { color: var(--yellow); font-size: 0.78rem; letter-spacing: 0.05em; }
+
+  .qbody {
+    padding: 1.1rem 1.4rem;
+  }
+  .qtext {
+    font-size: 0.97rem;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+  .qtext strong { color: var(--accent2); }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.9rem; }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.65rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface3);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.9rem;
+  }
+  .option:hover { border-color: var(--accent); background: var(--accent-glow); }
+  .option.selected { border-color: var(--accent); background: var(--accent-glow); }
+  .option.correct { border-color: var(--green); background: var(--green-glow); color: #6ee7b7; }
+  .option.wrong { border-color: var(--red); background: var(--red-glow); color: #fca5a5; }
+  .opt-label { font-family: var(--font-header); font-size: 1rem; color: var(--accent); min-width: 1.2rem; }
+
+  /* OX */
+  .ox-options { display: flex; gap: 0.8rem; margin-bottom: 0.9rem; }
+  .ox-btn {
+    flex: 1; padding: 0.9rem; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface3); cursor: pointer; font-family: var(--font-header);
+    font-size: 1.8rem; text-align: center; transition: all 0.15s; color: var(--text);
+  }
+  .ox-btn:hover { border-color: var(--accent); background: var(--accent-glow); }
+  .ox-btn.selected { border-color: var(--accent); background: var(--accent-glow); }
+  .ox-btn.correct { border-color: var(--green); background: var(--green-glow); color: var(--green); }
+  .ox-btn.wrong { border-color: var(--red); background: var(--red-glow); color: var(--red); }
+
+  /* Fill blank */
+  .fill-row { display: flex; gap: 0.6rem; align-items: center; margin-bottom: 0.9rem; flex-wrap: wrap; }
+  .fill-input {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font-code);
+    font-size: 0.88rem;
+    padding: 0.45rem 0.8rem;
+    min-width: 160px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .fill-input:focus { border-color: var(--accent); }
+  .fill-input.correct { border-color: var(--green); background: var(--green-glow); }
+  .fill-input.wrong { border-color: var(--red); background: var(--red-glow); }
+
+  /* Essay */
+  .essay-area {
+    width: 100%;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    padding: 0.75rem 1rem;
+    resize: vertical;
+    min-height: 90px;
+    outline: none;
+    transition: border-color 0.15s;
+    margin-bottom: 0.9rem;
+  }
+  .essay-area:focus { border-color: var(--accent); }
+
+  /* Calc area */
+  .calc-area {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.9rem;
+    font-family: var(--font-code);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.9;
+  }
+  .calc-area .formula {
+    color: var(--yellow);
+    font-weight: bold;
+  }
+
+  /* Answer toggle */
+  .answer-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 0.6rem;
+  }
+  .answer-toggle:hover { border-color: var(--accent); color: var(--accent2); }
+  .answer-toggle .arrow { transition: transform 0.2s; display: inline-block; }
+  .answer-toggle.open .arrow { transform: rotate(90deg); }
+
+  .answer-box {
+    display: none;
+    background: linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(16,185,129,0.02) 100%);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    font-size: 0.88rem;
+    line-height: 1.85;
+    color: var(--text);
+  }
+  .answer-box.show { display: block; }
+  .answer-box .ans-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--green);
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    display: block;
+  }
+  .answer-box .ans-text { color: #a7f3d0; font-weight: 600; margin-bottom: 0.5rem; }
+  .answer-box .explanation { color: var(--text-muted); border-top: 1px solid rgba(16,185,129,0.15); padding-top: 0.6rem; margin-top: 0.5rem; }
+  .answer-box code {
+    background: rgba(0,0,0,0.3);
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    font-family: var(--font-code);
+    font-size: 0.85em;
+    color: var(--yellow);
+  }
+  .answer-box .step {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    align-items: flex-start;
+  }
+  .step-num { color: var(--accent); font-weight: 700; min-width: 1.4rem; font-family: var(--font-code); }
+
+  /* Submit row */
+  .submit-row { display: flex; gap: 0.7rem; align-items: center; flex-wrap: wrap; }
+
+  /* Result modal */
+  .result-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .result-overlay.show { display: flex; }
+  .result-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+  }
+  .result-modal h2 { font-family: var(--font-header); font-size: 2rem; color: #fff; margin-bottom: 1rem; }
+  .result-score-big { font-family: var(--font-header); font-size: 3.5rem; color: var(--accent2); display: block; margin: 0.5rem 0; }
+  .result-msg { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
+
+  /* Progress bar */
+  .progress-bar-wrap { background: var(--surface2); border-radius: 99px; height: 6px; overflow: hidden; margin: 1rem auto 0; max-width: 400px; }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 99px; width: 0%; transition: width 0.4s; }
+
+  /* SVG diagram */
+  .svg-wrap { background: var(--surface3); border-radius: 8px; border: 1px solid var(--border); padding: 0.6rem; margin-bottom: 0.8rem; overflow-x: auto; }
+  .svg-wrap svg { display: block; width: 100%; }
+
+  hr.divider { border: none; border-top: 1px solid var(--border); margin: 0.8rem 0; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-badge">데이터통신 · 중간고사 대비</div>
+  <h1>📡 MIDTERM QUIZ</h1>
+  <p>에타 족보 기반 · 총 25문제 · 난이도 중~상</p>
+  <div class="scoreboard">
+    <div class="score-item"><span class="score-num" id="score-answered">0</span><span class="score-label">풀었음</span></div>
+    <div class="score-item"><span class="score-num" id="score-total">25</span><span class="score-label">전체</span></div>
+  </div>
+  <div class="progress-bar-wrap" style="margin-top:1rem">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+</header>
+
+<div class="controls">
+  <button class="btn btn-outline" onclick="expandAll()">▼ 전체 정답 펼치기</button>
+  <button class="btn btn-outline" onclick="collapseAll()">▲ 전체 정답 접기</button>
+  <button class="btn btn-green" onclick="showResult()">🎯 채점하기</button>
+  <button class="btn btn-outline" onclick="resetAll()">↺ 초기화</button>
+</div>
+
+<main class="main" id="quiz-main">
+
+  <!-- ══════════════════════════════════════════════
+       Q01  주파수·파장 계산 (기본)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-1">
+    <div class="qcard-header">
+      <div class="qnum">01</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-topic">주파수·파장</span>
+          <span class="tag tag-ref">족보 ⭐1번</span>
+        </div>
+        <span class="stars">⭐⭐ 보통</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">빛의 속도 <strong>c = 3×10⁸ m/s</strong>를 이용하여, Wi-Fi에서 사용하는 <strong>2.4 GHz</strong>와 <strong>5 GHz</strong> 전파의 파장(λ)을 각각 계산하시오. 또한 두 주파수를 <strong>파장 길이, 장애물 투과성, 도달 거리</strong> 3가지 측면에서 비교하시오.</p>
+
+      <div class="svg-wrap">
+        <!-- 주파수-파장 비교 SVG -->
+        <svg viewBox="0 0 640 180" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#60a5fa"/>
+            </marker>
+          </defs>
+          <!-- 2.4GHz wave - longer wavelength -->
+          <text x="20" y="28" font-size="11" fill="#94a3b8" font-family="monospace">2.4 GHz</text>
+          <text x="20" y="42" font-size="10" fill="#f59e0b" font-family="monospace">λ ≈ 0.125 m</text>
+          <path d="M 120,60 C 150,20 180,20 210,60 C 240,100 270,100 300,60 C 330,20 360,20 390,60 C 420,100 450,100 480,60 C 510,20 540,20 570,60" stroke="#3b82f6" stroke-width="2.5" fill="none"/>
+          <!-- 5GHz wave - shorter wavelength -->
+          <text x="20" y="115" font-size="11" fill="#94a3b8" font-family="monospace">5 GHz</text>
+          <text x="20" y="129" font-size="10" fill="#f59e0b" font-family="monospace">λ = 0.06 m</text>
+          <path d="M 120,148 C 135,120 150,120 165,148 C 180,176 195,176 210,148 C 225,120 240,120 255,148 C 270,176 285,176 300,148 C 315,120 330,120 345,148 C 360,176 375,176 390,148 C 405,120 420,120 435,148 C 450,176 465,176 480,148 C 495,120 510,120 525,148 C 540,176 555,176 570,148" stroke="#10b981" stroke-width="2.5" fill="none"/>
+          <!-- baseline -->
+          <line x1="118" y1="104" x2="578" y2="104" stroke="#2a3a55" stroke-width="1"/>
+          <text x="588" y="108" font-size="9" fill="#64748b">→ 거리</text>
+        </svg>
+      </div>
+
+      <textarea class="essay-area" id="q1-ans" placeholder="풀이 과정과 비교표를 작성하세요..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans1')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans1">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">2.4 GHz: λ = 0.125 m (12.5 cm) &nbsp;|&nbsp; 5 GHz: λ = 0.06 m (6 cm)</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span>λ = c / f &nbsp;→&nbsp; <code>λ(2.4G) = 3×10⁸ / 2.4×10⁹ = 0.125 m</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>λ(5G) = 3×10⁸ / 5×10⁹ = 0.06 m</code></span></div>
+          <div class="step"><span class="step-num">③</span><span><strong>파장 길이</strong>: 2.4 GHz &gt; 5 GHz (파장이 길수록 저주파)</span></div>
+          <div class="step"><span class="step-num">④</span><span><strong>장애물 투과</strong>: 2.4 GHz가 유리 (파장이 길어 회절이 잘 됨) → 벽 투과 유리</span></div>
+          <div class="step"><span class="step-num">⑤</span><span><strong>도달 거리</strong>: 2.4 GHz가 더 멀리 도달 / 5 GHz는 속도 빠르지만 거리 짧음</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q02  주파수·파장 (응용)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-2">
+    <div class="qcard-header">
+      <div class="qnum">02</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-applied">[응용] 수치변형</span>
+          <span class="tag tag-topic">주파수·파장</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">어떤 무선 통신 시스템이 <strong>60 GHz</strong> 주파수를 사용한다. (c = 3×10⁸ m/s)<br>
+      ① 파장을 구하시오.<br>
+      ② 이 주파수는 2.4 GHz 대비 파장이 몇 배 짧은가?<br>
+      ③ 이 주파수를 실내에서 사용할 때의 단점을 파장 관점에서 설명하시오.</p>
+
+      <textarea class="essay-area" id="q2-ans" placeholder="풀이 과정과 설명을 작성하세요..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans2')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans2">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① λ = 0.005 m (5 mm) &nbsp;② 25배 짧음 &nbsp;③ 장애물 투과 불가, 직진성 강함</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>λ = 3×10⁸ / 60×10⁹ = 0.005 m = 5 mm</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>0.125 / 0.005 = 25배</code> (2.4 GHz 파장 0.125 m 대비)</span></div>
+          <div class="step"><span class="step-num">③</span><span>파장이 매우 짧아 회절 능력이 극히 낮음 → 벽·가구 하나로도 신호 완전 차단. 실내 LOS(가시선) 환경 필수. Wi-Fi 6E에서 60 GHz 활용하지만 같은 방 내에서만 사용.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q03  SNR 공식 (기본)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-3">
+    <div class="qcard-header">
+      <div class="qnum">03</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-topic">SNR</span>
+          <span class="tag tag-ref">족보 ⭐2번</span>
+        </div>
+        <span class="stars">⭐⭐ 보통</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">신호 전력이 <strong>10 mW</strong>, 잡음 전력이 <strong>0.01 mW</strong>일 때,<br>
+      ① SNR을 구하시오.<br>
+      ② SNR<sub>dB</sub>를 구하시오. (log₁₀(1000) = 3 이용)</p>
+
+      <div class="calc-area">
+        <span class="formula">SNR = Signal Power / Noise Power</span><br>
+        <span class="formula">SNR_dB = 10 × log₁₀(SNR)</span>
+      </div>
+
+      <textarea class="essay-area" id="q3-ans" placeholder="풀이 과정을 작성하세요..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans3')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans3">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① SNR = 1000 &nbsp;② SNR_dB = 30 dB</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>SNR = 10 / 0.01 = 1000</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>SNR_dB = 10 × log₁₀(1000) = 10 × 3 = 30 dB</code></span></div>
+          <div class="step"><span class="step-num">✓</span><span>SNR이 높을수록 신호 품질이 좋음. 30 dB는 일반적으로 양호한 통신 품질</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q04  SNR (응용) — 역방향
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-4">
+    <div class="qcard-header">
+      <div class="qnum">04</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-applied">[응용] 역방향</span>
+          <span class="tag tag-topic">SNR</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">어떤 채널의 <strong>SNR_dB = 36 dB</strong>이다. 잡음 전력이 <strong>0.001 mW</strong>일 때, 신호 전력(mW)을 구하시오.<br>
+      (hint: 10^3.6 ≈ 3981)</p>
+
+      <textarea class="essay-area" id="q4-ans" placeholder="역방향 풀이 과정을 작성하세요..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans4')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans4">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">신호 전력 ≈ 3.981 mW</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>SNR_dB = 10 × log₁₀(SNR)</code> → <code>36 = 10 × log₁₀(SNR)</code> → <code>SNR = 10^3.6 ≈ 3981</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>SNR = P_signal / P_noise</code> → <code>P_signal = SNR × P_noise = 3981 × 0.001 ≈ 3.981 mW</code></span></div>
+          <div class="step"><span class="step-num">✓</span><span>역방향 문제: SNR_dB → SNR(선형) → 신호전력 순으로 역산. 단위 mW 주의</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q05  샤넌 + 나이퀴스트 복합 (기본)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-5">
+    <div class="qcard-header">
+      <div class="qnum">05</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-topic">샤넌·나이퀴스트</span>
+          <span class="tag tag-ref">족보 ⭐3번</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">대역폭 <strong>B = 4 kHz</strong>, <strong>SNR = 255</strong>인 채널이 있다.<br>
+      ① <strong>샤넌 공식</strong>으로 채널 용량(bps 상한)을 구하시오.<br>
+      ② <strong>나이퀴스트 공식</strong>으로 이 채널의 최대 신호 준위 수(L)를 구하시오.<br>
+      (단, 나이퀴스트 전송률이 샤넌 용량을 넘지 않아야 함)<br>
+      (log₂(256) = 8)</p>
+
+      <div class="calc-area">
+        <span class="formula">Shannon: C = B × log₂(1 + SNR)</span><br>
+        <span class="formula">Nyquist: C = 2B × log₂(L)</span>
+      </div>
+
+      <textarea class="essay-area" id="q5-ans" placeholder="샤넌→나이퀴스트 순서로 풀이하세요..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans5')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans5">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① C = 32,000 bps (32 kbps) &nbsp;② L = 16</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>C = 4000 × log₂(256) = 4000 × 8 = 32,000 bps</code></span></div>
+          <div class="step"><span class="step-num">②</span><span>나이퀴스트: <code>32,000 = 2 × 4000 × log₂(L)</code> → <code>log₂(L) = 4</code> → <code>L = 2⁴ = 16</code></span></div>
+          <div class="step"><span class="step-num">✓</span><span>샤넌 = 이론적 최대(잡음 고려), 나이퀴스트 = 무잡음 최대(준위 수 고려). 실제 L은 샤넌 한계를 초과 불가</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q06  샤넌+나이퀴스트 (응용) — 수치변형
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-6">
+    <div class="qcard-header">
+      <div class="qnum">06</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-applied">[응용] 수치변형</span>
+          <span class="tag tag-topic">샤넌·나이퀴스트</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">대역폭 <strong>B = 1 MHz</strong>, 신호 준위 수 <strong>L = 8</strong>인 채널에서:<br>
+      ① 나이퀴스트 공식으로 최대 데이터 전송률을 구하시오.<br>
+      ② 이 채널의 실제 SNR이 63일 때, 샤넌 용량도 구하고 ①의 결과와 비교하시오.<br>
+      (log₂(64) = 6, log₂(8) = 3)</p>
+
+      <textarea class="essay-area" id="q6-ans" placeholder="나이퀴스트→샤넌 비교 풀이..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans6')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans6">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① 6 Mbps &nbsp;② 샤넌 6 Mbps → 동일. 나이퀴스트가 샤넌 한계에 딱 맞음</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>C_N = 2 × 1×10⁶ × log₂(8) = 2×10⁶ × 3 = 6 Mbps</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>C_S = 1×10⁶ × log₂(64) = 10⁶ × 6 = 6 Mbps</code></span></div>
+          <div class="step"><span class="step-num">✓</span><span>두 값이 같다 → 이 채널은 나이퀴스트 최대치가 샤넌 상한과 정확히 일치하는 이상적 설계. 실제로는 나이퀴스트 ≤ 샤넌이어야 안전</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q07  나이퀴스트 (응용) — 역방향
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-7">
+    <div class="qcard-header">
+      <div class="qnum">07</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-applied">[응용] 역방향</span>
+          <span class="tag tag-topic">나이퀴스트</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">나이퀴스트 공식(C = 2B log₂L)에서 목표 전송률이 <strong>100 Mbps</strong>이고 신호 준위 수 <strong>L = 4</strong>일 때, 필요한 최소 대역폭 B를 구하시오.</p>
+
+      <textarea class="essay-area" id="q7-ans" placeholder="B를 역산하는 풀이를 작성하세요..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans7')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans7">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">B = 25 MHz</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>100×10⁶ = 2 × B × log₂(4) = 2 × B × 2 = 4B</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>B = 100×10⁶ / 4 = 25×10⁶ Hz = 25 MHz</code></span></div>
+          <div class="step"><span class="step-num">✓</span><span>역방향 문제: C와 L을 알 때 B를 구함. log₂(4) = 2 임을 기억</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q08  dBm 공식 (기본)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-8">
+    <div class="qcard-header">
+      <div class="qnum">08</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-topic">dBm</span>
+          <span class="tag tag-ref">족보 ⭐4번</span>
+        </div>
+        <span class="stars">⭐⭐ 보통</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">다음을 계산하시오.<br>
+      ① 전력 <strong>100 mW</strong>를 dBm으로 변환하시오. (log₁₀(100) = 2)<br>
+      ② dBm = <strong>−20 dBm</strong>의 전력을 mW로 변환하시오. (10^(−2) = 0.01)</p>
+
+      <div class="calc-area">
+        <span class="formula">P(dBm) = 10 × log₁₀( P(mW) / 1 mW )</span>
+      </div>
+
+      <textarea class="essay-area" id="q8-ans" placeholder="양방향 변환 풀이를 작성하세요..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans8')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans8">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① 20 dBm &nbsp;② 0.01 mW</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>10 × log₁₀(100/1) = 10 × 2 = 20 dBm</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>−20 = 10 × log₁₀(P/1)</code> → <code>log₁₀(P) = −2</code> → <code>P = 10^(−2) = 0.01 mW</code></span></div>
+          <div class="step"><span class="step-num">✓</span><span>dBm은 1 mW 기준. 0 dBm = 1 mW, 10 dBm = 10 mW, 30 dBm = 1 W (10 dB 증가 = 전력 10배)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q09  dBm (응용) — 개념결합
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-9">
+    <div class="qcard-header">
+      <div class="qnum">09</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-applied">[응용] 개념결합</span>
+          <span class="tag tag-topic">dBm + SNR</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">신호 전력이 <strong>+10 dBm</strong>, 잡음 전력이 <strong>−20 dBm</strong>이다.<br>
+      ① 각 전력을 mW로 변환하시오.<br>
+      ② 선형 SNR을 구하시오.<br>
+      ③ SNR_dB를 dBm 값의 차이만으로 바로 구하시오 (힌트: SNR_dB = 신호dBm − 잡음dBm).</p>
+
+      <textarea class="essay-area" id="q9-ans" placeholder="dBm→mW→SNR 순서로 풀이..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans9')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans9">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① 신호 10 mW, 잡음 0.01 mW &nbsp;② SNR = 1000 &nbsp;③ SNR_dB = 30 dB</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>+10 dBm → 10^(10/10) = 10 mW</code> &nbsp;|&nbsp; <code>−20 dBm → 10^(−2) = 0.01 mW</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>SNR = 10 / 0.01 = 1000</code></span></div>
+          <div class="step"><span class="step-num">③</span><span><code>SNR_dB = 10 − (−20) = 30 dB</code> ← dBm 차이로 바로 계산 가능 (곱셈이 dB에서 뺄셈으로)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q10  QPSK sinX1+sinX2 합성 (기본)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-10">
+    <div class="qcard-header">
+      <div class="qnum">10</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">서술+그래프</span>
+          <span class="tag tag-topic">QPSK 위상</span>
+          <span class="tag tag-ref">족보 ⭐5번</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">QPSK에서 2비트 입력 <strong>10</strong>이 들어왔다. 상위비트(1)는 동위상(I) 반송파 <code>sin(2πft)</code>에, 하위비트(0)는 직교(Q) 반송파 <code>sin(2πft + 90°)</code>에 실린다.<br>
+      ① 상위비트 1 → I 성분의 진폭 부호를 결정하시오 (1→+1, 0→−1 매핑).<br>
+      ② 하위비트 0 → Q 성분의 진폭 부호를 결정하시오.<br>
+      ③ 합산 신호를 수식으로 쓰고, 위상(°)을 구하시오.</p>
+
+      <div class="svg-wrap">
+        <!-- QPSK 성상도 SVG -->
+        <svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
+          <!-- 축 -->
+          <line x1="160" y1="20" x2="160" y2="200" stroke="#2a3a55" stroke-width="1.5"/>
+          <line x1="20" y1="110" x2="300" y2="110" stroke="#2a3a55" stroke-width="1.5"/>
+          <!-- 축 레이블 -->
+          <text x="295" y="107" font-size="10" fill="#64748b" font-family="monospace">I(동)</text>
+          <text x="155" y="18" font-size="10" fill="#64748b" font-family="monospace">Q(직)</text>
+          <!-- 4개 심볼 -->
+          <circle cx="240" cy="50" r="7" fill="#3b82f6" opacity="0.7"/>
+          <text x="248" y="46" font-size="10" fill="#60a5fa">11 (135°)</text>
+          <circle cx="80" cy="50" r="7" fill="#10b981" opacity="0.7"/>
+          <text x="30" y="46" font-size="10" fill="#6ee7b7">01 (45°?)</text>
+          <circle cx="240" cy="170" r="7" fill="#f59e0b" opacity="0.9"/>
+          <text x="245" y="183" font-size="10" fill="#fbbf24">10 (−135°/225°)</text>
+          <circle cx="80" cy="170" r="7" fill="#ef4444" opacity="0.9"/>
+          <text x="20" y="183" font-size="10" fill="#fca5a5">00 (−45°)</text>
+          <!-- 현재 심볼 강조 -->
+          <circle cx="240" cy="170" r="14" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 2"/>
+          <!-- 좌표값 -->
+          <text x="265" y="113" font-size="9" fill="#64748b">+1</text>
+          <text x="120" y="113" font-size="9" fill="#64748b">−1</text>
+          <text x="163" y="75" font-size="9" fill="#64748b">+1</text>
+          <text x="163" y="148" font-size="9" fill="#64748b">−1</text>
+        </svg>
+      </div>
+
+      <textarea class="essay-area" id="q10-ans" placeholder="① I 성분, ② Q 성분, ③ 합산 수식 및 위상 계산..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans10')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans10">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">I = +1, Q = −1 &nbsp;→&nbsp; 위상 = −135° (또는 225°)</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span>상위비트 <strong>1</strong> → I 성분 = <code>+1 × sin(2πft)</code></span></div>
+          <div class="step"><span class="step-num">②</span><span>하위비트 <strong>0</strong> → Q 성분 = <code>−1 × sin(2πft + 90°)</code></span></div>
+          <div class="step"><span class="step-num">③</span><span>합산: <code>A sin(2πft + φ)</code> &nbsp;|&nbsp; 성상도에서 (I=+1, Q=−1) → 4사분면 → φ = arctan(−1/+1) = −45°? </span></div>
+          <div class="step"><span class="step-num">✓</span><span>주의: QPSK 표준 매핑(Gray code)에서 <strong>10</strong>은 보통 −135° (3사분면). 교수님 강의 매핑 기준 확인 필수. I=+1, Q=−1이면 −45° 또는 315°.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q11  QPSK (응용) — sinX1+sinX2 합성 직접 계산
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-11">
+    <div class="qcard-header">
+      <div class="qnum">11</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-applied">[응용] 수치변형</span>
+          <span class="tag tag-topic">QPSK sinX1+sinX2</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext"><code>sin A + sin B = 2 sin((A+B)/2) cos((A-B)/2)</code> 공식을 이용하여,<br>
+      <strong>sin(2πft) + sin(2πft + 90°)</strong>를 단일 정현파로 표현하시오.<br>
+      (cos 45° = sin 45° = √2/2 ≈ 0.707)</p>
+
+      <div class="calc-area">
+        <span class="formula">sin A + sin B = 2 sin((A+B)/2) cos((A-B)/2)</span>
+      </div>
+
+      <textarea class="essay-area" id="q11-ans" placeholder="A, B 대입 → 합차 공식 전개..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans11')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans11">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">√2 · sin(2πft + 45°)</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span>A = 2πft, B = 2πft + 90° 대입</span></div>
+          <div class="step"><span class="step-num">②</span><span><code>(A+B)/2 = 2πft + 45°</code>, <code>(A−B)/2 = −45°</code></span></div>
+          <div class="step"><span class="step-num">③</span><span><code>2 × sin(2πft + 45°) × cos(−45°) = 2 × sin(2πft + 45°) × (√2/2)</code></span></div>
+          <div class="step"><span class="step-num">④</span><span><code>= √2 · sin(2πft + 45°)</code> → 진폭 √2, 위상 45°</span></div>
+          <div class="step"><span class="step-num">✓</span><span>QPSK에서 두 직교 성분의 합산으로 위상이 이동한 단일 신호가 됨. 이것이 QPSK의 핵심 원리</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q12  개념 서술 — 회선교환 / 양자화잡음 / 회선부호화
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-12">
+    <div class="qcard-header">
+      <div class="qnum">12</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">서술형</span>
+          <span class="tag tag-topic">회선교환·양자화·부호화</span>
+          <span class="tag tag-ref">족보 ⭐6번</span>
+        </div>
+        <span class="stars">⭐⭐ 보통</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">다음 개념을 각각 서술하시오.<br>
+      ① <strong>회선교환(Circuit Switching)</strong>이란 무엇인지, 패킷교환과의 차이점 1가지 포함하여 설명하시오.<br>
+      ② <strong>양자화 잡음(Quantization Noise)</strong>이란 무엇인지 설명하시오.<br>
+      ③ <strong>회선부호화(Line Coding)</strong>가 필요한 이유를 2가지 이상 서술하시오.</p>
+
+      <textarea class="essay-area" id="q12-ans" placeholder="각 개념을 번호별로 서술하세요..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans12')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans12">
+        <span class="ans-label">✓ 정답</span>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><strong>회선교환</strong>: 통신 시작 전에 발신자와 수신자 사이에 전용 물리 회선을 미리 설정하고, 통신이 끝날 때까지 그 회선을 독점 사용하는 방식. <br>vs 패킷교환: 회선교환은 전용 대역 보장(지연 일정), 패킷교환은 자원 공유(효율적이나 지연 가변)</span></div>
+          <div class="step"><span class="step-num">②</span><span><strong>양자화 잡음</strong>: 연속적인 아날로그 신호를 유한한 양자화 레벨(이산값)로 근사할 때 발생하는 오차(원신호 - 양자화값). 레벨 수가 적을수록 잡음이 커짐.</span></div>
+          <div class="step"><span class="step-num">③</span><span><strong>회선부호화 필요 이유</strong>: (a) DC 성분 제거 → 변압기 결합 가능, (b) 동기화(클록 추출) → 수신 측이 비트 경계 파악, (c) 오류 검출 가능, (d) 대역폭 효율화</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q13  맨체스터 코딩 + 비동기 직렬 (기본)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-13">
+    <div class="qcard-header">
+      <div class="qnum">13</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">서술+그래프</span>
+          <span class="tag tag-topic">맨체스터·비동기직렬</span>
+          <span class="tag tag-ref">족보 ⭐6번</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">① <strong>맨체스터(Manchester) 코딩</strong>의 규칙을 설명하고, 비트열 <strong>1 0 1 1 0</strong>의 파형을 아래 SVG 빈칸에 설명으로 답하시오.<br>
+      ② <strong>비동기식 직렬 전송</strong>에서 Start bit와 Stop bit가 필요한 이유를 설명하시오.</p>
+
+      <div class="svg-wrap">
+        <!-- 맨체스터 파형 SVG -->
+        <svg viewBox="0 0 600 140" xmlns="http://www.w3.org/2000/svg">
+          <!-- 축 -->
+          <line x1="40" y1="110" x2="580" y2="110" stroke="#2a3a55" stroke-width="1"/>
+          <line x1="40" y1="30" x2="40" y2="110" stroke="#2a3a55" stroke-width="1"/>
+          <!-- 비트 구분선 -->
+          <line x1="144" y1="25" x2="144" y2="115" stroke="#1e2d42" stroke-dasharray="3 3" stroke-width="1"/>
+          <line x1="248" y1="25" x2="248" y2="115" stroke="#1e2d42" stroke-dasharray="3 3" stroke-width="1"/>
+          <line x1="352" y1="25" x2="352" y2="115" stroke="#1e2d42" stroke-dasharray="3 3" stroke-width="1"/>
+          <line x1="456" y1="25" x2="456" y2="115" stroke="#1e2d42" stroke-dasharray="3 3" stroke-width="1"/>
+          <!-- 비트 레이블 -->
+          <text x="80" y="16" font-size="12" fill="#f59e0b" text-anchor="middle" font-family="monospace" font-weight="bold">1</text>
+          <text x="196" y="16" font-size="12" fill="#f59e0b" text-anchor="middle" font-family="monospace" font-weight="bold">0</text>
+          <text x="300" y="16" font-size="12" fill="#f59e0b" text-anchor="middle" font-family="monospace" font-weight="bold">1</text>
+          <text x="404" y="16" font-size="12" fill="#f59e0b" text-anchor="middle" font-family="monospace" font-weight="bold">1</text>
+          <text x="508" y="16" font-size="12" fill="#f59e0b" text-anchor="middle" font-family="monospace" font-weight="bold">0</text>
+          <!-- 맨체스터 파형: 1=하강(High→Low), 0=상승(Low→High) -->
+          <!-- 비트1: High→Low -->
+          <line x1="40" y1="40" x2="92" y2="40" stroke="#3b82f6" stroke-width="2.5"/>
+          <line x1="92" y1="40" x2="92" y2="95" stroke="#3b82f6" stroke-width="2.5"/>
+          <line x1="92" y1="95" x2="144" y2="95" stroke="#3b82f6" stroke-width="2.5"/>
+          <!-- 비트0: Low→High -->
+          <line x1="144" y1="95" x2="196" y2="95" stroke="#10b981" stroke-width="2.5"/>
+          <line x1="196" y1="95" x2="196" y2="40" stroke="#10b981" stroke-width="2.5"/>
+          <line x1="196" y1="40" x2="248" y2="40" stroke="#10b981" stroke-width="2.5"/>
+          <!-- 비트1: High→Low -->
+          <line x1="248" y1="40" x2="300" y2="40" stroke="#3b82f6" stroke-width="2.5"/>
+          <line x1="300" y1="40" x2="300" y2="95" stroke="#3b82f6" stroke-width="2.5"/>
+          <line x1="300" y1="95" x2="352" y2="95" stroke="#3b82f6" stroke-width="2.5"/>
+          <!-- 비트1: High→Low -->
+          <line x1="352" y1="40" x2="404" y2="40" stroke="#3b82f6" stroke-width="2.5"/>
+          <line x1="404" y1="40" x2="404" y2="95" stroke="#3b82f6" stroke-width="2.5"/>
+          <line x1="404" y1="95" x2="456" y2="95" stroke="#3b82f6" stroke-width="2.5"/>
+          <!-- 비트0: Low→High -->
+          <line x1="456" y1="95" x2="508" y2="95" stroke="#10b981" stroke-width="2.5"/>
+          <line x1="508" y1="95" x2="508" y2="40" stroke="#10b981" stroke-width="2.5"/>
+          <line x1="508" y1="40" x2="560" y2="40" stroke="#10b981" stroke-width="2.5"/>
+          <!-- y축 레이블 -->
+          <text x="30" y="44" font-size="9" fill="#64748b" text-anchor="end">H</text>
+          <text x="30" y="99" font-size="9" fill="#64748b" text-anchor="end">L</text>
+          <!-- 범례 -->
+          <rect x="42" y="120" width="10" height="3" fill="#3b82f6"/>
+          <text x="56" y="127" font-size="9" fill="#60a5fa">1: 비트중간 하강(H→L)</text>
+          <rect x="200" y="120" width="10" height="3" fill="#10b981"/>
+          <text x="214" y="127" font-size="9" fill="#6ee7b7">0: 비트중간 상승(L→H)</text>
+        </svg>
+      </div>
+
+      <textarea class="essay-area" id="q13-ans" placeholder="① 맨체스터 규칙, ② 비동기 직렬 설명..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans13')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans13">
+        <span class="ans-label">✓ 정답</span>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><strong>맨체스터 코딩</strong>: 각 비트 중간에 전이(transition) 발생. <br>• <code>1</code>: 비트 중간에 High → Low (하강 전이) <br>• <code>0</code>: 비트 중간에 Low → High (상승 전이) <br>→ 항상 비트 중간에 전이 있어 클록 동기 추출 가능. DC 성분 없음. 위 파형 참조.</span></div>
+          <div class="step"><span class="step-num">②</span><span><strong>비동기 직렬 Start/Stop bit</strong>: 발신자-수신자 사이에 공통 클록이 없음. Start bit(논리0)로 프레임 시작을 알려 수신 측 클록 동기 시작, Stop bit(논리1)로 프레임 끝과 유휴 상태 알림. 각 문자마다 재동기화.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q14  물리주소 / 논리주소 (기본)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-14">
+    <div class="qcard-header">
+      <div class="qnum">14</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">단답형</span>
+          <span class="tag tag-topic">물리·논리 주소</span>
+          <span class="tag tag-ref">족보 ⭐물리논리주소</span>
+        </div>
+        <span class="stars">⭐⭐ 보통</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">패킷이 LAN3를 통과할 때 프레임 헤더에는 <strong>물리 주소(MAC)</strong>와 <strong>논리 주소(IP)</strong>가 포함된다.<br>
+      족보에 주어진 답 <strong>"95/96/A/P"</strong>의 의미를 해석하여, 각 항목이 무엇을 나타내는지 설명하시오.<br>
+      (A = ARP로 얻은 다음 홉 MAC, P = 최종 목적지 IP)</p>
+
+      <div class="options" id="q14-opts">
+        <div class="option" onclick="selectOption(14,'A')"><span class="opt-label">A</span> 출발지MAC=95, 목적지MAC=96, 출발지IP=A, 목적지IP=P</div>
+        <div class="option" onclick="selectOption(14,'B')"><span class="opt-label">B</span> 출발지IP=95, 목적지IP=96, 출발지MAC=A, 목적지MAC=P</div>
+        <div class="option" onclick="selectOption(14,'C')"><span class="opt-label">C</span> LAN3의 포트번호, 서브넷, 게이트웨이, 프로토콜 번호</div>
+        <div class="option" onclick="selectOption(14,'D')"><span class="opt-label">D</span> 95=목적지MAC, 96=출발지MAC, A=출발지IP, P=목적지IP</div>
+      </div>
+      <input type="hidden" id="q14-selected" value="">
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans14')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans14">
+        <span class="ans-label">✓ 정답: A</span>
+        <div class="ans-text">출발지MAC=95, 목적지MAC=96, 출발지IP=A(호스트A), 목적지IP=P(목적지)</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">✓</span><span>LAN3 구간 프레임: MAC 헤더(물리주소)에는 해당 링크의 이전 라우터 MAC(95)과 다음 라우터/호스트 MAC(96), IP 헤더(논리주소)에는 종단간 출발지IP(A)와 목적지IP(P)가 유지됨. IP는 종단 유지, MAC은 홉마다 교체.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q15  QAM — r값, 비트전송률 (기본)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-15">
+    <div class="qcard-header">
+      <div class="qnum">15</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-topic">QAM</span>
+          <span class="tag tag-ref">족보 ⭐QAM</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext"><strong>256-QAM</strong> 시스템에서 샘플링 주파수(심볼 전송률)가 <strong>10,000 baud</strong>일 때,<br>
+      ① 심볼당 비트 수(r)를 구하시오. (log₂(256) = 8)<br>
+      ② 비트 전송률(bps)을 구하시오.<br>
+      ③ 같은 대역폭에서 16-QAM으로 바꾸면 비트전송률은 어떻게 변하는가?</p>
+
+      <div class="calc-area">
+        <span class="formula">r = log₂(M) &nbsp;&nbsp; 비트전송률 = Baud × r</span>
+      </div>
+
+      <textarea class="essay-area" id="q15-ans" placeholder="r 계산 → bps 계산 → 비교..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans15')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans15">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① r = 8 &nbsp;② 80,000 bps (80 kbps) &nbsp;③ 16-QAM → 40 kbps (절반)</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>r = log₂(256) = 8 비트/심볼</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>비트전송률 = 10,000 × 8 = 80,000 bps</code></span></div>
+          <div class="step"><span class="step-num">③</span><span><code>16-QAM: r = log₂(16) = 4</code> → <code>10,000 × 4 = 40,000 bps</code> — QAM 성상도 크기가 클수록 고속, 오류에 취약</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q16  QAM — 대역폭 주고 S값 구하기 (응용)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-16">
+    <div class="qcard-header">
+      <div class="qnum">16</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-applied">[응용] 역방향</span>
+          <span class="tag tag-topic">QAM S값</span>
+          <span class="tag tag-ref">족보 ⭐QAM d=일때S</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">어떤 QAM 시스템의 대역폭이 <strong>B = 200 kHz</strong>이고, 목표 비트 전송률이 <strong>C = 1.2 Mbps</strong>이다.<br>
+      나이퀴스트 공식 <code>C = 2B log₂L</code>을 이용하여 필요한 QAM 성상도 심볼 수(S = L²)를 구하시오.<br>
+      (단, L은 QAM에서 한 축의 준위 수, S = 전체 심볼 수)</p>
+
+      <textarea class="essay-area" id="q16-ans" placeholder="C=2Blog₂L → L 계산 → S=L² ..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans16')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans16">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">L = 8, S = 64 → 64-QAM</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>1.2×10⁶ = 2 × 200×10³ × log₂(L)</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>log₂(L) = 1.2×10⁶ / (4×10⁵) = 3</code> → <code>L = 2³ = 8</code></span></div>
+          <div class="step"><span class="step-num">③</span><span><code>S = L² = 8² = 64</code> → <strong>64-QAM</strong></span></div>
+          <div class="step"><span class="step-num">✓</span><span>QAM은 2차원 성상도: I축 L준위 × Q축 L준위 = L² 개 심볼. 이 문제에서 L을 구한 뒤 제곱해야 함</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q17  4D-PAM5 빈칸 (기본)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-17">
+    <div class="qcard-header">
+      <div class="qnum">17</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">코드완성형</span>
+          <span class="tag tag-topic">4D-PAM5</span>
+          <span class="tag tag-ref">족보 ⭐4D-PAM5</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">4D-PAM5(1000BASE-T 기가비트 이더넷)에 대한 설명의 빈칸을 채우시오.</p>
+
+      <div class="calc-area">
+        4D-PAM5는 <span style="color:#f59e0b">( ① )</span>개의 회선을 동시에 사용하며,<br>
+        각 회선은 <span style="color:#f59e0b">( ② )</span>개의 준위(−2,−1,0,+1,+2)를 사용한다.<br>
+        총 전송률 1 Gbps에서 회선당 전송률은 <span style="color:#f59e0b">( ③ )</span> Mbps이고,<br>
+        심볼 전송률(baud)은 <span style="color:#f59e0b">( ④ )</span> MBaud이다.<br>
+        (단, 각 회선의 심볼당 비트 수 = log₂5 ≈ 2.32 bit 사용하지 않고<br>
+        실제로는 8B/10T 방식으로 유효 전송률 계산)
+      </div>
+
+      <div class="fill-row">
+        <span style="color:var(--text-muted)">①</span>
+        <input class="fill-input" id="f17-1" placeholder="회선 수">
+        <span style="color:var(--text-muted)">②</span>
+        <input class="fill-input" id="f17-2" placeholder="준위 수">
+        <span style="color:var(--text-muted)">③</span>
+        <input class="fill-input" id="f17-3" placeholder="회선당 Mbps">
+        <span style="color:var(--text-muted)">④</span>
+        <input class="fill-input" id="f17-4" placeholder="MBaud">
+      </div>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans17')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans17">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① 4개 &nbsp;② 5개 &nbsp;③ 250 Mbps &nbsp;④ 125 MBaud</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span>4D = 4 Dimensional = <strong>4개 쌍꼬임선(회선)</strong> 동시 사용</span></div>
+          <div class="step"><span class="step-num">②</span><span>PAM5 = <strong>5준위</strong> (−2, −1, 0, +1, +2)</span></div>
+          <div class="step"><span class="step-num">③</span><span>회선당: <code>1000 Mbps ÷ 4 = 250 Mbps</code></span></div>
+          <div class="step"><span class="step-num">④</span><span>각 심볼에 2비트 실어 전송 기준: <code>250 Mbps ÷ 2 = 125 MBaud</code></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q18  그물형 연결 케이블 (기본)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-18">
+    <div class="qcard-header">
+      <div class="qnum">18</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-topic">그물형 연결</span>
+          <span class="tag tag-ref">족보 ⭐그물형</span>
+        </div>
+        <span class="stars">⭐⭐ 보통</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">그물형(Mesh) 토폴로지에서 n개 노드를 완전 연결하는 데 필요한 링크 수는 <code>n(n-1)/2</code>이다.<br>
+      ① 4개 노드의 그물형에서 총 링크 수를 구하시오.<br>
+      ② 여기에 3개 노드를 <strong>추가</strong>하면 (총 7개), 추가로 필요한 케이블 수는?</p>
+
+      <div class="svg-wrap">
+        <!-- 그물형 노드 SVG -->
+        <svg viewBox="0 0 380 160" xmlns="http://www.w3.org/2000/svg">
+          <!-- 4노드 그물형 -->
+          <text x="90" y="12" font-size="10" fill="#94a3b8" text-anchor="middle">4-노드 (기존)</text>
+          <circle cx="50" cy="50" r="12" fill="#1e2d42" stroke="#3b82f6" stroke-width="2"/>
+          <circle cx="130" cy="50" r="12" fill="#1e2d42" stroke="#3b82f6" stroke-width="2"/>
+          <circle cx="50" cy="130" r="12" fill="#1e2d42" stroke="#3b82f6" stroke-width="2"/>
+          <circle cx="130" cy="130" r="12" fill="#1e2d42" stroke="#3b82f6" stroke-width="2"/>
+          <line x1="62" y1="50" x2="118" y2="50" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="50" y1="62" x2="50" y2="118" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="130" y1="62" x2="130" y2="118" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="62" y1="130" x2="118" y2="130" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="62" y1="58" x2="118" y2="118" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="118" y1="58" x2="62" y2="118" stroke="#3b82f6" stroke-width="1.5"/>
+          <text x="12" y="54" font-size="9" fill="#64748b">A</text>
+          <text x="138" y="54" font-size="9" fill="#64748b">B</text>
+          <text x="12" y="134" font-size="9" fill="#64748b">C</text>
+          <text x="138" y="134" font-size="9" fill="#64748b">D</text>
+          <!-- 화살표 -->
+          <text x="190" y="90" font-size="18" fill="#3b82f6">→</text>
+          <!-- 추가 3노드 -->
+          <text x="300" y="12" font-size="10" fill="#94a3b8" text-anchor="middle">+3노드 추가</text>
+          <circle cx="260" cy="50" r="12" fill="#1e2d42" stroke="#3b82f6" stroke-width="2"/>
+          <circle cx="340" cy="50" r="12" fill="#1e2d42" stroke="#3b82f6" stroke-width="2"/>
+          <circle cx="260" cy="130" r="12" fill="#1e2d42" stroke="#3b82f6" stroke-width="2"/>
+          <circle cx="340" cy="130" r="12" fill="#1e2d42" stroke="#3b82f6" stroke-width="2"/>
+          <!-- 추가 노드 -->
+          <circle cx="220" cy="90" r="12" fill="#1e2d42" stroke="#10b981" stroke-width="2.5"/>
+          <circle cx="300" cy="25" r="12" fill="#1e2d42" stroke="#10b981" stroke-width="2.5"/>
+          <circle cx="370" cy="90" r="12" fill="#1e2d42" stroke="#10b981" stroke-width="2.5"/>
+          <text x="220" y="94" font-size="8" fill="#6ee7b7" text-anchor="middle">E</text>
+          <text x="300" y="29" font-size="8" fill="#6ee7b7" text-anchor="middle">F</text>
+          <text x="370" y="94" font-size="8" fill="#6ee7b7" text-anchor="middle">G</text>
+          <!-- 추가 링크 표시 (새 노드 연결선 일부) -->
+          <line x1="220" y1="90" x2="248" y2="62" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4 2"/>
+          <line x1="220" y1="90" x2="248" y2="118" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4 2"/>
+          <line x1="300" y1="37" x2="272" y2="58" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4 2"/>
+          <line x1="300" y1="37" x2="328" y2="58" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4 2"/>
+        </svg>
+      </div>
+
+      <textarea class="essay-area" id="q18-ans" placeholder="공식 적용 풀이를 작성하세요..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans18')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans18">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① 6개 &nbsp;② 추가 케이블 15개</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>4×3/2 = 6개</code></span></div>
+          <div class="step"><span class="step-num">②</span><span>7노드 총 링크: <code>7×6/2 = 21개</code></span></div>
+          <div class="step"><span class="step-num">③</span><span>추가 케이블 = <code>21 − 6 = 15개</code></span></div>
+          <div class="step"><span class="step-num">✓</span><span>노드 k개 추가 시 링크 증가량 = <code>k × (기존노드수) + k(k-1)/2</code> = 3×4 + 3 = 15로도 계산 가능</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q19  동기 TDM 계산 (기본)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-19">
+    <div class="qcard-header">
+      <div class="qnum">19</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-topic">동기 TDM</span>
+          <span class="tag tag-ref">족보 ⭐23년 TDM</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">동기 TDM 시스템에 <strong>20명</strong>의 고품질 음성 사용자가 있다.<br>
+      각 음성 신호의 최대 주파수는 <strong>10 kHz</strong>이고, 양자화 레벨은 <strong>512</strong>이다.<br>
+      ① 샘플링 주파수(Nyquist 기준)를 구하시오.<br>
+      ② 샘플당 비트 수(b)를 구하시오. (log₂(512) = 9)<br>
+      ③ 채널당 비트 전송률을 구하시오.<br>
+      ④ TDM 프레임 크기(비트)와 프레임 duration(μs)을 구하시오.</p>
+
+      <textarea class="essay-area" id="q19-ans" placeholder="① 샘플링주파수 → ② 샘플비트 → ③ 채널전송률 → ④ 프레임..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans19')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans19">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① 20,000 Hz &nbsp;② 9 bit &nbsp;③ 180,000 bps &nbsp;④ 프레임=180 bit, duration=50 μs</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span>나이퀴스트 샘플링: <code>fs = 2 × 10,000 = 20,000 Hz</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>b = log₂(512) = 9 bit/샘플</code></span></div>
+          <div class="step"><span class="step-num">③</span><span>채널당: <code>20,000 × 9 = 180,000 bps = 180 kbps</code></span></div>
+          <div class="step"><span class="step-num">④</span><span>프레임 크기: <code>20명 × 9 bit = 180 bit</code><br>
+          duration: 1프레임 = 1샘플 주기 = <code>1 / 20,000 = 50 μs</code><br>
+          TDM 전송률: <code>180 bit / 50 μs = 3.6 Mbps</code></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q20  동기 TDM (응용) — 수치변형
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-20">
+    <div class="qcard-header">
+      <div class="qnum">20</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-applied">[응용] 수치변형</span>
+          <span class="tag tag-topic">동기 TDM</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">동기 TDM 시스템에 <strong>10명</strong> 사용자가 있고, 각 음성 신호 최대 주파수는 <strong>4 kHz</strong>, 양자화 레벨은 <strong>256</strong>이다.<br>
+      ① 채널당 비트 전송률(bps)을 구하시오. (log₂(256) = 8)<br>
+      ② 전체 TDM 전송률(bps)을 구하시오.<br>
+      ③ 19번 문제(20명, 10 kHz, 512레벨)와 비교하여 전체 전송률 차이를 구하시오.</p>
+
+      <textarea class="essay-area" id="q20-ans" placeholder="동일한 공식으로 수치를 달리하여 계산..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans20')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans20">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① 64 kbps &nbsp;② 640 kbps &nbsp;③ 3.6 Mbps − 0.64 Mbps = 2.96 Mbps 차이</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>fs = 2×4000 = 8000 Hz</code>, b=8 bit → <code>8000×8 = 64,000 bps</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>10 × 64,000 = 640,000 bps = 640 kbps</code></span></div>
+          <div class="step"><span class="step-num">③</span><span>Q19 TDM = 3,600,000 bps, Q20 TDM = 640,000 bps → 차이 <code>2,960,000 bps ≈ 2.96 Mbps</code></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q21  OSI 7계층 (기본)
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-21">
+    <div class="qcard-header">
+      <div class="qnum">21</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">단답형</span>
+          <span class="tag tag-topic">OSI 7계층</span>
+          <span class="tag tag-ref">족보 ⭐23년 OSI</span>
+        </div>
+        <span class="stars">⭐⭐ 보통</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">다음 역할 설명에 해당하는 OSI 계층 이름을 쓰시오.</p>
+
+      <div class="calc-area" style="font-family:var(--font-body); font-size:0.87rem; line-height:2.1">
+        <span style="color:var(--text-muted)">① 비트를 전기/광 신호로 변환하여 물리적 매체로 전송</span>&nbsp;&nbsp;<input class="fill-input" id="osi1" style="min-width:120px" placeholder="계층명"><br>
+        <span style="color:var(--text-muted)">② 같은 LAN 내 MAC 주소 기반 프레임 전달, 오류검출(CRC)</span>&nbsp;&nbsp;<input class="fill-input" id="osi2" style="min-width:120px" placeholder="계층명"><br>
+        <span style="color:var(--text-muted)">③ IP 주소 기반 라우팅, 패킷 포워딩</span>&nbsp;&nbsp;<input class="fill-input" id="osi3" style="min-width:120px" placeholder="계층명"><br>
+        <span style="color:var(--text-muted)">④ 포트번호, 신뢰성 있는 종단간 데이터 전달(TCP/UDP)</span>&nbsp;&nbsp;<input class="fill-input" id="osi4" style="min-width:120px" placeholder="계층명"><br>
+        <span style="color:var(--text-muted)">⑤ 데이터 암호화·압축·형식 변환</span>&nbsp;&nbsp;<input class="fill-input" id="osi5" style="min-width:120px" placeholder="계층명">
+      </div>
+
+      <div class="submit-row" style="margin-top:0.6rem">
+        <button class="answer-toggle" onclick="toggleAnswer('ans21')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans21">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① 물리 ② 데이터링크 ③ 네트워크 ④ 전송(Transport) ⑤ 표현(Presentation)</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">전체</span><span>OSI 7계층 (하→상): 물리(1) → 데이터링크(2) → 네트워크(3) → 전송(4) → 세션(5) → 표현(6) → 응용(7). 암기법: <strong>물데네전세표응</strong></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q22  기저대역신호 / 패킷교환 (기본) OX
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-22">
+    <div class="qcard-header">
+      <div class="qnum">22</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">OX 문제</span>
+          <span class="tag tag-topic">기저대역·패킷교환</span>
+          <span class="tag tag-ref">족보 ⭐23년 개념</span>
+        </div>
+        <span class="stars">⭐⭐ 보통</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">다음 설명이 옳으면 O, 틀리면 X를 선택하시오.</p>
+
+      <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:0.9rem">
+        <div>
+          <p style="font-size:0.9rem;margin-bottom:0.5rem;color:var(--text)">① 기저대역(Baseband) 신호는 변조 없이 원래 디지털 신호를 그대로 전송하는 방식으로, 하나의 채널만 사용할 수 있다.</p>
+          <div class="ox-options">
+            <div class="ox-btn" onclick="selectOX('ox22a','O',this)">O</div>
+            <div class="ox-btn" onclick="selectOX('ox22a','X',this)">X</div>
+          </div>
+          <input type="hidden" id="ox22a" value="">
+        </div>
+        <div>
+          <p style="font-size:0.9rem;margin-bottom:0.5rem;color:var(--text)">② 패킷교환(Packet Switching)에서는 패킷마다 경로가 다를 수 있으며, 수신 측에서 재조립이 필요할 수 있다.</p>
+          <div class="ox-options">
+            <div class="ox-btn" onclick="selectOX('ox22b','O',this)">O</div>
+            <div class="ox-btn" onclick="selectOX('ox22b','X',this)">X</div>
+          </div>
+          <input type="hidden" id="ox22b" value="">
+        </div>
+        <div>
+          <p style="font-size:0.9rem;margin-bottom:0.5rem;color:var(--text)">③ 통계적 TDM(Statistical TDM)은 동기 TDM과 달리 슬롯을 활성 사용자에게만 동적으로 할당하므로 대역폭 효율이 낮다.</p>
+          <div class="ox-options">
+            <div class="ox-btn" onclick="selectOX('ox22c','O',this)">O</div>
+            <div class="ox-btn" onclick="selectOX('ox22c','X',this)">X</div>
+          </div>
+          <input type="hidden" id="ox22c" value="">
+        </div>
+      </div>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans22')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans22">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① O &nbsp;② O &nbsp;③ X</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span>O — 기저대역은 단일 채널에서 원신호를 직접 전송. 장거리 멀티 채널 전송은 대역통과(Broadband) 방식 필요</span></div>
+          <div class="step"><span class="step-num">②</span><span>O — 데이터그램 방식 패킷교환에서 패킷은 독립 라우팅 → 도착 순서 뒤섞임 → 수신 측 재조립 필요</span></div>
+          <div class="step"><span class="step-num">③</span><span>X — 통계적 TDM은 빈 슬롯 없이 활성 사용자에게만 할당하므로 <strong>효율이 높다</strong>. 동기 TDM이 빈 슬롯 낭비</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q23  확산대역 (기본) — OX+서술
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-23">
+    <div class="qcard-header">
+      <div class="qnum">23</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">서술형</span>
+          <span class="tag tag-topic">확산대역</span>
+          <span class="tag tag-ref">족보 ⭐23년 확산대역</span>
+        </div>
+        <span class="stars">⭐⭐ 보통</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext"><strong>확산대역(Spread Spectrum)</strong> 방식의 장단점과, 주요 기법인 <strong>FHSS</strong>와 <strong>DSSS</strong>를 각각 설명하시오.</p>
+
+      <textarea class="essay-area" id="q23-ans" placeholder="장점, 단점, FHSS, DSSS 설명..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans23')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans23">
+        <span class="ans-label">✓ 정답</span>
+        <div class="explanation">
+          <div class="step"><span class="step-num">장점</span><span>① 재밍(전파방해) 및 도청에 강함 (신호가 넓은 대역에 분산) ② 다중 사용자 동시 접속 가능(CDMA) ③ 협대역 간섭에 강함</span></div>
+          <div class="step"><span class="step-num">단점</span><span>① 넓은 대역폭 필요 (주파수 자원 비효율적 사용) ② 구현 복잡도 높음 ③ 동기화 어려움</span></div>
+          <div class="step"><span class="step-num">FHSS</span><span>주파수 도약 확산대역: 송수신자가 공유하는 의사난수 시퀀스에 따라 반송파 주파수를 빠르게 전환. Bluetooth에서 사용 (2.4 GHz 대역 79채널)</span></div>
+          <div class="step"><span class="step-num">DSSS</span><span>직접 시퀀스 확산대역: 각 데이터 비트를 칩(chip) 시퀀스(의사잡음 코드)와 XOR하여 대역폭을 넓게 분산. Wi-Fi 802.11b, GPS에서 사용</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q24  개념결합 (응용) — QAM + 샤넌 + SNR
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-24">
+    <div class="qcard-header">
+      <div class="qnum">24</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">계산형</span>
+          <span class="tag tag-applied">[응용] 개념결합</span>
+          <span class="tag tag-topic">QAM + 샤넌 + dBm</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">다음 조건에서 시스템 설계 가능 여부를 판단하시오.<br>
+      • 채널 대역폭: <strong>B = 500 kHz</strong><br>
+      • 신호전력: <strong>+20 dBm</strong>, 잡음전력: <strong>−10 dBm</strong><br>
+      • 목표: <strong>64-QAM</strong> 방식으로 <strong>3 Mbps</strong> 전송<br>
+      ① SNR_dB와 선형 SNR을 구하시오.<br>
+      ② 샤넌 용량(이론 최대)을 구하시오. (log₂(1001) ≈ 10)<br>
+      ③ 64-QAM 나이퀴스트 전송률을 구하시오. (log₂(64)=6)<br>
+      ④ 3 Mbps 목표 달성이 가능한지 판단하시오.</p>
+
+      <textarea class="essay-area" id="q24-ans" placeholder="① SNR → ② 샤넌 → ③ 나이퀴스트 → ④ 판단..."></textarea>
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans24')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans24">
+        <span class="ans-label">✓ 정답</span>
+        <div class="ans-text">① SNR_dB=30 dB, SNR=1000 &nbsp;② 샤넌≈5 Mbps &nbsp;③ 나이퀴스트=3 Mbps &nbsp;④ 가능</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">①</span><span><code>SNR_dB = 20 − (−10) = 30 dB</code> → <code>SNR = 10^3 = 1000</code></span></div>
+          <div class="step"><span class="step-num">②</span><span><code>C_S = 500×10³ × log₂(1001) ≈ 500×10³ × 10 = 5 Mbps</code></span></div>
+          <div class="step"><span class="step-num">③</span><span><code>C_N = 2 × 500×10³ × log₂(64) = 10⁶ × 6 = 6 Mbps</code> (나이퀴스트 최대)</span></div>
+          <div class="step"><span class="step-num">④</span><span>목표 3 Mbps ≤ 샤넌 5 Mbps ✓ &nbsp;|&nbsp; 나이퀴스트 6 Mbps ≥ 3 Mbps ✓ → <strong>설계 가능</strong>. 단, 나이퀴스트가 샤넌을 초과(6&gt;5)하므로 실제로는 샤넌 한계 5 Mbps를 넘을 수 없어 3 Mbps는 달성 가능</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       Q25  객관식 — 개념 종합 (응용) 조건변형
+  ══════════════════════════════════════════════ -->
+  <div class="qcard" id="card-25">
+    <div class="qcard-header">
+      <div class="qnum">25</div>
+      <div class="qmeta">
+        <div class="qtype-row">
+          <span class="tag tag-type">객관식</span>
+          <span class="tag tag-applied">[응용] 조건변형</span>
+          <span class="tag tag-topic">종합 개념</span>
+        </div>
+        <span class="stars">⭐⭐⭐ 어려움</span>
+      </div>
+    </div>
+    <div class="qbody">
+      <p class="qtext">아래 보기 중 <strong>옳지 않은 것</strong>을 고르시오.</p>
+
+      <div class="options" id="q25-opts">
+        <div class="option" onclick="selectOption(25,'A')"><span class="opt-label">A</span> 나이퀴스트 샘플링 정리에 따르면, 4 kHz 음성 신호를 디지털로 변환하기 위해 최소 8,000 Hz로 샘플링해야 한다.</div>
+        <div class="option" onclick="selectOption(25,'B')"><span class="opt-label">B</span> 동기 TDM에서 사용자가 데이터를 전송하지 않아도 해당 슬롯은 예약되어 다른 사용자가 사용할 수 없다.</div>
+        <div class="option" onclick="selectOption(25,'C')"><span class="opt-label">C</span> 샤넌 용량 공식 C = B log₂(1+SNR)에서 SNR을 높이면 채널 용량은 선형적으로 증가한다.</div>
+        <div class="option" onclick="selectOption(25,'D')"><span class="opt-label">D</span> QPSK는 한 심볼이 2비트를 나타내며, BPSK 대비 같은 대역폭에서 2배의 비트 전송률을 달성한다.</div>
+      </div>
+      <input type="hidden" id="q25-selected" value="">
+      <div class="submit-row">
+        <button class="answer-toggle" onclick="toggleAnswer('ans25')"><span class="arrow">▶</span> 정답 및 해설 보기</button>
+      </div>
+      <div class="answer-box" id="ans25">
+        <span class="ans-label">✓ 정답: C</span>
+        <div class="ans-text">C가 틀림 — 샤넌 용량은 SNR에 대해 로그 함수적으로 증가 (선형 아님)</div>
+        <div class="explanation">
+          <div class="step"><span class="step-num">A</span><span>O — 나이퀴스트: fs ≥ 2 × f_max = 2 × 4000 = 8000 Hz</span></div>
+          <div class="step"><span class="step-num">B</span><span>O — 동기 TDM의 고정 슬롯 할당 방식. 낭비 발생 → 통계적 TDM이 해결</span></div>
+          <div class="step"><span class="step-num">C</span><span>X — <code>C = B log₂(1+SNR)</code>에서 SNR이 커지면 log₂ 함수로 증가하므로 <strong>로그 함수적</strong>. SNR을 10배로 늘려도 C는 약 3.32B 증가에 불과</span></div>
+          <div class="step"><span class="step-num">D</span><span>O — QPSK: 2 bit/symbol, BPSK: 1 bit/symbol → 같은 Baud에서 2배 비트전송률</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Result Modal -->
+<div class="result-overlay" id="result-overlay">
+  <div class="result-modal">
+    <h2>🎯 채점 결과</h2>
+    <span class="result-score-big" id="result-score">-</span>
+    <p class="result-msg" id="result-msg"></p>
+    <button class="btn btn-primary" onclick="document.getElementById('result-overlay').classList.remove('show')">닫기</button>
+    &nbsp;
+    <button class="btn btn-outline" onclick="resetAll(); document.getElementById('result-overlay').classList.remove('show')">다시 풀기</button>
+  </div>
+</div>
+
+<script>
+  // ── Toggle answer box ──
+  function toggleAnswer(id) {
+    const box = document.getElementById(id);
+    const btn = box.previousElementSibling.previousElementSibling;
+    // find the toggle button
+    const allToggles = document.querySelectorAll('.answer-toggle');
+    allToggles.forEach(t => {
+      if (t.getAttribute('onclick') === `toggleAnswer('${id}')`) {
+        t.classList.toggle('open');
+      }
+    });
+    box.classList.toggle('show');
+  }
+
+  function expandAll() {
+    document.querySelectorAll('.answer-box').forEach(b => b.classList.add('show'));
+    document.querySelectorAll('.answer-toggle').forEach(t => t.classList.add('open'));
+  }
+  function collapseAll() {
+    document.querySelectorAll('.answer-box').forEach(b => b.classList.remove('show'));
+    document.querySelectorAll('.answer-toggle').forEach(t => t.classList.remove('open'));
+  }
+
+  // ── OX selection ──
+  function selectOX(inputId, val, el) {
+    document.getElementById(inputId).value = val;
+    const parent = el.parentElement;
+    parent.querySelectorAll('.ox-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    updateProgress();
+  }
+
+  // ── Multiple choice ──
+  function selectOption(qnum, val) {
+    const opts = document.querySelectorAll(`#q${qnum}-opts .option`);
+    opts.forEach(o => o.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    document.getElementById(`q${qnum}-selected`).value = val;
+    updateProgress();
+  }
+
+  // ── Progress ──
+  function updateProgress() {
+    let answered = 0;
+    // essays
+    document.querySelectorAll('.essay-area').forEach(a => { if (a.value.trim()) answered++; });
+    // ox
+    document.querySelectorAll('[id^="ox"]').forEach(i => { if (i.value) answered++; });
+    // options
+    ['q14-selected','q25-selected'].forEach(id => { if (document.getElementById(id).value) answered++; });
+    // fill inputs
+    ['f17-1','f17-2','f17-3','f17-4','osi1','osi2','osi3','osi4','osi5'].forEach(id => {
+      if (document.getElementById(id).value.trim()) answered++;
+    });
+    // cap at 25 for display
+    const pct = Math.min(100, Math.round(answered / 25 * 100));
+    document.getElementById('score-answered').textContent = Math.min(25, answered);
+    document.getElementById('progress-bar').style.width = pct + '%';
+  }
+
+  // ── Show result (scored MCQ + OX) ──
+  function showResult() {
+    let correct = 0;
+    let total = 0;
+
+    // Q14 MCQ
+    if (document.getElementById('q14-selected').value) {
+      total++;
+      if (document.getElementById('q14-selected').value === 'A') correct++;
+    }
+    // Q25 MCQ
+    if (document.getElementById('q25-selected').value) {
+      total++;
+      if (document.getElementById('q25-selected').value === 'C') correct++;
+    }
+    // Q22 OX
+    const ox = [['ox22a','O'],['ox22b','O'],['ox22c','X']];
+    ox.forEach(([id, ans]) => {
+      if (document.getElementById(id).value) {
+        total++;
+        if (document.getElementById(id).value === ans) correct++;
+      }
+    });
+
+    const msg = total === 0
+      ? '객관식/OX 문제를 먼저 풀어주세요.\n서술형·계산형은 정답 토글로 직접 확인하세요.'
+      : `객관식+OX ${total}문제 중 ${correct}개 정답!\n서술형·계산형은 정답 토글로 직접 채점하세요.`;
+
+    document.getElementById('result-score').textContent = `${correct} / ${total}`;
+    document.getElementById('result-msg').textContent = msg;
+    document.getElementById('result-overlay').classList.add('show');
+  }
+
+  // ── Reset ──
+  function resetAll() {
+    document.querySelectorAll('.essay-area').forEach(a => a.value = '');
+    document.querySelectorAll('.fill-input').forEach(i => i.value = '');
+    document.querySelectorAll('[id$="-selected"]').forEach(i => i.value = '');
+    document.querySelectorAll('[id^="ox"]').forEach(i => i.value = '');
+    document.querySelectorAll('.option').forEach(o => o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.ox-btn').forEach(b => b.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.fill-input').forEach(i => i.classList.remove('correct','wrong'));
+    document.querySelectorAll('.qcard').forEach(c => c.classList.remove('answered-correct','answered-wrong'));
+    collapseAll();
+    document.getElementById('score-answered').textContent = '0';
+    document.getElementById('progress-bar').style.width = '0%';
+  }
+
+  // init
+  document.querySelectorAll('.essay-area, .fill-input').forEach(el => {
+    el.addEventListener('input', updateProgress);
+  });
+</script>
+</body>
+</html>
