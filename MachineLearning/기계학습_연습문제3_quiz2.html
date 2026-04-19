@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기계학습 — 응용 퀴즈 (선형회귀·이진분류 + 연습문제3)</title>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --surface3: #1e2d42;
+  --border: #2a3a55;
+  --accent: #3b82f6;
+  --accent2: #60a5fa;
+  --accent3: #93c5fd;
+  --green: #22c55e;
+  --green2: #4ade80;
+  --yellow: #f59e0b;
+  --yellow2: #fbbf24;
+  --red: #ef4444;
+  --red2: #f87171;
+  --purple: #a855f7;
+  --purple2: #c084fc;
+  --cyan: #06b6d4;
+  --text: #e2e8f0;
+  --text-sub: #94a3b8;
+  --text-dim: #64748b;
+  --code-bg: #0d1117;
+  --radius: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;
+  line-height: 1.7;
+}
+
+/* ── Header ── */
+.page-header {
+  background: linear-gradient(135deg,#0f1e35 0%,#0a1628 60%,#0d1a2e 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 44px 48px 36px;
+  position: relative;
+  overflow: hidden;
+}
+.page-header::before {
+  content:'';
+  position:absolute; top:-80px; right:-80px;
+  width:360px; height:360px;
+  background: radial-gradient(circle,rgba(59,130,246,.07) 0%,transparent 70%);
+}
+.header-label {
+  font-family:'Menlo','Courier New',monospace;
+  font-size:11px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--accent); margin-bottom:10px;
+}
+.page-header h1 {
+  font-family:'Impact','Arial Narrow','Arial Black',sans-serif;
+  font-size:36px; color:#fff; margin-bottom:10px; letter-spacing:.5px;
+}
+.page-header h1 span { color:var(--accent2); }
+.page-header p { color:var(--text-sub); font-size:14px; }
+
+/* ── Scoreboard ── */
+.scoreboard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 28px 48px;
+  padding: 20px 28px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.score-label { color:var(--text-sub); font-size:14px; }
+.score-val { font-size:28px; font-weight:700; color:var(--accent2); font-family:'Menlo','Courier New',monospace; }
+.score-btn {
+  margin-left:auto;
+  background: var(--accent);
+  color:#fff; border:none; border-radius:8px;
+  padding:10px 24px; font-size:14px; font-weight:700;
+  cursor:pointer; transition:.2s;
+  font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+.score-btn:hover { background:#2563eb; }
+
+/* ── Section divider ── */
+.section-divider {
+  margin: 36px 48px 24px;
+  display:flex; align-items:center; gap:16px;
+}
+.section-divider h2 {
+  font-family:'Impact','Arial Narrow','Arial Black',sans-serif;
+  font-size:22px; color:#fff; white-space:nowrap;
+}
+.section-divider .line {
+  flex:1; height:1px; background:var(--border);
+}
+.section-badge {
+  font-size:11px; font-family:'Menlo','Courier New',monospace;
+  letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border-radius:6px;
+}
+.badge-blue { background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.3); color:var(--accent2); }
+.badge-green { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.3); color:var(--green2); }
+
+/* ── Quiz Card ── */
+.quiz-wrap { padding: 0 48px; }
+
+.quiz-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.quiz-card:hover { border-color: var(--accent); }
+
+.quiz-head {
+  padding: 22px 28px;
+  display:flex; align-items:flex-start; gap:14px;
+  cursor:pointer;
+  user-select:none;
+}
+.quiz-num {
+  font-family:'Menlo','Courier New',monospace;
+  font-size:12px; font-weight:700;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  padding:3px 10px; border-radius:6px;
+  color:var(--text-dim); white-space:nowrap; margin-top:2px;
+}
+.quiz-meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+
+.tag-applied {
+  font-size:11px; padding:2px 8px; border-radius:4px;
+  background:rgba(168,85,247,.15); border:1px solid rgba(168,85,247,.3);
+  color:var(--purple2); font-weight:700;
+}
+.tag-type {
+  font-size:11px; padding:2px 8px; border-radius:4px;
+  background:rgba(6,182,212,.12); border:1px solid rgba(6,182,212,.25);
+  color:var(--cyan);
+}
+.tag-ref {
+  font-size:11px; padding:2px 8px; border-radius:4px;
+  background:var(--surface2); border:1px solid var(--border);
+  color:var(--text-dim);
+}
+
+.stars { font-size:13px; }
+
+.quiz-q {
+  font-size:15px; color:var(--text); line-height:1.75; font-weight:600;
+}
+.quiz-q .sub {
+  font-size:13.5px; color:var(--text-sub); font-weight:400;
+  display:block; margin-top:6px; line-height:1.65;
+}
+
+.toggle-icon {
+  margin-left:auto; font-size:18px;
+  color:var(--text-dim); transition:transform .25s; flex-shrink:0;
+}
+.quiz-card.open .toggle-icon { transform:rotate(180deg); }
+
+/* ── Answer ── */
+.quiz-ans {
+  display:none;
+  border-top:1px solid var(--border);
+  padding:24px 28px;
+  animation: fadeIn .2s;
+}
+.quiz-card.open .quiz-ans { display:block; }
+
+@keyframes fadeIn { from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:translateY(0)} }
+
+.ans-label {
+  font-size:11px; font-family:'Menlo','Courier New',monospace;
+  letter-spacing:2px; text-transform:uppercase;
+  color:var(--green2); margin-bottom:14px;
+  display:flex; align-items:center; gap:8px;
+}
+.ans-label::before { content:''; width:3px; height:14px; background:var(--green); border-radius:2px; }
+
+.ans-body { font-size:14px; color:var(--text-sub); line-height:1.8; }
+.ans-body strong { color:var(--text); }
+.ans-body .formula {
+  background:var(--code-bg);
+  border:1px solid var(--border);
+  border-left:3px solid var(--accent);
+  border-radius:8px;
+  padding:12px 16px;
+  font-family:'Menlo','Courier New',monospace;
+  font-size:13px; color:var(--yellow2);
+  line-height:2; margin:10px 0;
+  overflow-x:auto;
+}
+.ans-body .formula .cm { color:var(--text-dim); font-size:11px; }
+
+.variation-box {
+  background:rgba(168,85,247,.07);
+  border:1px solid rgba(168,85,247,.25);
+  border-radius:8px;
+  padding:14px 18px;
+  margin-top:14px;
+  font-size:13px;
+}
+.variation-box .vt {
+  font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  color:var(--purple2); margin-bottom:8px;
+  display:flex; align-items:center; gap:6px;
+}
+.variation-box p { color:var(--text-sub); line-height:1.7; }
+.variation-box strong { color:var(--purple2); }
+
+.check-wrap { margin-top:16px; display:flex; gap:10px; }
+.check-btn {
+  padding:8px 20px; border-radius:8px; border:none;
+  font-size:13px; font-weight:700; cursor:pointer;
+  font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  transition:.15s;
+}
+.btn-correct { background:rgba(34,197,94,.15); color:var(--green2); border:1px solid rgba(34,197,94,.3); }
+.btn-correct:hover, .btn-correct.active { background:var(--green); color:#fff; }
+.btn-wrong { background:rgba(239,68,68,.12); color:var(--red2); border:1px solid rgba(239,68,68,.25); }
+.btn-wrong:hover, .btn-wrong.active { background:var(--red); color:#fff; }
+
+/* ── Responsive ── */
+@media(max-width:700px){
+  .page-header, .scoreboard, .section-divider, .quiz-wrap { padding-left:16px; padding-right:16px; }
+  .scoreboard { margin-left:16px; margin-right:16px; }
+  .section-divider { margin-left:16px; margin-right:16px; }
+  .page-header h1 { font-size:26px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="page-header">
+  <div class="header-label">기계학습 · 응용 서술형 퀴즈</div>
+  <h1>선형회귀·이진분류 &amp; <span>연습문제3 응용</span></h1>
+  <p>인천대학교 컴퓨터공학부 · 2026년 1학기 · 총 16문제 (자료1: 4문제 / 자료2: 12문제)</p>
+</div>
+
+<!-- ── Scoreboard ── -->
+<div class="scoreboard">
+  <div>
+    <div class="score-label">맞힌 문제</div>
+    <div class="score-val"><span id="correct-cnt">0</span> / <span id="total-cnt">16</span></div>
+  </div>
+  <div style="color:var(--text-dim); font-size:13px;">각 문제를 풀고 ✅ / ❌ 로 자가 채점하세요</div>
+  <button class="score-btn" onclick="resetAll()">초기화</button>
+</div>
+
+<!-- ════════════════════════════════════════
+     자료 1 — slide_5 강의자료
+════════════════════════════════════════ -->
+<div class="section-divider">
+  <span class="section-badge badge-blue">자료 1</span>
+  <h2>slide_5 — 선형 회귀 &amp; 이진 분류 강의자료</h2>
+  <div class="line"></div>
+</div>
+
+<div class="quiz-wrap">
+
+<!-- Q1 -->
+<div class="quiz-card" id="qc1">
+  <div class="quiz-head" onclick="toggle(1)">
+    <span class="quiz-num">Q01</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-type">조건 변형</span>
+        <span class="tag-ref">슬라이드 4 — MSE 비용 함수</span>
+        <span class="stars">⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        선형 회귀에서 MSE 대신 MAE(평균 절댓값 오차)를 손실 함수로 사용할 경우,
+        경사하강법 적용에 어떤 근본적인 문제가 발생하는가?
+        <span class="sub">
+          MAE = (1/N)Σ|ŷᵢ − yᵢ| 의 수학적 특성과 MSE의 차이를 미분 가능성 측면에서 비교하고,
+          딥러닝에서 MSE가 기본 손실 함수로 채택되는 이유를 연결하여 서술하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>MAE의 핵심 문제: z=0에서의 미분 불연속성.</strong><br><br>
+      MAE = (1/N)Σ|ŷᵢ − yᵢ| 에서 절댓값 함수 |e|는 e=0 지점에서 미분이 존재하지 않는다(좌미분 −1, 우미분 +1로 불일치). 경사하강법은 <strong>∇J(θ)가 모든 점에서 정의</strong>되어야 파라미터 업데이트 방향을 결정할 수 있는데, MAE는 잔차가 0인 데이터 포인트마다 이 조건이 깨진다.<br><br>
+      반면 MSE = (1/N)Σ(ŷᵢ − yᵢ)²는 임의의 θ에서 연속적이고 두 번 미분 가능하며, 그래디언트가 <strong>∇J(θ) = (2/N)Xᵀ(Xθ−y)</strong>로 닫힌 형태로 존재한다. 이 덕분에 경사하강법이 안정적으로 수렴하고, 역전파(backpropagation) 계산 그래프에서 기울기를 끊김 없이 전파할 수 있다.<br><br>
+      추가로 MSE는 이차 함수이므로 볼록(convex)성이 보장되어 지역 최솟값과 전역 최솟값이 일치한다. 이 두 가지 이유(미분 연속성 + 볼록성)로 딥러닝에서 MSE가 회귀 문제의 기본 손실 함수로 채택된다.
+      <div class="formula">
+        MSE 그래디언트: ∇θJ = (2/N) Xᵀ(Xθ − y)  <span class="cm">← 모든 점에서 정의</span><br>
+        MAE 그래디언트: ∂|e|/∂e = sign(e)  <span class="cm">← e=0에서 미정의</span>
+      </div>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(1,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(1,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- Q2 -->
+<div class="quiz-card" id="qc2">
+  <div class="quiz-head" onclick="toggle(2)">
+    <span class="quiz-num">Q02</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-type">역방향 문제</span>
+        <span class="tag-ref">슬라이드 4 — MSE 비용 함수</span>
+        <span class="stars">⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        N=4인 회귀 모델에서 MSE 손실값이 J(θ) = 2.0으로 계산되었다.
+        <span class="sub">
+          이 손실값으로부터 데이터 포인트들의 평균 잔차 크기(RMS 오차)를 역으로 구하고,
+          만약 데이터 중 한 포인트의 잔차가 특별히 크다면 MSE가 그 오차를 어떻게 과중 처벌하는지
+          수식과 함께 서술하라. MAE와의 이상치 민감도 차이도 포함하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>RMSE(Root MSE) 역산:</strong><br><br>
+      J(θ) = MSE = (1/N)Σeᵢ² = 2.0 이므로 평균 제곱 잔차가 2.0이다.
+      평균 잔차 크기(RMS 오차)는 √MSE = √2.0 ≈ <strong>1.414</strong>로 역산된다.
+      즉 평균적으로 각 데이터 포인트의 예측이 실제값과 약 1.41 단위 차이남을 의미한다.<br><br>
+      <strong>이상치에 대한 과중 처벌:</strong><br>
+      예를 들어 3개의 잔차가 0.5이고 하나가 e=3.0인 경우를 가정하면,
+      MSE = (1/4)(0.25 + 0.25 + 0.25 + 9.0) = 2.44가 된다.
+      이상치 하나의 제곱 기여가 9.0으로 나머지 셋의 합(0.75)을 압도한다.
+      이처럼 MSE는 오차를 제곱하기 때문에 큰 오차일수록 손실에 미치는 영향이 비선형적으로 커진다.
+      <div class="formula">
+        RMSE = √(J(θ)) = √2.0 ≈ 1.414<br>
+        이상치 e=3.0 → 기여 = e² = 9.0  <span class="cm">← 정상 잔차(0.5²=0.25)의 36배</span>
+      </div>
+      반면 MAE는 |3.0|=3.0으로 선형 처벌하여 이상치에 더 강인하다. 그러나 앞서 설명한 미분 불연속 문제로 경사하강법에 불리하다.
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(2,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(2,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- Q3 -->
+<div class="quiz-card" id="qc3">
+  <div class="quiz-head" onclick="toggle(3)">
+    <span class="quiz-num">Q03</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-type">조건 변형</span>
+        <span class="tag-ref">슬라이드 6 — 경사하강법</span>
+        <span class="stars">⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        미니배치 경사하강법에서 배치 크기 B를 1 → 64 → N(전체)으로 늘릴수록
+        수렴 안정성, 학습 속도, 메모리 사용량은 각각 어떻게 변하는가?
+        <span class="sub">
+          세 가지 변화를 비교하고, 딥러닝에서 B=32~256이 표준으로 채택되는 이유를
+          속도와 안정성의 균형 측면에서 서술하라. SGD(B=1)가 지역 최솟값 탈출에
+          유리한 이유도 포함하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>배치 크기 B에 따른 세 가지 변화:</strong><br><br>
+      <strong>① 수렴 안정성:</strong> B=1(SGD)은 매 스텝 단 1개의 샘플로 그래디언트를 추정하므로 노이즈가 매우 크고 경로가 불안정하다. B를 늘릴수록 그래디언트 추정의 분산이 줄어 수렴 경로가 안정된다. B=N(Batch GD)은 정확한 그래디언트를 사용해 가장 안정적이다.<br><br>
+      <strong>② 학습 속도(스텝당):</strong> B=1은 스텝당 연산이 적어 업데이트가 빠르다. B=N은 스텝당 전체 데이터를 처리해 에포크당 1회 업데이트에 그치므로 대규모 데이터에서 비효율적이다.<br><br>
+      <strong>③ 메모리:</strong> B가 클수록 한 번에 GPU 메모리에 올려야 하는 데이터가 많아진다.<br><br>
+      <strong>B=32~256이 표준인 이유:</strong> GPU의 병렬 연산 단위와 맞아 떨어져 행렬 곱 연산 효율이 높고, 동시에 그래디언트 추정의 분산도 충분히 낮아 안정적 수렴이 가능한 절충점이기 때문이다.<br><br>
+      <strong>SGD가 지역 최솟값 탈출에 유리한 이유:</strong> 노이즈가 큰 그래디언트가 오히려 얕은 지역 최솟값에서 파라미터를 튕겨내는 효과를 낸다. 이 확률적 요동이 더 깊은 전역 최솟값 탐색을 도울 수 있다.
+      <div class="formula">
+        B=1 (SGD) : 불안정, 빠른 업데이트, 낮은 메모리, 지역최솟값 탈출 용이<br>
+        B=32~256  : 균형 ★ 딥러닝 표준<br>
+        B=N (Batch): 안정적, 느린 수렴, 높은 메모리, 지역최솟값 갇힐 위험
+      </div>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(3,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(3,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- Q4 -->
+<div class="quiz-card" id="qc4">
+  <div class="quiz-head" onclick="toggle(4)">
+    <span class="quiz-num">Q04</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-type">개념 결합</span>
+        <span class="tag-ref">슬라이드 5·6 — 정규방정식 + 경사하강법</span>
+        <span class="stars">⭐⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        선형 회귀에서 정규방정식 θ=(XᵀX)⁻¹Xᵀy이 존재함에도 불구하고,
+        딥러닝에서는 반드시 경사하강법을 사용해야 하는 이유를 세 가지 근거로 서술하라.
+        <span class="sub">
+          ① 계산 복잡도(특징 수 d와의 관계), ② 특이행렬 문제와 Ridge 정규화,
+          ③ 비선형 모델(신경망)에서의 적용 불가 — 세 축을 모두 포함하여
+          각각의 한계가 어떻게 경사하강법의 필요성으로 연결되는지 서술하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>① 계산 복잡도 O(d³):</strong><br>
+      정규방정식은 (XᵀX)의 역행렬 계산을 요구하며, d×d 행렬의 역행렬 계산은 O(d³) 시간복잡도를 가진다. 딥러닝에서는 특징 수 d가 수백만에 달할 수 있어 역행렬 계산이 현실적으로 불가능하다. 경사하강법은 O(Nd) 수준의 행렬-벡터 곱만 반복하므로 대규모 데이터에 효율적이다.<br><br>
+      <strong>② 특이행렬 문제:</strong><br>
+      특징 수 d가 데이터 수 N보다 크거나(d&gt;N), 특징들 간에 완전 다중공선성이 있으면 XᵀX의 랭크가 낮아져 역행렬이 존재하지 않는다. 이 경우 Ridge 정규화(L2)를 추가하면 (XᵀX + λI)⁻¹로 역행렬이 항상 존재하지만, 이 자체가 정규방정식의 한계를 보완하는 우회책이다. 경사하강법은 이런 특이성 문제가 없다.<br><br>
+      <strong>③ 비선형 모델 적용 불가:</strong><br>
+      정규방정식은 J(θ)=||Xθ−y||²라는 이차 볼록 함수에 대해서만 ∇J=0을 해석적으로 풀 수 있다. 신경망은 ReLU, Sigmoid 등 비선형 활성화 함수를 포함하므로 손실 함수가 θ에 대해 비선형이 되어 닫힌 형태의 해가 존재하지 않는다. 반복적 업데이트인 경사하강법만이 임의의 미분 가능 손실 함수에 적용 가능하다.
+      <div class="formula">
+        정규방정식: O(d³)  <span class="cm">d 크면 불가</span><br>
+        d > N 또는 다중공선성: (XᵀX) 역행렬 불존재<br>
+        신경망 f(x;θ): ∇J=0 해석적 해 없음 → 경사하강법 필수
+      </div>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(4,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(4,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /quiz-wrap -->
+
+<!-- ════════════════════════════════════════
+     자료 2 — 연습문제3.pdf 응용
+════════════════════════════════════════ -->
+<div class="section-divider">
+  <span class="section-badge badge-green">자료 2</span>
+  <h2>연습문제3.pdf — 원본 6문제 × 응용 2문제</h2>
+  <div class="line"></div>
+</div>
+
+<div class="quiz-wrap">
+
+<!-- ── 문제1 응용 ── -->
+<div style="font-size:12px; color:var(--text-dim); font-family:'Menlo','Courier New',monospace; letter-spacing:1px; margin-bottom:12px; padding-left:4px;">
+  ▸ 원본 문제 1 — 선형대수 (벡터·평면·직교)
+</div>
+
+<!-- Q5 -->
+<div class="quiz-card" id="qc5">
+  <div class="quiz-head" onclick="toggle(5)">
+    <span class="quiz-num">Q05</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-applied">[응용]</span>
+        <span class="tag-type">수치 변형</span>
+        <span class="tag-ref">원본 문제 1 — 선형대수</span>
+        <span class="stars">⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        아래 두 벡터 a', b'와 평면 P'를 span하는 기저 벡터 u1', u2'가 주어졌다.
+        <span class="sub">
+          a' = (2, −1, −1)ᵀ, &nbsp; b' = (1, 2, 2)ᵀ<br>
+          u1' = (1, 1, 0)ᵀ, &nbsp; u2' = (0, 1, 1)ᵀ<br><br>
+          (1) ‖a'‖와 ‖b'‖를 구하라.<br>
+          (2) 내적 a'·b'를 계산하고 cos θ를 구하라.<br>
+          (3) a'·u1'과 a'·u2'를 계산하여 a'와 평면 P'의 관계를 설명하라.<br>
+          (4) (2)~(3)의 결과를 종합하여 a'와 b'의 기하학적 관계를 한 문장으로 서술하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>(1) 노름 계산:</strong>
+      <div class="formula">
+        ‖a'‖ = √(4+1+1) = √6 ≈ 2.449<br>
+        ‖b'‖ = √(1+4+4) = √9 = 3
+      </div>
+      <strong>(2) 내적 및 cos θ:</strong>
+      <div class="formula">
+        a'·b' = 2×1 + (−1)×2 + (−1)×2 = 2 − 2 − 2 = −2<br>
+        cos θ = −2 / (√6 × 3) = −2/(3√6) ≈ −0.272
+      </div>
+      <strong>(3) a'와 평면 P'의 관계:</strong>
+      <div class="formula">
+        a'·u1' = 2×1 + (−1)×1 + (−1)×0 = 1  <span class="cm">← ≠ 0</span><br>
+        a'·u2' = 2×0 + (−1)×1 + (−1)×1 = −2  <span class="cm">← ≠ 0</span>
+      </div>
+      a'·u1' ≠ 0, a'·u2' ≠ 0이므로 a'는 평면 P'에 직교하지 않는다. 즉 a'는 P'의 법선벡터가 아니며, P' 위에 있지도 않은 임의의 벡터이다.<br><br>
+      <strong>(4) 기하학적 관계 (한 문장):</strong><br>
+      a'와 b'는 내적이 −2(≠0)이므로 직교하지 않으며, b'는 평면 P'의 원소이고 a'는 P'에 속하지도 직교하지도 않는 벡터이다.
+    </div>
+    <div class="variation-box">
+      <div class="vt">🔀 원본 대비 변형 포인트</div>
+      <p>원본의 a=(1,−1,−1)ᵀ는 a·u1=0, a·u2=0으로 <strong>평면 P에 직교</strong>하는 특수한 경우였다. 응용에서는 a'=(2,−1,−1)ᵀ로 수치를 변경하여 a'·u1'=1≠0이 되도록 했다. 이로 인해 결론이 "직교→직교 아님"으로 바뀌며, 기하학적 해석도 달라진다.</p>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(5,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(5,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- Q6 -->
+<div class="quiz-card" id="qc6">
+  <div class="quiz-head" onclick="toggle(6)">
+    <span class="quiz-num">Q06</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-applied">[응용]</span>
+        <span class="tag-type">역방향 문제</span>
+        <span class="tag-ref">원본 문제 1 — 선형대수</span>
+        <span class="stars">⭐⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        벡터 v = (α, β, γ)ᵀ가 원본 문제의 평면 P (u1=(1,1,0)ᵀ, u2=(1,0,1)ᵀ로 span됨)에
+        직교하려면 α, β, γ가 만족해야 할 조건을 유도하라.
+        <span class="sub">
+          v·u1 = 0과 v·u2 = 0 두 조건을 연립하여 v가 가져야 할 일반적인 형태를 구하고,
+          이것이 기하학적으로 무엇을 의미하는지(법선벡터의 의미) 한 문장으로 서술하라.
+          원본에서 a=(1,−1,−1)ᵀ가 이 조건을 만족함을 검증하는 과정도 포함하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>직교 조건 연립:</strong>
+      <div class="formula">
+        v·u1 = α + β = 0  →  β = −α<br>
+        v·u2 = α + γ = 0  →  γ = −α<br><br>
+        따라서 v = α(1, −1, −1)ᵀ  (α ≠ 0인 임의의 실수)
+      </div>
+      <strong>기하학적 의미 (한 문장):</strong><br>
+      v = α(1,−1,−1)ᵀ는 평면 P의 <strong>법선벡터(normal vector)</strong>로, P 위의 모든 벡터와 수직이며 P의 방향을 완전히 결정짓는다.<br><br>
+      <strong>원본 a=(1,−1,−1)ᵀ 검증:</strong>
+      <div class="formula">
+        a·u1 = 1×1 + (−1)×1 + (−1)×0 = 0  ✓<br>
+        a·u2 = 1×1 + (−1)×0 + (−1)×1 = 0  ✓<br>
+        → a는 α=1인 법선벡터이므로 조건 만족
+      </div>
+    </div>
+    <div class="variation-box">
+      <div class="vt">🔀 원본 대비 변형 포인트</div>
+      <p>원본은 a가 주어지고 "P와의 관계를 설명"하는 <strong>순방향</strong>이었다. 응용에서는 "P에 직교하는 벡터의 조건을 역으로 유도"하는 <strong>역방향</strong>으로 변형했다. 풀이 구조(내적=0 조건 연립)는 동일하되, 시작점과 목표가 뒤집힌다.</p>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(6,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(6,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 문제2 응용 ── -->
+<div style="font-size:12px; color:var(--text-dim); font-family:'Menlo','Courier New',monospace; letter-spacing:1px; margin:24px 0 12px; padding-left:4px;">
+  ▸ 원본 문제 2 — 기술통계 (분산·공분산·상관계수)
+</div>
+
+<!-- Q7 -->
+<div class="quiz-card" id="qc7">
+  <div class="quiz-head" onclick="toggle(7)">
+    <span class="quiz-num">Q07</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-applied">[응용]</span>
+        <span class="tag-type">수치 변형</span>
+        <span class="tag-ref">원본 문제 2 — 기술통계</span>
+        <span class="stars">⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        아래 N=4개의 데이터 쌍이 주어졌다. (N으로 나누는 방식 사용)
+        <span class="sub">
+          i:&nbsp; 1 &nbsp; 2 &nbsp; 3 &nbsp; 4<br>
+          xᵢ: 2 &nbsp; 4 &nbsp; 6 &nbsp; 8<br>
+          yᵢ: 1 &nbsp; 2 &nbsp; 4 &nbsp; 5<br><br>
+          (1) 표본 평균 x̄, ȳ를 구하라.<br>
+          (2) 분산 σ²x, σ²y를 구하라.<br>
+          (3) 공분산 Cov(X,Y)를 구하라.<br>
+          (4) 피어슨 상관계수 r을 구하고 두 변수의 선형 관계를 한 문장으로 해석하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>(1) 표본 평균:</strong>
+      <div class="formula">
+        x̄ = (2+4+6+8)/4 = 20/4 = 5<br>
+        ȳ = (1+2+4+5)/4 = 12/4 = 3
+      </div>
+      <strong>(2) 분산:</strong>
+      <div class="formula">
+        편차 xᵢ−x̄: −3, −1, 1, 3<br>
+        σ²x = (9+1+1+9)/4 = 20/4 = 5<br><br>
+        편차 yᵢ−ȳ: −2, −1, 1, 2<br>
+        σ²y = (4+1+1+4)/4 = 10/4 = 2.5
+      </div>
+      <strong>(3) 공분산:</strong>
+      <div class="formula">
+        Cov(X,Y) = [(−3)(−2)+(−1)(−1)+(1)(1)+(3)(2)] / 4<br>
+                 = [6 + 1 + 1 + 6] / 4 = 14/4 = 3.5
+      </div>
+      <strong>(4) 상관계수:</strong>
+      <div class="formula">
+        σx = √5 ≈ 2.236,  σy = √2.5 ≈ 1.581<br>
+        r = 3.5 / (2.236 × 1.581) = 3.5 / 3.536 ≈ 0.990
+      </div>
+      r ≈ 0.990으로 1에 매우 가까우므로, X와 Y 사이에는 <strong>거의 완전한 양의 선형 관계</strong>가 존재한다.
+    </div>
+    <div class="variation-box">
+      <div class="vt">🔀 원본 대비 변형 포인트</div>
+      <p>원본의 xᵢ={1,2,3,4}, yᵢ={0,3,2,3}에서 xᵢ={2,4,6,8}, yᵢ={1,2,4,5}로 <strong>수치 변경</strong>. x는 원본의 2배 스케일로 늘어났고, y도 단조 증가 패턴으로 변경되었다. 풀이 구조(평균→분산→공분산→상관계수 순)는 동일하나 σ²x, Cov, r 수치가 달라진다. 특히 r이 원본보다 1에 훨씬 가까워 해석도 달라진다.</p>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(7,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(7,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- Q8 -->
+<div class="quiz-card" id="qc8">
+  <div class="quiz-head" onclick="toggle(8)">
+    <span class="quiz-num">Q08</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-applied">[응용]</span>
+        <span class="tag-type">조건 변형</span>
+        <span class="tag-ref">원본 문제 2 — 기술통계</span>
+        <span class="stars">⭐⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        원본 문제 2의 데이터(xᵢ={1,2,3,4}, yᵢ={0,3,2,3})를 그대로 사용하되,
+        분모를 N 대신 N−1(불편 추정량)로 바꾸어 계산하라.
+        <span class="sub">
+          (1) 불편 분산 s²x, s²y를 구하라.<br>
+          (2) 불편 공분산 s_xy를 구하라.<br>
+          (3) 피어슨 상관계수 r은 N으로 나누나 N−1로 나누나 동일한 값이 나오는가?
+          그 이유를 분자·분모 관계로 설명하라.<br>
+          (4) 왜 통계학에서는 N−1로 나누는 불편 추정량을 사용하는지 한 문장으로 서술하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      원본 데이터: x̄=2.5, ȳ=2, Σ(xᵢ−x̄)²=5, Σ(yᵢ−ȳ)²=6, Σ(xᵢ−x̄)(yᵢ−ȳ)=3
+      <div class="formula">
+        (1) s²x = 5/(4−1) = 5/3 ≈ 1.667   (원본 σ²x = 5/4 = 1.25)<br>
+            s²y = 6/(4−1) = 6/3 = 2.0     (원본 σ²y = 6/4 = 1.5)<br><br>
+        (2) s_xy = 3/(4−1) = 3/3 = 1.0    (원본 Cov = 3/4 = 0.75)
+      </div>
+      <strong>(3) 상관계수의 N vs N−1:</strong><br>
+      r = s_xy / (sx × sy) = [Σ(xi−x̄)(yi−ȳ)/(N−1)] / [√(Σ(xi−x̄)²/(N−1)) × √(Σ(yi−ȳ)²/(N−1))]<br>
+      분자와 분모의 (N−1)이 모두 약분되어 사라지므로 <strong>r 값은 N이든 N−1이든 동일</strong>하다.<br><br>
+      <div class="formula">
+        r = Σ(xi−x̄)(yi−ȳ) / √[Σ(xi−x̄)² × Σ(yi−ȳ)²]  <span class="cm">← N, N−1 무관</span><br>
+        = 3 / √(5×6) = 3/√30 ≈ 0.548
+      </div>
+      <strong>(4) N−1을 사용하는 이유 (한 문장):</strong><br>
+      표본에서 평균 μ̂=x̄를 추정하는 데 이미 1개의 자유도가 소모되므로, 분산 추정에 남은 자유도(N−1)로 나눠야 모집단 분산에 대한 <strong>불편 추정량</strong>(기댓값이 참값과 일치)을 얻을 수 있다.
+    </div>
+    <div class="variation-box">
+      <div class="vt">🔀 원본 대비 변형 포인트</div>
+      <p>원본은 "N으로 나누는 방식을 사용하라"고 명시했다. 응용에서는 <strong>분모를 N→N−1로 변경</strong>하여 불편 추정량 개념을 도입했다. 데이터는 동일하나 계산 결과(s², s_xy)가 달라지며, 추가로 "상관계수는 N/N−1과 무관함"이라는 숨겨진 구조를 발견하도록 유도하는 문제로 변형되었다.</p>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(8,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(8,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 문제3 응용 ── -->
+<div style="font-size:12px; color:var(--text-dim); font-family:'Menlo','Courier New',monospace; letter-spacing:1px; margin:24px 0 12px; padding-left:4px;">
+  ▸ 원본 문제 3 — 이항분포·정규근사·MLE
+</div>
+
+<!-- Q9 -->
+<div class="quiz-card" id="qc9">
+  <div class="quiz-head" onclick="toggle(9)">
+    <span class="quiz-num">Q09</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-applied">[응용]</span>
+        <span class="tag-type">수치 변형</span>
+        <span class="tag-ref">원본 문제 3 — 이항분포·정규근사</span>
+        <span class="stars">⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        앞면이 나올 확률이 p=0.6인 동전을 n=200번 던진다. 앞면 횟수를 X라 하자.
+        <span class="sub">
+          (참고) Φ(−2.89) ≈ 0.0019<br><br>
+          (1) X의 분포를 B(n,p) 표기로 쓰고 E[X], Var(X)를 계산하라.<br>
+          (2) 정규 근사를 이용하여 P(X ≤ 100)을 구하라. Z-score 계산 과정을 명시하라.<br>
+          (3) 이 결과가 p=0.8, n=100인 원본 문제의 결과(P(X≤70)≈0.0062)와
+          어떻게 다른지, 그 차이의 직관적 이유를 서술하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>(1) 분포 및 모멘트:</strong>
+      <div class="formula">
+        X ∼ B(200, 0.6)<br>
+        E[X] = np = 200 × 0.6 = 120<br>
+        Var(X) = np(1−p) = 200 × 0.6 × 0.4 = 48<br>
+        SD(X) = √48 ≈ 6.928
+      </div>
+      <strong>(2) 정규 근사 P(X ≤ 100):</strong>
+      <div class="formula">
+        Z = (X − np) / √(np(1−p)) = (100 − 120) / √48<br>
+          = −20 / 6.928 ≈ −2.887 ≈ −2.89<br><br>
+        P(X ≤ 100) ≈ Φ(−2.89) ≈ 0.0019
+      </div>
+      <strong>(3) 원본과의 비교 및 직관:</strong><br>
+      원본(p=0.8, n=100)에서 P(X≤70)≈0.0062이고, 응용(p=0.6, n=200)에서 P(X≤100)≈0.0019로 더 작다. 두 경우 모두 평균보다 한참 낮은 값(원본: 평균80보다 10 낮음 / 응용: 평균120보다 20 낮음)의 확률을 구했는데, 응용이 평균에서 더 멀리 떨어진 표준편차 수(Z≈−2.89 vs −2.50)만큼 더 희귀한 사건이기 때문에 확률이 더 낮게 나온다.
+    </div>
+    <div class="variation-box">
+      <div class="vt">🔀 원본 대비 변형 포인트</div>
+      <p>원본의 p=0.8→<strong>p=0.6</strong>, n=100→<strong>n=200</strong>으로 두 수치 모두 변경. E[X]=80→120, Var(X)=16→48로 달라지며, 구하는 임계값도 70→100으로 변경. 풀이 구조(E[X], Var(X) 계산 → Z-score 표준화 → Φ 조회)는 동일하나 Z≈−2.89로 원본(−2.50)보다 더 극단적인 결과가 나온다.</p>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(9,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(9,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- Q10 -->
+<div class="quiz-card" id="qc10">
+  <div class="quiz-head" onclick="toggle(10)">
+    <span class="quiz-num">Q10</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-applied">[응용]</span>
+        <span class="tag-type">역방향 문제</span>
+        <span class="tag-ref">원본 문제 3 — MLE</span>
+        <span class="stars">⭐⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        어떤 동전을 n=100번 던져 MLE로 추정한 결과 p̂=0.6을 얻었다.
+        <span class="sub">
+          (1) 이 MLE 결과로부터 실제로 앞면이 몇 번 나왔는지 역산하라.<br>
+          (2) 앞면 횟수 k를 역산한 값으로 로그 우도 함수 ℓ(p)를 p의 식으로 써라.<br>
+          (3) dℓ/dp = 0을 풀어 p̂를 유도하고, 역산한 k값을 대입하면 p̂=0.6이 복원됨을 확인하라.<br>
+          (4) 이 과정이 "MLE = 관측 빈도"임을 직관적으로 한 문장으로 설명하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>(1) 앞면 횟수 역산:</strong>
+      <div class="formula">
+        MLE의 성질: p̂ = k/n<br>
+        0.6 = k/100  →  k = 60번
+      </div>
+      <strong>(2) 로그 우도 함수 (k=60, n=100):</strong>
+      <div class="formula">
+        L(p) = P(X=60|p) = C(100,60) · p⁶⁰ · (1−p)⁴⁰<br>
+        ℓ(p) = log L(p) = 60·log(p) + 40·log(1−p) + const
+      </div>
+      <strong>(3) MLE 유도 및 복원 확인:</strong>
+      <div class="formula">
+        dℓ/dp = 60/p − 40/(1−p) = 0<br>
+        60(1−p) = 40p<br>
+        60 − 60p = 40p<br>
+        60 = 100p<br>
+        p̂ = 60/100 = 0.6  ✓
+      </div>
+      <strong>(4) 직관적 의미 (한 문장):</strong><br>
+      이항 분포의 MLE는 우도를 최대화하는 p가 항상 <strong>"앞면 횟수/전체 시행 횟수"</strong>라는 단순한 관측 빈도와 일치하므로, 복잡한 미분 없이도 직관적으로 추정값을 알 수 있다.
+    </div>
+    <div class="variation-box">
+      <div class="vt">🔀 원본 대비 변형 포인트</div>
+      <p>원본은 "p 모름, k=70번 관측 → p̂ 유도"하는 <strong>순방향</strong>. 응용은 "p̂=0.6 주어짐 → k 역산 → ℓ(p) 재구성 → p̂ 복원"으로 <strong>역방향</strong> 변형. 풀이 핵심 수식(dℓ/dp=0)은 동일하되, 시작점이 결과(p̂)에서 시작하여 과정을 거슬러 올라간다는 점이 다르다.</p>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(10,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(10,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 문제4 응용 ── -->
+<div style="font-size:12px; color:var(--text-dim); font-family:'Menlo','Courier New',monospace; letter-spacing:1px; margin:24px 0 12px; padding-left:4px;">
+  ▸ 원본 문제 4 — 로지스틱 회귀·Chain Rule·경사하강법
+</div>
+
+<!-- Q11 -->
+<div class="quiz-card" id="qc11">
+  <div class="quiz-head" onclick="toggle(11)">
+    <span class="quiz-num">Q11</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-applied">[응용]</span>
+        <span class="tag-type">수치 변형</span>
+        <span class="tag-ref">원본 문제 4 — 로지스틱 회귀</span>
+        <span class="stars">⭐⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        아래 N=4 데이터로 로지스틱 회귀를 수행한다.
+        <span class="sub">
+          xᵢ: 2, 4, 6, 8 &nbsp;&nbsp; yᵢ: 0, 0, 1, 1<br>
+          모델: ŷᵢ = σ(zᵢ), zᵢ = θ₀ + θ₁xᵢ<br>
+          초기값: θ₀=0, θ₁=0. 학습률 α=0.5<br><br>
+          (1) 초기 파라미터에서 σ(0)=0.5를 이용해 모든 ŷᵢ와 오차 ŷᵢ−yᵢ를 구하라.<br>
+          (2) 전체 손실 J를 계산하라. (참고: log 0.5 = −log2 ≈ −0.693)<br>
+          (3) ∂J/∂θ₀와 ∂J/∂θ₁을 수치적으로 계산하라.<br>
+          (4) 경사하강법을 한 번 적용하여 θ₀⁽¹⁾, θ₁⁽¹⁾을 구하라.<br>
+          (5) 업데이트된 파라미터로 x=4에서의 P(y=1|x=4)를 계산하라. (참고: σ(2.5)≈0.924)
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>(1) 초기 예측 및 오차 (θ₀=θ₁=0 → 모든 zᵢ=0):</strong>
+      <div class="formula">
+        ŷ₁=ŷ₂=ŷ₃=ŷ₄ = σ(0) = 0.5<br>
+        오차 ŷᵢ−yᵢ: 0.5−0=0.5,  0.5−0=0.5,  0.5−1=−0.5,  0.5−1=−0.5
+      </div>
+      <strong>(2) 손실 J:</strong>
+      <div class="formula">
+        L₁ = −[0·log(0.5) + 1·log(0.5)] = −log(0.5) = log2 ≈ 0.693  (y=0인 경우)<br>
+        L₂ = 0.693, L₃ = 0.693, L₄ = 0.693<br>
+        J = (0.693×4)/4 = 0.693
+      </div>
+      <strong>(3) 그래디언트:</strong>
+      <div class="formula">
+        ∂J/∂θ₀ = (1/4)Σ(ŷᵢ−yᵢ) = (0.5+0.5−0.5−0.5)/4 = 0/4 = 0<br><br>
+        ∂J/∂θ₁ = (1/4)Σxᵢ(ŷᵢ−yᵢ)<br>
+               = (1/4)[2×0.5 + 4×0.5 + 6×(−0.5) + 8×(−0.5)]<br>
+               = (1/4)[1 + 2 − 3 − 4]<br>
+               = (1/4)(−4) = −1.0
+      </div>
+      <strong>(4) 파라미터 업데이트 (α=0.5):</strong>
+      <div class="formula">
+        θ₀⁽¹⁾ = 0 − 0.5×0 = 0<br>
+        θ₁⁽¹⁾ = 0 − 0.5×(−1.0) = 0.5
+      </div>
+      <strong>(5) x=4에서의 예측:</strong>
+      <div class="formula">
+        z = θ₀⁽¹⁾ + θ₁⁽¹⁾×4 = 0 + 0.5×4 = 2.0<br>
+        <span class="cm">※ σ(2.5)≈0.924는 참고이며 z=2.0에 대해서는</span><br>
+        σ(2.0) ≈ 0.880<br>
+        P(y=1|x=4) ≈ 0.880
+      </div>
+    </div>
+    <div class="variation-box">
+      <div class="vt">🔀 원본 대비 변형 포인트</div>
+      <p>원본: xᵢ={1,2,3,4}, yᵢ={0,1,1,1}, α=1. 응용: xᵢ={2,4,6,8}, yᵢ={0,0,1,1}, <strong>α=0.5</strong>. x 스케일이 2배로 커져 ∂J/∂θ₁에서 xᵢ 가중치가 달라지고, y가 {0,0,1,1}로 바뀌어 오차의 합계가 0이 되어 θ₀ 업데이트가 없어지는 흥미로운 결과가 나온다. α가 절반으로 줄어 θ₁ 업데이트 폭도 달라진다.</p>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(11,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(11,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- Q12 -->
+<div class="quiz-card" id="qc12">
+  <div class="quiz-head" onclick="toggle(12)">
+    <span class="quiz-num">Q12</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-applied">[응용]</span>
+        <span class="tag-type">조건 변형</span>
+        <span class="tag-ref">원본 문제 4 — 로지스틱 회귀 + 정규화</span>
+        <span class="stars">⭐⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        원본 문제 4의 로지스틱 회귀 설정에 L2 정규화(λ=0.5)를 추가한다.
+        <span class="sub">
+          정규화된 손실: J_reg = J + (λ/2)(θ₀² + θ₁²)<br><br>
+          (1) L2 정규화 항이 추가되었을 때 ∂J_reg/∂θ₀와 ∂J_reg/∂θ₁의 공식이
+          어떻게 변하는지 원본 그래디언트와 비교하여 서술하라.<br>
+          (2) 초기 파라미터(θ₀=0, θ₁=0)에서 정규화 항의 그래디언트 기여는 얼마인가?<br>
+          (3) 학습이 진행되어 θ₁이 커질수록 정규화가 θ₁ 업데이트에 어떤 방향으로
+          작용하는지 서술하고, 이것이 Overfitting 방지와 어떻게 연결되는지 설명하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>(1) 정규화 그래디언트 공식 변화:</strong>
+      <div class="formula">
+        원본: ∂J/∂θ₀ = (1/N)Σ(ŷᵢ−yᵢ)<br>
+              ∂J/∂θ₁ = (1/N)Σxᵢ(ŷᵢ−yᵢ)<br><br>
+        정규화 후: ∂J_reg/∂θ₀ = (1/N)Σ(ŷᵢ−yᵢ) + λθ₀<br>
+                   ∂J_reg/∂θ₁ = (1/N)Σxᵢ(ŷᵢ−yᵢ) + λθ₁
+      </div>
+      각 그래디언트에 <strong>λθⱼ 항이 추가</strong>된다. 이는 파라미터가 클수록 더 강한 패널티를 주어 θ를 0 방향으로 당기는 힘(shrinkage)을 만든다.<br><br>
+      <strong>(2) 초기(θ₀=θ₁=0)에서 정규화 기여:</strong>
+      <div class="formula">
+        λθ₀ = 0.5×0 = 0<br>
+        λθ₁ = 0.5×0 = 0
+      </div>
+      초기에는 θ가 모두 0이므로 정규화 항의 기여가 0이다. 즉 첫 번째 업데이트는 원본과 동일하다.<br><br>
+      <strong>(3) θ₁이 커질수록 정규화의 역할:</strong><br>
+      학습이 진행되어 θ₁이 예를 들어 2.0이 되면 λθ₁=0.5×2.0=1.0이 그래디언트에 추가된다. 파라미터 업데이트 방향이 데이터 손실만 줄이는 쪽이 아니라 <strong>θ₁을 줄이는 방향</strong>으로도 압력을 받게 된다. 이로 인해 파라미터가 과도하게 커지지 않아 모델이 훈련 데이터의 노이즈에 과적합되는 것을 막고, 새로운 데이터에 더 잘 일반화된다.
+    </div>
+    <div class="variation-box">
+      <div class="vt">🔀 원본 대비 변형 포인트</div>
+      <p>원본은 L2 정규화가 없는 순수 Cross-Entropy 손실. 응용에서는 <strong>λ=0.5의 L2 패널티 항 추가</strong>라는 조건 변형을 적용. 데이터와 초기값은 원본 그대로이나 그래디언트 공식에 λθⱼ 항이 붙어 초기(θ=0)에는 영향 없음→θ가 커질수록 영향 증가 라는 동적 효과를 분석하도록 유도한다.</p>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(12,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(12,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 문제5 응용 ── -->
+<div style="font-size:12px; color:var(--text-dim); font-family:'Menlo','Courier New',monospace; letter-spacing:1px; margin:24px 0 12px; padding-left:4px;">
+  ▸ 원본 문제 5 — K-평균 군집화
+</div>
+
+<!-- Q13 -->
+<div class="quiz-card" id="qc13">
+  <div class="quiz-head" onclick="toggle(13)">
+    <span class="quiz-num">Q13</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-applied">[응용]</span>
+        <span class="tag-type">수치 변형</span>
+        <span class="tag-ref">원본 문제 5 — K-평균 군집화</span>
+        <span class="stars">⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        원본과 동일한 6개 포인트 A(1,1) B(2,3) C(3,2) D(6,1) E(7,3) F(8,2)에 대해
+        초기 중심을 c₁⁽⁰⁾=(2,2), c₂⁽⁰⁾=(7,2)로 변경하여 K=2 군집화를 수행하라.
+        <span class="sub">
+          (1) 각 포인트에서 두 초기 중심까지의 거리 제곱을 계산하고 군집을 배정하라.<br>
+          (2) 새로운 중심 c₁⁽¹⁾, c₂⁽¹⁾을 계산하라.<br>
+          (3) 갱신된 중심으로 다시 할당해도 배정이 변하지 않음을 확인하라.<br>
+          (4) 원본(c₁=(1,1), c₂=(8,2))과 최종 군집 결과를 비교하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>(1) 거리 제곱 계산 및 배정 (c₁=(2,2), c₂=(7,2)):</strong>
+      <div class="formula">
+        A(1,1): d²(c₁)=(1)²+(1)²=2,  d²(c₂)=(6)²+(1)²=37  → c₁<br>
+        B(2,3): d²(c₁)=(0)²+(1)²=1,  d²(c₂)=(5)²+(1)²=26  → c₁<br>
+        C(3,2): d²(c₁)=(1)²+(0)²=1,  d²(c₂)=(4)²+(0)²=16  → c₁<br>
+        D(6,1): d²(c₁)=(4)²+(1)²=17, d²(c₂)=(1)²+(1)²=2   → c₂<br>
+        E(7,3): d²(c₁)=(5)²+(1)²=26, d²(c₂)=(0)²+(1)²=1   → c₂<br>
+        F(8,2): d²(c₁)=(6)²+(0)²=36, d²(c₂)=(1)²+(0)²=1   → c₂<br>
+        군집1: {A,B,C} / 군집2: {D,E,F}
+      </div>
+      <strong>(2) 중심 갱신:</strong>
+      <div class="formula">
+        c₁⁽¹⁾ = ((1+2+3)/3, (1+3+2)/3) = (2, 2)<br>
+        c₂⁽¹⁾ = ((6+7+8)/3, (1+3+2)/3) = (7, 2)
+      </div>
+      <strong>(3) 수렴 확인:</strong><br>
+      c₁⁽¹⁾=(2,2), c₂⁽¹⁾=(7,2)는 초기 중심과 동일하므로 배정이 변하지 않는다. <strong>1회 반복만에 수렴</strong>.<br><br>
+      <strong>(4) 원본과 비교:</strong><br>
+      원본(c₁=(1,1), c₂=(8,2))도 최종 군집 {A,B,C}/{D,E,F}로 동일하지만, 원본은 2회 반복 후 수렴한 반면 응용은 초기 중심이 이미 최적에 가까워 <strong>1회 반복으로 수렴</strong>한다. 초기 중심 선택이 수렴 속도에 영향을 미침을 확인할 수 있다.
+    </div>
+    <div class="variation-box">
+      <div class="vt">🔀 원본 대비 변형 포인트</div>
+      <p>데이터 포인트 6개는 동일하나 초기 중심을 c₁=(1,1)→<strong>(2,2)</strong>, c₂=(8,2)→<strong>(7,2)</strong>로 변경. 새 초기 중심이 최종 군집 중심에 이미 가깝기 때문에 1회 반복으로 수렴하는 반면, 원본은 2회가 필요하다. 최종 군집 배정은 동일하지만 수렴 속도가 달라지는 흥미로운 결과로, K-means의 초기화 민감성을 체험하게 한다.</p>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(13,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(13,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- Q14 -->
+<div class="quiz-card" id="qc14">
+  <div class="quiz-head" onclick="toggle(14)">
+    <span class="quiz-num">Q14</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-applied">[응용]</span>
+        <span class="tag-type">조건 변형</span>
+        <span class="tag-ref">원본 문제 5 — K-평균 군집화</span>
+        <span class="stars">⭐⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        원본과 동일한 6개 포인트에서 K=3으로 변경하여 군집화를 수행한다.
+        초기 중심: c₁⁽⁰⁾=(1,1), c₂⁽⁰⁾=(4,2), c₃⁽⁰⁾=(8,2)
+        <span class="sub">
+          (1) 각 포인트에서 세 중심까지의 거리 제곱을 계산하고 군집을 배정하라.<br>
+          (2) 새로운 중심 c₁⁽¹⁾, c₂⁽¹⁾, c₃⁽¹⁾을 계산하라.<br>
+          (3) K=2와 K=3 결과를 비교하여, K값 선택이 군집 해석에 미치는 영향을
+          한 문장으로 서술하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>(1) 거리 제곱 및 배정 (c₁=(1,1), c₂=(4,2), c₃=(8,2)):</strong>
+      <div class="formula">
+        A(1,1): d²(c₁)=0,    d²(c₂)=9+1=10,  d²(c₃)=49+1=50  → c₁<br>
+        B(2,3): d²(c₁)=1+4=5, d²(c₂)=4+1=5,  d²(c₃)=36+1=37 → c₁(동률, c₁ 선택)<br>
+        C(3,2): d²(c₁)=4+1=5, d²(c₂)=1+0=1,  d²(c₃)=25+0=25 → c₂<br>
+        D(6,1): d²(c₁)=25+0=25,d²(c₂)=4+1=5, d²(c₃)=4+1=5   → c₂(동률, c₂ 선택)<br>
+        E(7,3): d²(c₁)=36+4=40,d²(c₂)=9+1=10,d²(c₃)=1+1=2   → c₃<br>
+        F(8,2): d²(c₁)=49+1=50,d²(c₂)=16+0=16,d²(c₃)=0+0=0  → c₃<br>
+        군집1: {A,B} / 군집2: {C,D} / 군집3: {E,F}
+      </div>
+      <strong>(2) 중심 갱신:</strong>
+      <div class="formula">
+        c₁⁽¹⁾ = ((1+2)/2, (1+3)/2) = (1.5, 2)<br>
+        c₂⁽¹⁾ = ((3+6)/2, (2+1)/2) = (4.5, 1.5)<br>
+        c₃⁽¹⁾ = ((7+8)/2, (3+2)/2) = (7.5, 2.5)
+      </div>
+      <strong>(3) K=2 vs K=3 비교 (한 문장):</strong><br>
+      K=2는 왼쪽 그룹 {A,B,C}와 오른쪽 그룹 {D,E,F}로 x축 위치 기반으로만 분리하지만, K=3은 중간 포인트 {C,D}를 별도 군집으로 분리하여 <strong>더 세밀한 공간적 구조</strong>를 포착하는 대신 각 군집의 크기가 작아져 통계적 신뢰도가 낮아질 수 있다.
+    </div>
+    <div class="variation-box">
+      <div class="vt">🔀 원본 대비 변형 포인트</div>
+      <p>원본의 K=2 → <strong>K=3으로 조건 변경</strong>. 데이터는 동일하나 군집 수와 초기 중심이 3개로 늘어나 거리 계산 횟수(6×3=18회)가 많아지고, 중간 포인트(C, D)가 새로운 군집에 배정되는 구조가 형성된다. K 선택이 군집 해석과 모델 복잡도에 미치는 영향을 체험하게 한다.</p>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(14,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(14,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 문제6 응용 ── -->
+<div style="font-size:12px; color:var(--text-dim); font-family:'Menlo','Courier New',monospace; letter-spacing:1px; margin:24px 0 12px; padding-left:4px;">
+  ▸ 원본 문제 6 — 가우시안 MLE (고난도)
+</div>
+
+<!-- Q15 -->
+<div class="quiz-card" id="qc15">
+  <div class="quiz-head" onclick="toggle(15)">
+    <span class="quiz-num">Q15</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-applied">[응용]</span>
+        <span class="tag-type">수치 변형</span>
+        <span class="tag-ref">원본 문제 6 — 가우시안 MLE</span>
+        <span class="stars">⭐⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        N=5개의 데이터 {2, 4, 6, 8, 5}가 정규분포 N(μ, σ²)에서 생성되었다고 가정한다.
+        <span class="sub">
+          (1) μ̂ (표본 평균 = MLE)를 구하라.<br>
+          (2) σ̂² (MLE, N으로 나누기)를 구하라.<br>
+          (3) 불편 추정량 s² (N−1로 나누기)를 구하라.<br>
+          (4) σ̂²과 s²을 비교하고, 어느 쪽이 크며 그 비율이 N/(N−1)임을 확인하라.<br>
+          (5) σ̂ = √σ̂²를 구하라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>(1) MLE μ̂:</strong>
+      <div class="formula">
+        μ̂ = (2+4+6+8+5)/5 = 25/5 = 5
+      </div>
+      <strong>(2) MLE σ̂² (N=5로 나누기):</strong>
+      <div class="formula">
+        편차: 2−5=−3, 4−5=−1, 6−5=1, 8−5=3, 5−5=0<br>
+        편차²: 9, 1, 1, 9, 0  →  합계 = 20<br>
+        σ̂² = 20/5 = 4.0
+      </div>
+      <strong>(3) 불편 추정량 s² (N−1=4로 나누기):</strong>
+      <div class="formula">
+        s² = 20/4 = 5.0
+      </div>
+      <strong>(4) 비교 및 비율 확인:</strong>
+      <div class="formula">
+        s² > σ̂²  (5.0 > 4.0)<br>
+        s²/σ̂² = 5.0/4.0 = 1.25 = 5/(5−1) = N/(N−1)  ✓
+      </div>
+      항상 s² = (N/(N−1))·σ̂²이므로 MLE σ̂²은 모집단 분산을 과소추정한다.<br><br>
+      <strong>(5) σ̂:</strong>
+      <div class="formula">
+        σ̂ = √4.0 = 2.0
+      </div>
+    </div>
+    <div class="variation-box">
+      <div class="vt">🔀 원본 대비 변형 포인트</div>
+      <p>원본 데이터 {1,3,5,7,4} → <strong>{2,4,6,8,5}</strong>로 수치 변경. 원본의 μ̂=4, σ̂²=4에서 μ̂=5, σ̂²=4로 평균이 달라졌다. 우연히 σ̂²=4로 동일하지만 편차 구성이 다르다. 풀이 구조(μ̂=표본평균 → 편차 제곱합 → σ̂²=합/N → s²=합/(N−1))는 동일하며, N/(N−1) 비율 확인 과정도 동일하게 적용된다.</p>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(15,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(15,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+<!-- Q16 -->
+<div class="quiz-card" id="qc16">
+  <div class="quiz-head" onclick="toggle(16)">
+    <span class="quiz-num">Q16</span>
+    <div style="flex:1;">
+      <div class="quiz-meta">
+        <span class="tag-applied">[응용]</span>
+        <span class="tag-type">개념 결합</span>
+        <span class="tag-ref">원본 문제 6 — 가우시안 MLE + 자유도</span>
+        <span class="stars">⭐⭐⭐</span>
+      </div>
+      <div class="quiz-q">
+        원본 문제 6의 σ²의 MLE가 편향 추정량임을 수학적으로 보이고,
+        N−1로 나누는 불편 추정량 s²과의 관계를 자유도(degrees of freedom) 개념과
+        연결하여 서술하라.
+        <span class="sub">
+          (1) E[σ̂²] = (N−1)/N · σ² 임을 직관적 논리로 설명하라.<br>
+          (2) 왜 μ를 추정하는 순간 자유도가 1 감소하여 N−1이 되는지 서술하라.<br>
+          (3) σ̂²이 편향 추정량이면 실무에서 어떤 문제가 생기는지,
+          s²을 사용하는 것이 왜 더 타당한지 한 문장으로 결론지어라.
+        </span>
+      </div>
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
+  <div class="quiz-ans">
+    <div class="ans-label">모범 답안</div>
+    <div class="ans-body">
+      <strong>(1) E[σ̂²]의 편향 논리:</strong><br>
+      σ̂² = (1/N)Σ(xᵢ−μ̂)²에서 모평균 μ 대신 표본평균 μ̂를 사용하기 때문에 편차 (xᵢ−μ̂)가 (xᵢ−μ)보다 항상 작거나 같아진다. μ̂가 표본에 맞게 최적화된 값이므로 편차의 제곱합이 체계적으로 과소추정된다. 정확히 계산하면:
+      <div class="formula">
+        E[σ̂²] = E[(1/N)Σ(xᵢ−μ̂)²] = (N−1)/N · σ²<br>
+        → σ²보다 항상 작은 값을 기대값으로 가짐 = 편향(bias) 존재
+      </div>
+      <strong>(2) 자유도 1 감소의 이유:</strong><br>
+      N개의 데이터 {x₁, …, xₙ}에서 분산을 계산할 때 우리는 이미 μ̂=x̄를 추정했다. Σ(xᵢ−x̄)=0이라는 제약이 항상 성립하므로, N개의 편차 중 N−1개만 자유롭게 변할 수 있고 마지막 하나는 자동으로 결정된다. 즉 <strong>μ 추정에 자유도 1을 소비</strong>했으므로 남은 자유도는 N−1이다.<br><br>
+      <strong>(3) 실무적 결론 (한 문장):</strong><br>
+      σ̂²은 모집단 분산을 체계적으로 과소추정하는 편향 추정량이므로, 표본 데이터로 모집단을 추론할 때는 자유도 N−1로 나누는 불편 추정량 s²을 사용하는 것이 통계적으로 더 타당하다.
+    </div>
+    <div class="variation-box">
+      <div class="vt">🔀 원본 대비 변형 포인트</div>
+      <p>원본 문제 6의 (4)항 "σ²의 MLE 유도"와 (6)항 "편향 논의"를 <strong>개념 결합</strong>으로 묶어 하나의 심화 문제로 재구성. 원본에서는 수치 계산이 중심이었으나, 응용에서는 E[σ̂²]=(N−1)/N·σ² 편향의 수학적 논리, 자유도 개념, 실무적 타당성까지 연결하여 <strong>서술 깊이</strong>를 한 단계 높였다.</p>
+    </div>
+    <div class="check-wrap">
+      <button class="check-btn btn-correct" onclick="mark(16,true,this)">✅ 맞음</button>
+      <button class="check-btn btn-wrong" onclick="mark(16,false,this)">❌ 틀림</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /quiz-wrap -->
+
+<div style="height:60px;"></div>
+
+<script>
+const scores = {};
+
+function toggle(n) {
+  const card = document.getElementById('qc'+n);
+  card.classList.toggle('open');
+}
+
+function mark(n, correct, btn) {
+  const prev = scores[n];
+  if (prev === correct) {
+    // 같은 버튼 다시 누르면 취소
+    delete scores[n];
+    btn.classList.remove('active');
+  } else {
+    scores[n] = correct;
+    // 반대 버튼 비활성화
+    const card = document.getElementById('qc'+n);
+    card.querySelectorAll('.check-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  updateScore();
+}
+
+function updateScore() {
+  const cnt = Object.values(scores).filter(v => v === true).length;
+  document.getElementById('correct-cnt').textContent = cnt;
+}
+
+function resetAll() {
+  Object.keys(scores).forEach(k => delete scores[k]);
+  document.querySelectorAll('.check-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.quiz-card').forEach(c => c.classList.remove('open'));
+  updateScore();
+}
+</script>
+</body>
+</html>
