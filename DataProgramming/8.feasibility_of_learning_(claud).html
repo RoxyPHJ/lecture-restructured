@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8: Feasibility of Learning — Data Programming</title>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --surface3: #1e2d45;
+  --border: #1f3050;
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --accent3: #34d399;
+  --accent4: #f472b6;
+  --accent5: #fb923c;
+  --red: #f87171;
+  --green: #4ade80;
+  --yellow: #fbbf24;
+  --text: #e2e8f0;
+  --text-dim: #94a3b8;
+  --text-muted: #475569;
+  --formula-bg: #0d1b2e;
+  --code-bg: #070d18;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Nanum Gothic', sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── TOC ── */
+#toc {
+  position: fixed;
+  top: 0; left: 0;
+  width: 260px;
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 100;
+  padding: 0 0 32px;
+}
+
+#toc-header {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0;
+  background: var(--surface);
+  z-index: 1;
+}
+
+#toc-header .course-tag {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+#toc-header h2 {
+  font-family: 'Impact', 'Arial Narrow', 'Arial Black', sans-serif;
+  font-size: 16px;
+  color: var(--text);
+  line-height: 1.3;
+  letter-spacing: 0.5px;
+}
+
+#toc nav { padding: 12px 0; }
+
+.toc-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 20px;
+  text-decoration: none;
+  color: var(--text-dim);
+  font-size: 12.5px;
+  line-height: 1.4;
+  transition: all 0.2s;
+  border-left: 2px solid transparent;
+}
+
+.toc-item:hover {
+  color: var(--text);
+  background: var(--surface2);
+  border-left-color: var(--accent2);
+}
+
+.toc-item.active {
+  color: var(--accent);
+  background: rgba(56,189,248,0.07);
+  border-left-color: var(--accent);
+}
+
+.toc-num {
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-size: 10px;
+  color: var(--accent2);
+  min-width: 22px;
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+/* ── MAIN ── */
+#main {
+  margin-left: 260px;
+  flex: 1;
+  max-width: calc(100vw - 260px);
+  padding: 0 48px 80px;
+}
+
+/* ── HERO ── */
+#hero {
+  padding: 64px 0 48px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 56px;
+}
+
+.lecture-num {
+  font-family: 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent2);
+  margin-bottom: 16px;
+}
+
+#hero h1 {
+  font-family: 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 48px;
+  line-height: 1.1;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
+}
+
+.hero-meta {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.meta-chip {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ── SECTION ── */
+.section {
+  margin-bottom: 64px;
+  scroll-margin-top: 24px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-num {
+  font-family: 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 13px;
+  color: var(--accent2);
+  letter-spacing: 1px;
+  min-width: 32px;
+}
+
+.section-header h2 {
+  font-family: 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 26px;
+  letter-spacing: 0.5px;
+  color: var(--text);
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+.card-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .card-2col { grid-template-columns: 1fr; }
+}
+
+/* ── KEY CONCEPT ── */
+.key-concept {
+  background: linear-gradient(135deg, rgba(56,189,248,0.06), rgba(129,140,248,0.06));
+  border: 1px solid rgba(56,189,248,0.25);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.key-concept .label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+/* ── FORMULA ── */
+.formula-box {
+  background: var(--formula-bg);
+  border: 1px solid rgba(56,189,248,0.3);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-size: 14.5px;
+  text-align: center;
+  color: var(--accent);
+  overflow-x: auto;
+}
+
+/* ── HIGHLIGHT COLORS ── */
+.hl-blue { color: var(--accent); font-weight: 600; }
+.hl-purple { color: var(--accent2); font-weight: 600; }
+.hl-green { color: var(--accent3); font-weight: 600; }
+.hl-red { color: var(--red); font-weight: 600; }
+.hl-yellow { color: var(--yellow); font-weight: 600; }
+.hl-pink { color: var(--accent4); font-weight: 600; }
+.hl-orange { color: var(--accent5); font-weight: 600; }
+
+/* ── LISTS ── */
+ul.styled, ol.styled {
+  padding-left: 0;
+  list-style: none;
+}
+
+ul.styled li, ol.styled li {
+  padding: 5px 0 5px 20px;
+  position: relative;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+ul.styled li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--accent2);
+}
+
+ol.styled { counter-reset: li; }
+ol.styled li { counter-increment: li; }
+ol.styled li::before {
+  content: counter(li);
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+ul.styled li strong, ol.styled li strong { color: var(--text); }
+
+/* ── TABLE ── */
+table.styled {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+table.styled th {
+  background: var(--surface3);
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+
+table.styled td {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  vertical-align: top;
+}
+
+table.styled tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* ── COMPARISON GRID ── */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.compare-card {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  border: 1px solid var(--border);
+}
+
+.compare-card .compare-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* ── SVG WRAPPER ── */
+.svg-wrap {
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--formula-bg);
+}
+
+.svg-wrap svg {
+  width: 100%;
+  display: block;
+}
+
+/* ── CALLOUT ── */
+.callout {
+  display: flex;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  margin: 14px 0;
+  align-items: flex-start;
+}
+
+.callout.info { background: rgba(56,189,248,0.08); border-left: 3px solid var(--accent); }
+.callout.warn { background: rgba(251,191,36,0.08); border-left: 3px solid var(--yellow); }
+.callout.success { background: rgba(52,211,153,0.08); border-left: 3px solid var(--accent3); }
+.callout.danger { background: rgba(248,113,113,0.08); border-left: 3px solid var(--red); }
+
+.callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.callout-text { font-size: 13.5px; color: var(--text-dim); line-height: 1.6; }
+
+/* ── SUMMARY BOX ── */
+#summary-section .sum-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+#summary-section .sum-item:last-child { border-bottom: none; }
+
+.sum-num {
+  font-family: 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 28px;
+  color: var(--border);
+  min-width: 36px;
+  line-height: 1;
+}
+
+.sum-content h4 { color: var(--text); font-size: 14px; margin-bottom: 4px; }
+.sum-content p { color: var(--text-dim); font-size: 13px; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+p { color: var(--text-dim); font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ TOC ═══════════════════════════════ -->
+<aside id="toc">
+  <div id="toc-header">
+    <div class="course-tag">Data Programming · Lec 8</div>
+    <h2>Feasibility<br>of Learning</h2>
+  </div>
+  <nav>
+    <a class="toc-item active" href="#s01"><span class="toc-num">01</span>Learning Unknown Target Function</a>
+    <a class="toc-item" href="#s02"><span class="toc-num">02</span>Hoeffding Inequality</a>
+    <a class="toc-item" href="#s03"><span class="toc-num">03</span>Connection to Learning</a>
+    <a class="toc-item" href="#s04"><span class="toc-num">04</span>Generalizing the Hoeffding Bound</a>
+    <a class="toc-item" href="#s05"><span class="toc-num">05</span>Feasibility of Learning</a>
+    <a class="toc-item" href="#s06"><span class="toc-num">06</span>Error Measures</a>
+    <a class="toc-item" href="#s07"><span class="toc-num">07</span>Noisy Targets</a>
+    <a class="toc-item" href="#s08"><span class="toc-num">08</span>Summary</a>
+  </nav>
+</aside>
+
+<!-- ═══════════════════════════════ MAIN ═══════════════════════════════ -->
+<main id="main">
+
+<!-- HERO -->
+<section id="hero">
+  <div class="lecture-num">LECTURE 08 · CSE | INU · Jangho Lee</div>
+  <h1>Feasibility of Learning</h1>
+  <p style="color:var(--text-dim); font-size:15px; max-width:600px;">
+    학습이란 과연 가능한가? 제한된 데이터로 미지의 목표 함수를 확률적으로 근사하는 이론적 토대를 다룬다.
+  </p>
+  <div class="hero-meta">
+    <span class="meta-chip">Data Programming (0011445001)</span>
+    <span class="meta-chip">Hoeffding Inequality</span>
+    <span class="meta-chip">PAC Learning</span>
+    <span class="meta-chip">Error & Noise</span>
+  </div>
+</section>
+
+<!-- ═══ 01: Learning Unknown Target Function ═══ -->
+<section class="section" id="s01">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2>Learning Unknown Target Function</h2>
+  </div>
+
+  <div class="key-concept">
+    <div class="label">핵심 질문</div>
+    <p style="color:var(--text); font-size:15px;">
+      <strong>제한된 데이터셋</strong>이 <em>전체</em> 목표 함수를 결정하기에 충분한 정보를 어떻게 드러낼 수 있는가?
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">목표 함수의 속성</div>
+    <ul class="styled">
+      <li>목표 함수 <span class="hl-blue">f</span> = 학습의 목적 (learning objective)</li>
+      <li>f에 대한 가장 중요한 사실: 그것은 <span class="hl-red">알 수 없다 (unknown)</span></li>
+      <li>훈련 데이터 <span class="hl-purple">𝒟</span>에서 f의 값은 알지만, 이것이 f를 학습했음을 의미하지는 않음</li>
+    </ul>
+    <div class="callout info">
+      <span class="callout-icon">🔑</span>
+      <div class="callout-text">
+        핵심 질문: <strong>𝒟는 𝒟 밖에 있는 어떤 정보를 우리에게 알려주는가?</strong><br>
+        → 알려준다면 ⇒ 학습이 이루어졌다<br>
+        → 알려주지 않는다면 ⇒ 학습은 불가능하다
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">예시: 이진 목표 함수 학습 불가능성</div>
+    <p>6개의 훈련 예제로 9비트 벡터를 입력으로 받는 이진 목표 함수 f를 학습하는 상황을 고려하자.</p>
+
+    <div style="margin: 18px 0;">
+      <!-- SVG: pattern grid illustration -->
+      <div class="svg-wrap" style="background: var(--surface2);">
+        <svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block;">
+          <!-- f = -1 row -->
+          <text x="20" y="30" fill="#94a3b8" font-size="12" font-family="'Menlo','Courier New',monospace">f = -1 (비대칭)</text>
+          <!-- Grid 1 -->
+          <rect x="20" y="40" width="80" height="80" rx="4" fill="#1a2235" stroke="#1f3050" stroke-width="1"/>
+          <rect x="20" y="40" width="26" height="26" fill="#1e40af"/><rect x="46" y="40" width="27" height="26" fill="#1a2235"/><rect x="73" y="40" width="27" height="26" fill="#1e40af"/>
+          <rect x="20" y="66" width="26" height="27" fill="#1a2235"/><rect x="46" y="66" width="27" height="27" fill="#1e40af"/><rect x="73" y="66" width="27" height="27" fill="#1a2235"/>
+          <rect x="20" y="93" width="26" height="27" fill="#1e40af"/><rect x="46" y="93" width="27" height="27" fill="#1a2235"/><rect x="73" y="93" width="27" height="27" fill="#1e40af"/>
+
+          <!-- Grid 2 -->
+          <rect x="120" y="40" width="80" height="80" rx="4" fill="#1a2235" stroke="#1f3050" stroke-width="1"/>
+          <rect x="120" y="40" width="26" height="26" fill="#1a2235"/><rect x="146" y="40" width="27" height="26" fill="#1e40af"/><rect x="173" y="40" width="27" height="26" fill="#1a2235"/>
+          <rect x="120" y="66" width="26" height="27" fill="#1e40af"/><rect x="146" y="66" width="27" height="27" fill="#1a2235"/><rect x="173" y="66" width="27" height="27" fill="#1e40af"/>
+          <rect x="120" y="93" width="26" height="27" fill="#1a2235"/><rect x="146" y="93" width="27" height="27" fill="#1e40af"/><rect x="173" y="93" width="27" height="27" fill="#1a2235"/>
+
+          <!-- Grid 3 -->
+          <rect x="220" y="40" width="80" height="80" rx="4" fill="#1a2235" stroke="#1f3050" stroke-width="1"/>
+          <rect x="220" y="40" width="26" height="26" fill="#1e40af"/><rect x="246" y="40" width="27" height="26" fill="#1a2235"/><rect x="273" y="40" width="27" height="26" fill="#1a2235"/>
+          <rect x="220" y="66" width="26" height="27" fill="#1a2235"/><rect x="246" y="66" width="27" height="27" fill="#1e40af"/><rect x="273" y="66" width="27" height="27" fill="#1a2235"/>
+          <rect x="220" y="93" width="26" height="27" fill="#1a2235"/><rect x="246" y="93" width="27" height="27" fill="#1a2235"/><rect x="273" y="93" width="27" height="27" fill="#1e40af"/>
+
+          <!-- label -1 -->
+          <text x="330" y="85" fill="#f87171" font-size="18" font-family="'Menlo','Courier New',monospace" font-weight="bold">f = −1</text>
+
+          <!-- f = +1 row -->
+          <text x="20" y="155" fill="#94a3b8" font-size="12" font-family="'Menlo','Courier New',monospace">f = +1 (대칭)</text>
+
+          <!-- Grid 4 -->
+          <rect x="20" y="162" width="80" height="80" rx="4" fill="#1a2235" stroke="#1f3050" stroke-width="1"/>
+          <rect x="20" y="162" width="26" height="26" fill="#166534"/><rect x="46" y="162" width="27" height="26" fill="#1a2235"/><rect x="73" y="162" width="27" height="26" fill="#166534"/>
+          <rect x="20" y="188" width="26" height="27" fill="#1a2235"/><rect x="46" y="188" width="27" height="27" fill="#166534"/><rect x="73" y="188" width="27" height="27" fill="#1a2235"/>
+          <rect x="20" y="215" width="26" height="27" fill="#166534"/><rect x="46" y="215" width="27" height="27" fill="#1a2235"/><rect x="73" y="215" width="27" height="27" fill="#166534"/>
+
+          <!-- Grid 5 -->
+          <rect x="120" y="162" width="80" height="80" rx="4" fill="#1a2235" stroke="#1f3050" stroke-width="1"/>
+          <rect x="120" y="162" width="26" height="26" fill="#1a2235"/><rect x="146" y="162" width="27" height="26" fill="#166534"/><rect x="173" y="162" width="27" height="26" fill="#166534"/>
+          <rect x="120" y="188" width="26" height="27" fill="#166534"/><rect x="146" y="188" width="27" height="27" fill="#166534"/><rect x="173" y="188" width="27" height="27" fill="#166534"/>
+          <rect x="120" y="215" width="26" height="27" fill="#166534"/><rect x="146" y="215" width="27" height="27" fill="#166534"/><rect x="173" y="215" width="27" height="27" fill="#1a2235"/>
+
+          <!-- Grid 6 -->
+          <rect x="220" y="162" width="80" height="80" rx="4" fill="#1a2235" stroke="#1f3050" stroke-width="1"/>
+          <rect x="220" y="162" width="26" height="26" fill="#166534"/><rect x="246" y="162" width="27" height="26" fill="#166534"/><rect x="273" y="162" width="27" height="26" fill="#1a2235"/>
+          <rect x="220" y="188" width="26" height="27" fill="#166534"/><rect x="246" y="188" width="27" height="27" fill="#166534"/><rect x="273" y="188" width="27" height="27" fill="#166534"/>
+          <rect x="220" y="215" width="26" height="27" fill="#1a2235"/><rect x="246" y="215" width="27" height="27" fill="#166534"/><rect x="273" y="215" width="27" height="27" fill="#166534"/>
+
+          <!-- label +1 -->
+          <text x="330" y="207" fill="#4ade80" font-size="18" font-family="'Menlo','Courier New',monospace" font-weight="bold">f = +1</text>
+
+          <!-- Question mark grid -->
+          <rect x="450" y="90" width="80" height="80" rx="4" fill="#1a2235" stroke="#818cf8" stroke-width="2" stroke-dasharray="5,3"/>
+          <rect x="450" y="90" width="26" height="26" fill="#166534"/><rect x="476" y="90" width="27" height="26" fill="#1a2235"/><rect x="503" y="90" width="27" height="26" fill="#1a2235"/>
+          <rect x="450" y="116" width="26" height="27" fill="#1a2235"/><rect x="476" y="116" width="27" height="27" fill="#166534"/><rect x="503" y="116" width="27" height="27" fill="#1a2235"/>
+          <rect x="450" y="143" width="26" height="27" fill="#1a2235"/><rect x="476" y="143" width="27" height="27" fill="#1a2235"/><rect x="503" y="143" width="27" height="27" fill="#166534"/>
+
+          <text x="555" y="135" fill="#818cf8" font-size="18" font-family="'Menlo','Courier New',monospace" font-weight="bold">f = ?</text>
+
+          <!-- arrow -->
+          <line x1="400" y1="130" x2="445" y2="130" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <polygon points="445,125 455,130 445,135" fill="#475569"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="compare-grid">
+      <div class="compare-card">
+        <div class="compare-label" style="color: var(--accent);">Case 1</div>
+        <p style="font-size:13px;">f가 패턴이 <strong style="color:var(--accent3);">대칭</strong>일 때 +1이면?<br>→ 새 패턴은 비대칭 → f = −1</p>
+      </div>
+      <div class="compare-card">
+        <div class="compare-label" style="color: var(--accent4);">Case 2</div>
+        <p style="font-size:13px;">f가 <strong style="color:var(--accent4);">좌상단이 흰색</strong>일 때 +1이면?<br>→ 새 패턴 좌상단 흰색 → f = +1</p>
+      </div>
+    </div>
+
+    <div class="callout danger" style="margin-top:14px;">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-text">
+        두 가설 모두 기존 훈련 데이터와 완전히 일치한다. 어느 것이 정답인지 판별할 정보가 <span class="hl-red">충분하지 않다.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">해결책: 확률적 접근</div>
+    <p>f를 <strong>확실히(for sure)</strong> 알려는 시도를 포기하고, 확률적으로(in a probabilistic way) 추론한다.</p>
+    <div class="callout success">
+      <span class="callout-icon">💡</span>
+      <div class="callout-text">
+        확률을 이용하면, <strong>𝒟만을 사용해서 𝒟 밖에 있는 것을 추론</strong>할 수 있다.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 02: Hoeffding Inequality ═══ -->
+<section class="section" id="s02">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2>Hoeffding Inequality</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Bin 실험 (A 'Bin' Experiment)</div>
+    <div class="card-2col">
+      <div>
+        <ul class="styled">
+          <li>빨간 공과 초록 공이 (무한히 많이) 들어있는 항아리</li>
+          <li>ℙ[빨간 공 선택] = <span class="hl-red">μ</span> (우리에게 <span class="hl-red">미지수</span>)</li>
+          <li>ℙ[초록 공 선택] = 1 − μ</li>
+          <li>N개의 공을 <strong>독립적으로 (복원추출)</strong> 뽑음</li>
+          <li>표본 내 빨간 공 비율 = <span class="hl-blue">μ̂</span></li>
+        </ul>
+        <div class="callout info" style="margin-top: 14px;">
+          <span class="callout-icon">📌</span>
+          <div class="callout-text">
+            <strong>μ</strong> = 항아리 전체에서 빨간 공의 실제 비율 (미지, 고정)<br>
+            <strong>μ̂</strong> = 표본에서 관측된 빨간 공의 비율 (알려짐, 확률변수)
+          </div>
+        </div>
+      </div>
+      <div class="svg-wrap">
+        <!-- BIN → SAMPLE diagram -->
+        <svg viewBox="0 0 340 300" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block;">
+          <!-- BIN label -->
+          <text x="80" y="22" fill="#38bdf8" font-size="13" font-weight="bold" font-family="'Impact','Arial Narrow',sans-serif" letter-spacing="2">BIN</text>
+
+          <!-- Jar shape -->
+          <ellipse cx="100" cy="60" rx="62" ry="16" fill="#1a2235" stroke="#1f3050" stroke-width="1.5"/>
+          <path d="M38,60 Q22,180 50,230 Q80,255 100,255 Q120,255 150,230 Q178,180 162,60 Z" fill="#0d1b2e" stroke="#1f3050" stroke-width="1.5"/>
+          <ellipse cx="100" cy="240" rx="50" ry="12" fill="#111827" stroke="#1f3050" stroke-width="1"/>
+
+          <!-- Marbles in bin -->
+          <!-- Red marbles -->
+          <circle cx="70" cy="110" r="9" fill="#dc2626"/><circle cx="88" cy="98" r="9" fill="#dc2626"/>
+          <circle cx="106" cy="110" r="9" fill="#dc2626"/><circle cx="124" cy="98" r="9" fill="#dc2626"/>
+          <circle cx="65" cy="130" r="9" fill="#dc2626"/><circle cx="83" cy="142" r="9" fill="#dc2626"/>
+          <circle cx="115" cy="130" r="9" fill="#dc2626"/><circle cx="133" cy="142" r="9" fill="#dc2626"/>
+          <circle cx="75" cy="160" r="9" fill="#dc2626"/><circle cx="125" cy="160" r="9" fill="#dc2626"/>
+          <circle cx="100" cy="175" r="9" fill="#dc2626"/>
+          <!-- Green marbles -->
+          <circle cx="100" cy="125" r="9" fill="#16a34a"/><circle cx="78" cy="85" r="9" fill="#16a34a"/>
+          <circle cx="122" cy="85" r="9" fill="#16a34a"/><circle cx="55" cy="155" r="9" fill="#16a34a"/>
+          <circle cx="100" cy="150" r="9" fill="#16a34a"/><circle cx="140" cy="155" r="9" fill="#16a34a"/>
+          <circle cx="60" cy="185" r="9" fill="#16a34a"/><circle cx="140" cy="185" r="9" fill="#16a34a"/>
+          <circle cx="82" cy="205" r="9" fill="#16a34a"/><circle cx="118" cy="205" r="9" fill="#16a34a"/>
+
+          <!-- Arrow -->
+          <path d="M165,140 Q230,100 240,160" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <polygon points="235,168 242,157 248,167" fill="#475569"/>
+
+          <!-- SAMPLE label -->
+          <text x="240" y="130" fill="#38bdf8" font-size="12" font-weight="bold" font-family="'Impact','Arial Narrow',sans-serif" letter-spacing="2">SAMPLE</text>
+
+          <!-- Sample marbles row -->
+          <circle cx="225" cy="175" r="7" fill="#dc2626"/>
+          <circle cx="240" cy="175" r="7" fill="#dc2626"/>
+          <circle cx="255" cy="175" r="7" fill="#dc2626"/>
+          <circle cx="270" cy="175" r="7" fill="#16a34a"/>
+          <circle cx="285" cy="175" r="7" fill="#dc2626"/>
+          <circle cx="300" cy="175" r="7" fill="#16a34a"/>
+          <circle cx="315" cy="175" r="7" fill="#dc2626"/>
+
+          <!-- Labels -->
+          <text x="210" y="200" fill="#94a3b8" font-size="11" font-family="'Menlo','Courier New',monospace">μ̂ = 빨간 공 비율</text>
+          <text x="52" y="280" fill="#94a3b8" font-size="11" font-family="'Menlo','Courier New',monospace">μ = 빨간 공 확률</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Hoeffding 부등식 (Hoeffding Inequality)</div>
+    <p>임의의 표본 크기 N과 ε > 0에 대해:</p>
+    <div class="formula-box">
+      ℙ[ |μ̂ − μ| &gt; ε ] ≤ 2e<sup>−2ε²N</sup>
+    </div>
+    <ul class="styled">
+      <li>상한(upper bound)은 <span class="hl-blue">μ에 의존하지 않음</span> (항아리 크기에도 무관)</li>
+      <li>표본 크기 N이 커질수록, μ̂가 μ에서 ε 이상 벗어날 확률이 <span class="hl-green">지수적으로 감소</span></li>
+      <li>"μ ≈ μ̂" 라는 진술은 <span class="hl-yellow">Probably Approximately Correct (PAC)</span></li>
+    </ul>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚡</span>
+      <div class="callout-text">
+        <strong>ε를 매우 작게</strong> (μ̂가 μ에 가깝도록) 하면 → <strong>더 큰 N</strong>이 필요하다.<br>
+        핵심 파라미터: <strong>N</strong> → N → ∞ 이면, μ ≈ μ̂ (매우 높은 확률로)
+      </div>
+    </div>
+
+    <!-- SVG: Hoeffding Bound Graph -->
+    <div style="margin-top: 20px;">
+      <div class="svg-wrap">
+        <svg viewBox="0 0 620 320" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block;">
+          <defs>
+            <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#475569"/>
+            </marker>
+          </defs>
+
+          <!-- Title -->
+          <text x="310" y="22" fill="#94a3b8" font-size="12" text-anchor="middle" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">Hoeffding 상한 vs. 표본 크기 N (log 척도)</text>
+
+          <!-- Axes -->
+          <!-- Y axis -->
+          <line x1="80" y1="40" x2="80" y2="275" stroke="#475569" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <!-- X axis -->
+          <line x1="80" y1="275" x2="590" y2="275" stroke="#475569" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+          <!-- Y labels -->
+          <text x="74" y="50" fill="#94a3b8" font-size="10" text-anchor="end" font-family="'Menlo','Courier New',monospace">10⁰</text>
+          <text x="74" y="110" fill="#94a3b8" font-size="10" text-anchor="end" font-family="'Menlo','Courier New',monospace">10⁻¹</text>
+          <text x="74" y="170" fill="#94a3b8" font-size="10" text-anchor="end" font-family="'Menlo','Courier New',monospace">10⁻²</text>
+          <text x="74" y="230" fill="#94a3b8" font-size="10" text-anchor="end" font-family="'Menlo','Courier New',monospace">10⁻³</text>
+
+          <!-- Y gridlines -->
+          <line x1="80" y1="50" x2="575" y2="50" stroke="#1f3050" stroke-width="0.8" stroke-dasharray="4,4"/>
+          <line x1="80" y1="110" x2="575" y2="110" stroke="#1f3050" stroke-width="0.8" stroke-dasharray="4,4"/>
+          <line x1="80" y1="170" x2="575" y2="170" stroke="#1f3050" stroke-width="0.8" stroke-dasharray="4,4"/>
+          <line x1="80" y1="230" x2="575" y2="230" stroke="#1f3050" stroke-width="0.8" stroke-dasharray="4,4"/>
+
+          <!-- X labels (N values) -->
+          <text x="80" y="292" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">10⁰</text>
+          <text x="165" y="292" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">10¹</text>
+          <text x="250" y="292" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">10²</text>
+          <text x="335" y="292" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">10³</text>
+          <text x="420" y="292" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">10⁴</text>
+          <text x="505" y="292" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">10⁵</text>
+
+          <!-- X axis label -->
+          <text x="340" y="308" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="'Menlo','Courier New',monospace">N (표본 크기)</text>
+
+          <!-- Y axis label -->
+          <text x="20" y="160" fill="#94a3b8" font-size="11" text-anchor="middle" transform="rotate(-90,20,160)" font-family="'Menlo','Courier New',monospace">bound: 2e⁻²ᵋ²ᴺ</text>
+
+          <!--
+            Curves: each epsilon value creates a sigmoid-like drop in log scale
+            ε=0.1: drops around N=100-200
+            ε=0.05: drops around N=200-500
+            ε=0.025: drops around N=500-2000
+            ε=0.0125: drops around N=2000-8000
+            ε=0.00625: drops around N=8000+
+          -->
+
+          <!-- ε=10⁻¹ (orange) - fastest drop -->
+          <polyline points="80,50 130,50 160,80 190,150 220,220 250,265 290,272 350,274 580,275"
+            fill="none" stroke="#fb923c" stroke-width="2"/>
+
+          <!-- ε=10⁻¹/2 (yellow) -->
+          <polyline points="80,50 180,50 210,60 240,100 265,150 290,200 320,245 360,268 420,274 580,275"
+            fill="none" stroke="#fbbf24" stroke-width="2"/>
+
+          <!-- ε=10⁻¹/4 (green) -->
+          <polyline points="80,50 250,50 280,55 310,80 340,120 370,170 405,220 440,255 480,270 540,274 580,275"
+            fill="none" stroke="#4ade80" stroke-width="2"/>
+
+          <!-- ε=10⁻¹/8 (blue) -->
+          <polyline points="80,50 330,50 360,52 390,65 420,100 450,148 478,200 505,245 530,265 560,272 580,274"
+            fill="none" stroke="#38bdf8" stroke-width="2"/>
+
+          <!-- ε=10⁻¹/16 (purple) - slowest drop -->
+          <polyline points="80,50 400,50 430,50 460,55 490,80 515,120 540,165 560,210 578,250"
+            fill="none" stroke="#818cf8" stroke-width="2"/>
+
+          <!-- Legend -->
+          <rect x="110" y="55" width="200" height="105" rx="6" fill="#0d1b2e" stroke="#1f3050" stroke-width="1"/>
+          <line x1="118" y1="73" x2="148" y2="73" stroke="#fb923c" stroke-width="2"/>
+          <text x="155" y="77" fill="#fb923c" font-size="10" font-family="'Menlo','Courier New',monospace">ε = 10⁻¹</text>
+          <line x1="118" y1="90" x2="148" y2="90" stroke="#fbbf24" stroke-width="2"/>
+          <text x="155" y="94" fill="#fbbf24" font-size="10" font-family="'Menlo','Courier New',monospace">ε = 10⁻¹/2</text>
+          <line x1="118" y1="107" x2="148" y2="107" stroke="#4ade80" stroke-width="2"/>
+          <text x="155" y="111" fill="#4ade80" font-size="10" font-family="'Menlo','Courier New',monospace">ε = 10⁻¹/4</text>
+          <line x1="118" y1="124" x2="148" y2="124" stroke="#38bdf8" stroke-width="2"/>
+          <text x="155" y="128" fill="#38bdf8" font-size="10" font-family="'Menlo','Courier New',monospace">ε = 10⁻¹/8</text>
+          <line x1="118" y1="141" x2="148" y2="141" stroke="#818cf8" stroke-width="2"/>
+          <text x="155" y="145" fill="#818cf8" font-size="10" font-family="'Menlo','Courier New',monospace">ε = 10⁻¹/16</text>
+        </svg>
+      </div>
+      <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:8px;">ε가 작을수록 같은 상한에 도달하기 위해 더 큰 N이 필요하다</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">예시: N = 1,000</div>
+    <table class="styled">
+      <thead>
+        <tr><th>ε (허용 오차)</th><th>상한 2e^(−2ε²N)</th><th>의미 (신뢰 수준)</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="hl-orange">ε = 0.05</span></td>
+          <td>≈ 0.0067</td>
+          <td><span class="hl-green">99% 이상</span>의 확률로 μ ∈ [μ̂−0.05, μ̂+0.05]</td>
+        </tr>
+        <tr>
+          <td><span class="hl-blue">ε = 0.10</span></td>
+          <td>≈ 4×10⁻⁹</td>
+          <td><span class="hl-green">99.9999996%</span>의 확률로 μ ∈ [μ̂−0.10, μ̂+0.10]</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout success" style="margin-top:14px;">
+      <span class="callout-icon">✅</span>
+      <div class="callout-text">
+        1,000개 표본만으로 99% 시간에 옳다면 → 우리는 무언가를 학습한 것이다: <strong>𝒟를 넘어서 μ에 도달했다!</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 03: Connection to Learning ═══ -->
+<section class="section" id="s03">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2>Connection to Learning</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Bin 모델 ↔ 학습 문제 대응</div>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <div class="compare-label" style="color: var(--accent3);">명백한 대응 (obvious)</div>
+        <table class="styled">
+          <thead><tr><th>Bin 모델</th><th>학습 문제</th></tr></thead>
+          <tbody>
+            <tr><td>구슬 (marble)</td><td>입력점 x ∈ 𝒳</td></tr>
+            <tr><td>항아리 (bin)</td><td>입력 공간 𝒳</td></tr>
+            <tr><td>표본 (sample)</td><td>훈련 데이터 𝒟</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="compare-card">
+        <div class="compare-label" style="color: var(--accent4);">덜 명백한 대응 (less obvious)</div>
+        <table class="styled">
+          <thead><tr><th>Bin 모델</th><th>학습 문제</th></tr></thead>
+          <tbody>
+            <tr><td>구슬 색깔</td><td>h(x) ≠ f(x) 여부</td></tr>
+            <tr><td>μ (실제 비율)</td><td>E_out(h) 밖의 오차율</td></tr>
+            <tr><td>μ̂ (표본 비율)</td><td>E_in(h) 안의 오차율</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">가설 h에 의한 항아리 색칠 (Bin Coloring ≡ Hypothesis h)</div>
+    <div class="card-2col">
+      <div>
+        <p>특정 가설 h ∈ ℋ를 골라 각 x ∈ 𝒳에서 f와 비교한다:</p>
+        <ul class="styled" style="margin-top:12px;">
+          <li><span class="hl-green">초록색</span>: h(x) = f(x) — 가설이 <strong>옳음</strong></li>
+          <li><span class="hl-red">빨간색</span>: h(x) ≠ f(x) — 가설이 <strong>틀림</strong></li>
+        </ul>
+        <div class="formula-box" style="margin-top:16px; font-size:13px;">
+          μ ≡ h가 f를 근사할 때의 오차율<br>
+          μ̂ ≈ 0 ⇒ h ≈ f (전체 𝒳에서)
+        </div>
+        <div class="callout info" style="margin-top:12px;">
+          <span class="callout-icon">💡</span>
+          <div class="callout-text">
+            다른 h → 다른 채색 → 다른 μ<br>
+            학습 알고리즘 𝒜는 가장 좋은 h (즉, g)를 선택
+          </div>
+        </div>
+      </div>
+      <div class="svg-wrap">
+        <!-- Colored bin for hypothesis -->
+        <svg viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block;">
+          <!-- Jar -->
+          <ellipse cx="140" cy="55" rx="75" ry="18" fill="#1a2235" stroke="#1f3050" stroke-width="1.5"/>
+          <path d="M65,55 Q45,175 70,225 Q100,260 140,260 Q180,260 210,225 Q235,175 215,55 Z" fill="#0d1b2e" stroke="#1f3050" stroke-width="1.5"/>
+          <ellipse cx="140" cy="248" rx="60" ry="14" fill="#111827" stroke="#1f3050" stroke-width="1"/>
+
+          <!-- Red marbles (wrong) -->
+          <circle cx="110" cy="100" r="11" fill="#dc2626"/><circle cx="130" cy="88" r="11" fill="#dc2626"/>
+          <circle cx="152" cy="100" r="11" fill="#dc2626"/><circle cx="172" cy="88" r="11" fill="#dc2626"/>
+          <circle cx="100" cy="125" r="11" fill="#dc2626"/><circle cx="125" cy="145" r="11" fill="#dc2626"/>
+          <circle cx="170" cy="130" r="11" fill="#dc2626"/><circle cx="145" cy="155" r="11" fill="#dc2626"/>
+          <circle cx="105" cy="170" r="11" fill="#dc2626"/>
+
+          <!-- Green marbles (correct) -->
+          <circle cx="140" cy="115" r="11" fill="#16a34a"/><circle cx="118" cy="75" r="11" fill="#16a34a"/>
+          <circle cx="162" cy="75" r="11" fill="#16a34a"/><circle cx="90" cy="155" r="11" fill="#16a34a"/>
+          <circle cx="140" cy="135" r="11" fill="#16a34a"/><circle cx="185" cy="155" r="11" fill="#16a34a"/>
+          <circle cx="95" cy="195" r="11" fill="#16a34a"/><circle cx="185" cy="195" r="11" fill="#16a34a"/>
+          <circle cx="120" cy="215" r="11" fill="#16a34a"/><circle cx="160" cy="215" r="11" fill="#16a34a"/>
+          <circle cx="140" cy="195" r="11" fill="#dc2626"/>
+          <circle cx="170" cy="175" r="11" fill="#dc2626"/>
+
+          <!-- Labels pointing to marbles -->
+          <text x="205" y="80" fill="#f87171" font-size="11" font-family="'Menlo','Courier New',monospace">h(x)≠f(x)</text>
+          <text x="205" y="100" fill="#4ade80" font-size="11" font-family="'Menlo','Courier New',monospace">h(x)=f(x)</text>
+
+          <!-- E_out label -->
+          <text x="140" y="22" fill="#94a3b8" font-size="12" text-anchor="middle" font-family="'Menlo','Courier New',monospace">E_out(h)</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 04: Generalizing the Hoeffding Bound ═══ -->
+<section class="section" id="s04">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2>Generalizing the Hoeffding Bound</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title">In-sample vs Out-of-sample Error</div>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <div class="compare-label" style="color: var(--accent);">E_in(h) — 표본 내 오차</div>
+        <div class="formula-box" style="font-size:12px; text-align:left; padding:12px 16px;">
+          E_in(h) = (1/N) · Σ [h(xₙ) ≠ f(xₙ)]
+        </div>
+        <ul class="styled">
+          <li>μ̂에 대응</li>
+          <li><span class="hl-yellow">확률변수</span> (표본에 따라 다름)</li>
+          <li><span class="hl-green">알려져 있음</span></li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <div class="compare-label" style="color: var(--accent4);">E_out(h) — 표본 외 오차</div>
+        <div class="formula-box" style="font-size:12px; text-align:left; padding:12px 16px;">
+          E_out(h) = ℙ[h(x) ≠ f(x)]
+        </div>
+        <ul class="styled">
+          <li>μ에 대응</li>
+          <li><span class="hl-green">고정됨</span> (확률변수 아님)</li>
+          <li><span class="hl-red">알 수 없음</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="formula-box" style="margin-top:16px;">
+      ℙ[ |E_in(h) − E_out(h)| &gt; ε ] ≤ 2e<sup>−2ε²N</sup>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">다중 가설: Uniform Hoeffding Bound</div>
+    <p>실제 학습에서는 전체 가설 집합 ℋ = {h₁, h₂, ..., hₘ}을 탐색한다.</p>
+
+    <!-- Multiple bins SVG -->
+    <div class="svg-wrap" style="margin: 18px 0;">
+      <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block;">
+        <!-- Three jars -->
+        <!-- Jar 1: h1 -->
+        <text x="70" y="20" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="'Menlo','Courier New',monospace">h₁</text>
+        <text x="70" y="34" fill="#38bdf8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">E_out(h₁)</text>
+        <ellipse cx="70" cy="50" rx="42" ry="11" fill="#1a2235" stroke="#1f3050" stroke-width="1"/>
+        <path d="M28,50 Q18,115 32,140 Q48,158 70,158 Q92,158 108,140 Q122,115 112,50 Z" fill="#0d1b2e" stroke="#1f3050" stroke-width="1"/>
+        <!-- red/green marbles jar1 - mostly red -->
+        <circle cx="52" cy="80" r="7" fill="#dc2626"/><circle cx="64" cy="70" r="7" fill="#dc2626"/>
+        <circle cx="76" cy="80" r="7" fill="#dc2626"/><circle cx="88" cy="70" r="7" fill="#dc2626"/>
+        <circle cx="52" cy="97" r="7" fill="#dc2626"/><circle cx="70" cy="105" r="7" fill="#16a34a"/>
+        <circle cx="88" cy="97" r="7" fill="#dc2626"/><circle cx="58" cy="120" r="7" fill="#16a34a"/>
+        <circle cx="82" cy="120" r="7" fill="#dc2626"/><circle cx="70" cy="132" r="7" fill="#dc2626"/>
+        <!-- arrow down -->
+        <line x1="70" y1="162" x2="70" y2="178" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrowhead)"/>
+        <!-- E_in label -->
+        <text x="52" y="192" fill="#38bdf8" font-size="10" font-family="'Menlo','Courier New',monospace">E_in(h₁)</text>
+        <!-- mini marbles sample -->
+        <circle cx="38" cy="186" r="4" fill="#dc2626"/>
+        <circle cx="47" cy="186" r="4" fill="#dc2626"/>
+        <circle cx="56" cy="186" r="4" fill="#dc2626"/>
+        <circle cx="65" cy="186" r="4" fill="#16a34a"/>
+        <circle cx="74" cy="186" r="4" fill="#dc2626"/>
+        <circle cx="83" cy="186" r="4" fill="#dc2626"/>
+        <circle cx="92" cy="186" r="4" fill="#dc2626"/>
+
+        <!-- Jar 2: h2 - mixed -->
+        <text x="230" y="20" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="'Menlo','Courier New',monospace">h₂</text>
+        <text x="230" y="34" fill="#38bdf8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">E_out(h₂)</text>
+        <ellipse cx="230" cy="50" rx="42" ry="11" fill="#1a2235" stroke="#1f3050" stroke-width="1"/>
+        <path d="M188,50 Q178,115 192,140 Q208,158 230,158 Q252,158 268,140 Q282,115 272,50 Z" fill="#0d1b2e" stroke="#1f3050" stroke-width="1"/>
+        <circle cx="212" cy="80" r="7" fill="#16a34a"/><circle cx="224" cy="70" r="7" fill="#dc2626"/>
+        <circle cx="236" cy="80" r="7" fill="#16a34a"/><circle cx="248" cy="70" r="7" fill="#16a34a"/>
+        <circle cx="212" cy="97" r="7" fill="#dc2626"/><circle cx="230" cy="105" r="7" fill="#16a34a"/>
+        <circle cx="248" cy="97" r="7" fill="#dc2626"/><circle cx="218" cy="120" r="7" fill="#16a34a"/>
+        <circle cx="242" cy="120" r="7" fill="#16a34a"/><circle cx="230" cy="132" r="7" fill="#dc2626"/>
+        <line x1="230" y1="162" x2="230" y2="178" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrowhead)"/>
+        <text x="212" y="192" fill="#38bdf8" font-size="10" font-family="'Menlo','Courier New',monospace">E_in(h₂)</text>
+        <circle cx="198" cy="186" r="4" fill="#dc2626"/>
+        <circle cx="207" cy="186" r="4" fill="#16a34a"/>
+        <circle cx="216" cy="186" r="4" fill="#dc2626"/>
+        <circle cx="225" cy="186" r="4" fill="#16a34a"/>
+        <circle cx="234" cy="186" r="4" fill="#16a34a"/>
+        <circle cx="243" cy="186" r="4" fill="#dc2626"/>
+        <circle cx="252" cy="186" r="4" fill="#16a34a"/>
+
+        <!-- dots -->
+        <text x="340" y="105" fill="#475569" font-size="20" font-family="sans-serif">···</text>
+
+        <!-- Jar M: hM - mostly green -->
+        <text x="450" y="20" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="'Menlo','Courier New',monospace">hₘ</text>
+        <text x="450" y="34" fill="#38bdf8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">E_out(hₘ)</text>
+        <ellipse cx="450" cy="50" rx="42" ry="11" fill="#1a2235" stroke="#1f3050" stroke-width="1"/>
+        <path d="M408,50 Q398,115 412,140 Q428,158 450,158 Q472,158 488,140 Q502,115 492,50 Z" fill="#0d1b2e" stroke="#1f3050" stroke-width="1"/>
+        <circle cx="432" cy="80" r="7" fill="#16a34a"/><circle cx="444" cy="70" r="7" fill="#16a34a"/>
+        <circle cx="456" cy="80" r="7" fill="#16a34a"/><circle cx="468" cy="70" r="7" fill="#dc2626"/>
+        <circle cx="432" cy="97" r="7" fill="#16a34a"/><circle cx="450" cy="105" r="7" fill="#16a34a"/>
+        <circle cx="468" cy="97" r="7" fill="#16a34a"/><circle cx="438" cy="120" r="7" fill="#dc2626"/>
+        <circle cx="462" cy="120" r="7" fill="#16a34a"/><circle cx="450" cy="132" r="7" fill="#16a34a"/>
+        <line x1="450" y1="162" x2="450" y2="178" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrowhead)"/>
+        <text x="432" y="192" fill="#38bdf8" font-size="10" font-family="'Menlo','Courier New',monospace">E_in(hₘ)</text>
+        <circle cx="418" cy="186" r="4" fill="#16a34a"/>
+        <circle cx="427" cy="186" r="4" fill="#16a34a"/>
+        <circle cx="436" cy="186" r="4" fill="#16a34a"/>
+        <circle cx="445" cy="186" r="4" fill="#dc2626"/>
+        <circle cx="454" cy="186" r="4" fill="#16a34a"/>
+        <circle cx="463" cy="186" r="4" fill="#16a34a"/>
+        <circle cx="472" cy="186" r="4" fill="#16a34a"/>
+      </svg>
+    </div>
+
+    <p>Union Bound을 적용하면:</p>
+    <div class="formula-box">
+      ℙ[ |E_in(g) − E_out(g)| &gt; ε ] ≤ <span style="color:#f472b6;">2Me<sup>−2ε²N</sup></span>
+    </div>
+
+    <div class="callout warn" style="margin-top:14px;">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-text">
+        <strong>단점:</strong><br>
+        1. 단일 가설 상한보다 <span class="hl-pink">M배 느슨</span>하다<br>
+        2. <span class="hl-red">M이 유한한 경우에만 의미</span>있다 (무한 M → 더 정교한 이론 필요)
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 05: Feasibility of Learning ═══ -->
+<section class="section" id="s05">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2>Feasibility of Learning</h2>
+  </div>
+
+  <div class="key-concept">
+    <div class="label">학습의 궁극적 목표</div>
+    <p style="color:var(--text); font-size:15px;">E_out(g) ≈ 0 — 그러나 확률론적 분석으로 직접 얻는 것은: <span class="hl-blue">E_out(g) ≈ E_in(g)</span></p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">학습 가능성의 두 질문</div>
+    <ol class="styled">
+      <li><strong>E_out(g)가 E_in(g)에 충분히 가깝게 할 수 있는가?</strong> — Hoeffding 부등식으로 답 (이론적)</li>
+      <li><strong>E_in(g)를 충분히 작게 할 수 있는가?</strong> — 학습 알고리즘 실행 후 판단 (실용적)</li>
+    </ol>
+    <div class="callout success" style="margin-top:14px;">
+      <span class="callout-icon">🎯</span>
+      <div class="callout-text">
+        <strong>E_in을 E_out의 대리자(proxy)로 사용한다.</strong><br>
+        E_in ≈ 0이고 E_out ≈ E_in이면 → E_out ≈ 0 → 학습 성공!
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">모델 복잡도와 오차의 트레이드오프</div>
+    <div class="card-2col">
+      <div>
+        <table class="styled">
+          <thead><tr><th>복잡도 ↑</th><th>E_in</th><th>E_out−E_in</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>ℋ 복잡도 ↑</td>
+              <td><span class="hl-green">↓ 감소</span></td>
+              <td><span class="hl-red">↑ 증가</span></td>
+            </tr>
+            <tr>
+              <td>f 복잡도 ↑</td>
+              <td><span class="hl-red">↑ 증가</span></td>
+              <td>변화 없음*</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">*Hoeffding 상한은 f의 복잡도에 무관하나, E_in 자체가 나빠짐</p>
+        <div class="callout warn" style="margin-top:12px;">
+          <span class="callout-icon">⚖️</span>
+          <div class="callout-text">
+            이 <strong>복잡도 트레이드오프</strong>는 학습 이론의 핵심 주제 (e.g., VC dimension)
+          </div>
+        </div>
+      </div>
+      <div class="svg-wrap">
+        <!-- Bias-Variance tradeoff graph -->
+        <svg viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block;">
+          <defs>
+            <marker id="arr2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+              <polygon points="0 0, 7 2.5, 0 5" fill="#475569"/>
+            </marker>
+          </defs>
+          <!-- Axes -->
+          <line x1="40" y1="20" x2="40" y2="210" stroke="#475569" stroke-width="1.5" marker-end="url(#arr2)"/>
+          <line x1="40" y1="210" x2="280" y2="210" stroke="#475569" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+          <!-- Y label -->
+          <text x="15" y="120" fill="#94a3b8" font-size="10" text-anchor="middle" transform="rotate(-90,15,120)" font-family="'Menlo','Courier New',monospace">error</text>
+          <!-- X label -->
+          <text x="160" y="228" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">VC dimension</text>
+
+          <!-- out-of-sample error (purple U-shape) -->
+          <path d="M50,50 Q80,200 140,140 Q190,100 260,90"
+            fill="none" stroke="#818cf8" stroke-width="2.5"/>
+
+          <!-- in-sample error (blue decreasing) -->
+          <path d="M50,50 Q100,140 180,170 Q220,182 260,188"
+            fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+
+          <!-- optimal dashed line -->
+          <line x1="140" y1="25" x2="140" y2="205" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="142" y="22" fill="#475569" font-size="9" font-family="'Menlo','Courier New',monospace">d*vc</text>
+
+          <!-- Labels -->
+          <text x="215" y="80" fill="#818cf8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">out-of-sample</text>
+          <text x="215" y="175" fill="#38bdf8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">in-sample</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 06: Error Measures ═══ -->
+<section class="section" id="s06">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <h2>Error Measures</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title">오차 (Error) vs. 노이즈 (Noise)</div>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <div class="compare-label" style="color: var(--accent);">오차 (Error)</div>
+        <ul class="styled">
+          <li>별칭: cost, objective, risk</li>
+          <li>가설이 목표 함수를 얼마나 잘 근사하는지</li>
+          <li>목표로부터 얼마나 멀리 있는지 정량화</li>
+          <li>오차 측도의 선택이 학습 결과에 영향</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <div class="compare-label" style="color: var(--accent4);">노이즈 (Noise)</div>
+        <ul class="styled">
+          <li>목표 함수의 <strong>본질</strong>에 관한 것</li>
+          <li>종종 출력이 입력으로 유일하게 결정되지 않음</li>
+          <li>실세계 데이터에서 흔히 발생</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Pointwise Error → Overall Error</div>
+    <p>이상적으로 오차 E(h, f)는 사용자 특화되어야 하지만, 실용적으로는 <strong>점별 오차(pointwise error)</strong>로 정의:</p>
+
+    <div class="compare-grid" style="margin:16px 0;">
+      <div class="compare-card">
+        <div class="compare-label" style="color: var(--accent3);">Squared Error (회귀)</div>
+        <div class="formula-box" style="font-size:13px;">e(h(x), f(x)) = (h(x) − f(x))²</div>
+        <p style="font-size:12px; margin-top:8px;">연속 출력 예측에 사용</p>
+      </div>
+      <div class="compare-card">
+        <div class="compare-label" style="color: var(--accent4);">Binary Error (분류)</div>
+        <div class="formula-box" style="font-size:13px;">e(h(x), f(x)) = [h(x) ≠ f(x)]</div>
+        <p style="font-size:12px; margin-top:8px;">이진 분류에 사용</p>
+      </div>
+    </div>
+
+    <p>전체 오차는 점별 오차의 평균:</p>
+    <div class="formula-box">
+      E_in(h) = (1/N) · Σ e(h(xₙ), f(xₙ))<br>
+      E_out(h) = 𝔼ₓ[e(h(x), f(x))]
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">오차 측도 선택: 지문 인증 예시</div>
+    <p>오차 측도는 <strong>응용 목적</strong>에 따라 달라진다. 두 가지 오류 유형:</p>
+    <ul class="styled" style="margin: 12px 0;">
+      <li><span class="hl-red">False Reject</span>: 진짜 사용자를 거부 (h=−1, f=+1)</li>
+      <li><span class="hl-orange">False Accept</span>: 침입자를 허용 (h=+1, f=−1)</li>
+    </ul>
+
+    <div class="compare-grid">
+      <div class="compare-card" style="border-color: rgba(56,189,248,0.3);">
+        <div class="compare-label" style="color: var(--accent);">슈퍼마켓 (할인 적용)</div>
+        <table class="styled" style="font-size:12px;">
+          <thead><tr><th></th><th>f=+1 (you)</th><th>f=−1 (intruder)</th></tr></thead>
+          <tbody>
+            <tr><td>h=+1</td><td>0</td><td><span class="hl-yellow">1 (false accept)</span></td></tr>
+            <tr><td>h=−1</td><td><span class="hl-red">10 (false reject)</span></td><td>0</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:12px; margin-top:8px; color:var(--text-dim);">고객 불만 > 할인 손해 → false reject를 더 많이 패널티</p>
+      </div>
+      <div class="compare-card" style="border-color: rgba(248,113,113,0.3);">
+        <div class="compare-label" style="color: var(--red);">CIA (보안)</div>
+        <table class="styled" style="font-size:12px;">
+          <thead><tr><th></th><th>f=+1 (you)</th><th>f=−1 (intruder)</th></tr></thead>
+          <tbody>
+            <tr><td>h=+1</td><td>0</td><td><span class="hl-red">1000 (false accept!)</span></td></tr>
+            <tr><td>h=−1</td><td><span class="hl-yellow">1 (false reject)</span></td><td>0</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:12px; margin-top:8px; color:var(--text-dim);">보안 침해는 재앙 → false accept에 극도로 높은 페널티</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">학습 다이어그램 (오차 측도 포함)</div>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 600 360" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block;">
+        <!-- UNKNOWN TARGET FUNCTION -->
+        <rect x="170" y="20" width="230" height="52" rx="6" fill="#0d1b2e" stroke="#38bdf8" stroke-width="1.5"/>
+        <text x="285" y="40" fill="#38bdf8" font-size="11" text-anchor="middle" font-weight="bold" font-family="'Menlo','Courier New',monospace">UNKNOWN TARGET FUNCTION</text>
+        <text x="285" y="58" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="'Menlo','Courier New',monospace">f : 𝒳 ↦ 𝒴</text>
+
+        <!-- UNKNOWN INPUT DISTRIBUTION -->
+        <rect x="430" y="80" width="155" height="50" rx="6" fill="#0d1b2e" stroke="#818cf8" stroke-width="1.5"/>
+        <text x="507" y="100" fill="#818cf8" font-size="10" text-anchor="middle" font-weight="bold" font-family="'Menlo','Courier New',monospace">UNKNOWN INPUT</text>
+        <text x="507" y="116" fill="#818cf8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">DISTRIBUTION P(x)</text>
+
+        <!-- TRAINING EXAMPLES -->
+        <rect x="100" y="115" width="230" height="50" rx="6" fill="#0d1b2e" stroke="#34d399" stroke-width="1.5"/>
+        <text x="215" y="135" fill="#34d399" font-size="10" text-anchor="middle" font-weight="bold" font-family="'Menlo','Courier New',monospace">TRAINING EXAMPLES</text>
+        <text x="215" y="152" fill="#94a3b8" font-size="9" text-anchor="middle" font-family="'Menlo','Courier New',monospace">(x₁,y₁), ..., (xₙ,yₙ)</text>
+
+        <!-- ERROR MEASURE -->
+        <rect x="225" y="210" width="130" height="44" rx="6" fill="#0d1b2e" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="290" y="230" fill="#fbbf24" font-size="11" text-anchor="middle" font-weight="bold" font-family="'Menlo','Courier New',monospace">ERROR</text>
+        <text x="290" y="247" fill="#fbbf24" font-size="11" text-anchor="middle" font-weight="bold" font-family="'Menlo','Courier New',monospace">MEASURE</text>
+
+        <!-- LEARNING ALGORITHM -->
+        <ellipse cx="185" cy="295" rx="72" ry="36" fill="#0d1b2e" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="185" y="289" fill="#94a3b8" font-size="10" text-anchor="middle" font-weight="bold" font-family="'Menlo','Courier New',monospace">LEARNING</text>
+        <text x="185" y="305" fill="#94a3b8" font-size="10" text-anchor="middle" font-weight="bold" font-family="'Menlo','Courier New',monospace">ALGORITHM 𝒜</text>
+
+        <!-- FINAL HYPOTHESIS -->
+        <rect x="345" y="265" width="145" height="50" rx="6" fill="#0d1b2e" stroke="#f472b6" stroke-width="1.5"/>
+        <text x="418" y="286" fill="#f472b6" font-size="10" text-anchor="middle" font-weight="bold" font-family="'Menlo','Courier New',monospace">FINAL HYPOTHESIS</text>
+        <text x="418" y="303" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">g ≈ f(x)</text>
+
+        <!-- HYPOTHESIS SET -->
+        <rect x="50" y="330" width="150" height="28" rx="6" fill="#0d1b2e" stroke="#94a3b8" stroke-width="1"/>
+        <text x="125" y="349" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Menlo','Courier New',monospace">HYPOTHESIS SET ℋ</text>
+
+        <!-- Arrows -->
+        <!-- f → training examples -->
+        <line x1="250" y1="72" x2="215" y2="112" stroke="#475569" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <!-- P(x) → training examples (x1..xN) -->
+        <line x1="430" y1="105" x2="335" y2="130" stroke="#475569" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <!-- P(x) → x -->
+        <line x1="475" y1="132" x2="475" y2="195" stroke="#475569" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <text x="480" y="180" fill="#94a3b8" font-size="10" font-family="'Menlo','Courier New',monospace">x</text>
+        <!-- training → learning algo -->
+        <path d="M155,165 Q120,220 145,258" fill="none" stroke="#475569" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <!-- error measure → learning algo -->
+        <line x1="265" y1="254" x2="215" y2="261" stroke="#475569" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <!-- error measure → x→ g≈f -->
+        <path d="M355,232 Q400,240 420,262" fill="none" stroke="#475569" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <text x="405" y="250" fill="#94a3b8" font-size="9" font-family="'Menlo','Courier New',monospace">g(x)≈f(x)</text>
+        <!-- learning algo → final hypothesis -->
+        <line x1="257" y1="290" x2="342" y2="290" stroke="#475569" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <!-- hypothesis set → learning algo -->
+        <line x1="125" y1="330" x2="155" y2="333" stroke="#475569" stroke-width="1.5" marker-end="url(#arr2)"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 07: Noisy Targets ═══ -->
+<section class="section" id="s07">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <h2>Noisy Targets</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title">목표가 함수가 아닌 경우</div>
+    <p>실세계 학습 데이터는 결정론적 목표 함수가 아닌 <strong>노이즈 있는 방식</strong>으로 생성되는 경우가 많다.</p>
+    <div class="callout warn">
+      <span class="callout-icon">💳</span>
+      <div class="callout-text">
+        <strong>신용카드 예시:</strong> 동일한 특징값(나이, 성별, 연봉 등)을 가진 지원자라도 신용 승인 결과가 다를 수 있다. 목표 함수가 결정론적이지 않다!
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">보간 vs. 회귀 (Interpolation vs. Regression)</div>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <div class="compare-label" style="color: var(--text-muted);">보간 (Interpolation) — 학습 아님</div>
+        <div class="formula-box" style="font-size:13px;">yₙ = f(xₙ)</div>
+        <ul class="styled">
+          <li>결정론적 함수 f(x) ∈ ℝ 탐색</li>
+          <li>yₙ = f(xₙ)을 만족해야 함</li>
+          <li>노이즈 없음 → 과적합 위험</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <div class="compare-label" style="color: var(--accent);">회귀 (Regression) — 노이즈 추가</div>
+        <div class="formula-box" style="font-size:13px;">yₙ = f(xₙ) + ε</div>
+        <ul class="styled">
+          <li>yₙ를 근사하는 확률 분포 탐색</li>
+          <li>ε: 노이즈 (확률 변수)</li>
+          <li>실세계 데이터를 더 잘 반영</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">목표 '분포' (Target Distribution)</div>
+    <p>y = f(x) 대신, 출력 y를 입력 x에 <strong>영향을 받는(affected by)</strong> 확률변수로 취급한다:</p>
+    <div class="formula-box">
+      P(y|x) = 목표 분포 (target distribution)
+    </div>
+
+    <table class="styled" style="margin-top: 16px;">
+      <thead>
+        <tr><th>개념</th><th>수식</th><th>의미</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Noisy target</td>
+          <td style="font-family:monospace; font-size:12px;">y = f(x) + (y − f(x))</td>
+          <td>결정론적 목표 + 순수 노이즈</td>
+        </tr>
+        <tr>
+          <td>Deterministic target</td>
+          <td style="font-family:monospace; font-size:12px;">f(x) = 𝔼[y|x]</td>
+          <td>noisy target의 평균</td>
+        </tr>
+        <tr>
+          <td>Special case</td>
+          <td style="font-family:monospace; font-size:12px;">P(y|x) = 0 if y≠f(x)</td>
+          <td>결정론적 = noisy의 특수 경우</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">P(y|x) vs P(x)의 역할 구분</div>
+    <div class="compare-grid">
+      <div class="compare-card" style="border-color: rgba(56,189,248,0.3);">
+        <div class="compare-label" style="color: var(--accent);">P(y|x) — 목표 분포</div>
+        <ul class="styled">
+          <li>우리가 <strong>학습하려는 것</strong></li>
+          <li>입력 x에 대한 출력 y의 조건부 분포</li>
+          <li>= target function + noise</li>
+        </ul>
+      </div>
+      <div class="compare-card" style="border-color: rgba(129,140,248,0.3);">
+        <div class="compare-label" style="color: var(--accent2);">P(x) — 입력 분포</div>
+        <ul class="styled">
+          <li>점 x의 <strong>상대적 중요도</strong>만 정량화</li>
+          <li>학습의 목적이 아님</li>
+          <li>데이터 생성 메커니즘</li>
+        </ul>
+      </div>
+    </div>
+    <div class="formula-box" style="margin-top:16px;">
+      샘플 (x, y)는 결합 분포로 생성: <strong>P(x) · P(y|x)</strong>
+    </div>
+    <div class="callout danger" style="margin-top:12px;">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-text">
+        P(x)·P(y|x)를 P(x,y)로 합쳐버리면 두 개념이 혼재되므로 주의! 학습에서 두 역할은 명확히 구분되어야 한다.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 08: Summary ═══ -->
+<section class="section" id="s08" id="summary-section">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <h2>Summary</h2>
+  </div>
+
+  <div class="card" style="background: linear-gradient(135deg, rgba(56,189,248,0.04), rgba(129,140,248,0.04));">
+    <div class="card-title">핵심 정리</div>
+    <div id="summary-section">
+      <div class="sum-item">
+        <div class="sum-num">01</div>
+        <div class="sum-content">
+          <h4>학습은 확률적으로만 가능하다</h4>
+          <p>미지의 목표 함수 f를 확실히 알 수 없으므로, 확률 도구(Hoeffding)를 통해 <strong>𝒟 밖</strong>을 추론한다.</p>
+        </div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-num">02</div>
+        <div class="sum-content">
+          <h4>Hoeffding 부등식으로 학습 가능성 Q1에 답한다</h4>
+          <p style="font-family:monospace; font-size:12px; color:var(--accent);">ℙ[|E_in(h)−E_out(h)| &gt; ε] ≤ 2Me^{−2ε²N}</p>
+          <p>N을 충분히 크게 하면 E_out ≈ E_in 보장 (이론적 답).</p>
+        </div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-num">03</div>
+        <div class="sum-content">
+          <h4>E_in ≈ 0 만들기는 학습 패러다임이 답한다 (Q2)</h4>
+          <p>다양한 학습 알고리즘이 E_in을 최소화한다 (실용적 답). E_in을 E_out의 proxy로 사용.</p>
+        </div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-num">04</div>
+        <div class="sum-content">
+          <h4>오차 측도 (Error Measure)</h4>
+          <p>g ≈ f에서 "≈"의 의미를 정량화. E_in(h) = (1/N)Σe(h(xₙ),f(xₙ)), E_out(h) = 𝔼ₓ[e(h(x),f(x))]</p>
+        </div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-num">05</div>
+        <div class="sum-content">
+          <h4>Noisy Target</h4>
+          <p>y ~ P(y|x) 대신 y = f(x). (x₁,y₁),...,(xₙ,yₙ)은 P(x,y)=P(x)P(y|x)로 생성. E_out(h) = 𝔼_{x,y}[e(h(x),y)]</p>
+        </div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-num">06</div>
+        <div class="sum-content">
+          <h4>복잡도 트레이드오프 (Preview)</h4>
+          <p>모델 복잡도 ↑ → E_in ↓ 하지만 E_out−E_in ↑. 최적점 d*_vc가 존재 (VC analysis로 다룸).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Reference Table -->
+  <div class="card" style="margin-top: 24px;">
+    <div class="card-title">핵심 기호 & 공식 빠른 참조</div>
+    <table class="styled">
+      <thead>
+        <tr><th>기호</th><th>의미</th><th>비고</th></tr>
+      </thead>
+      <tbody>
+        <tr><td style="font-family:monospace">f</td><td>목표 함수 (target function)</td><td>미지(unknown), 고정</td></tr>
+        <tr><td style="font-family:monospace">h ∈ ℋ</td><td>가설 (hypothesis)</td><td>학습이 탐색하는 함수</td></tr>
+        <tr><td style="font-family:monospace">g</td><td>최종 가설 (final hypothesis)</td><td>알고리즘 𝒜의 출력</td></tr>
+        <tr><td style="font-family:monospace">E_in(h)</td><td>표본 내 오차 (= μ̂)</td><td>알려짐, 확률변수</td></tr>
+        <tr><td style="font-family:monospace">E_out(h)</td><td>표본 외 오차 (= μ)</td><td>미지, 고정</td></tr>
+        <tr><td style="font-family:monospace">ε</td><td>허용 편차 (tolerance)</td><td>PAC 정확도</td></tr>
+        <tr><td style="font-family:monospace">N</td><td>표본 크기</td><td>Hoeffding의 핵심 파라미터</td></tr>
+        <tr><td style="font-family:monospace">M</td><td>|ℋ| (가설 수)</td><td>복잡도 척도</td></tr>
+        <tr><td style="font-family:monospace">P(y|x)</td><td>목표 분포</td><td>noisy target 일반화</td></tr>
+        <tr><td style="font-family:monospace">2Me^{-2ε²N}</td><td>Uniform Hoeffding 상한</td><td>M개 가설에 대한 PAC 보장</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<script>
+// TOC active highlight on scroll
+const sections = document.querySelectorAll('.section');
+const tocItems = document.querySelectorAll('.toc-item');
+
+function updateTOC() {
+  let current = '';
+  sections.forEach(sec => {
+    const rect = sec.getBoundingClientRect();
+    if (rect.top <= 80) current = sec.id;
+  });
+  tocItems.forEach(item => {
+    item.classList.remove('active');
+    if (item.getAttribute('href') === '#' + current) {
+      item.classList.add('active');
+    }
+  });
+}
+
+window.addEventListener('scroll', updateTOC, { passive: true });
+updateTOC();
+
+// Smooth scroll
+tocItems.forEach(item => {
+  item.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(item.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+</body>
+</html>
