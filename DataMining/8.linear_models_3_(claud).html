@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8: Linear Model (3) — Data Mining</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --surface3: #1e2d45;
+    --border: #1f3050;
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --accent3: #34d399;
+    --accent4: #fb923c;
+    --accent5: #f472b6;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #475569;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --heading-font: 'Impact', 'Arial Narrow', sans-serif;
+    --body-font: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+    --code-font: 'Menlo', 'Courier New', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body-font);
+    font-size: 15px;
+    line-height: 1.7;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── TOC ── */
+  #toc {
+    width: 260px;
+    min-width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 0 0 40px 0;
+    flex-shrink: 0;
+  }
+
+  #toc::-webkit-scrollbar { width: 4px; }
+  #toc::-webkit-scrollbar-track { background: transparent; }
+  #toc::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .toc-header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+
+  .toc-course {
+    font-size: 10px;
+    font-family: var(--code-font);
+    color: var(--accent);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .toc-title {
+    font-family: var(--heading-font);
+    font-size: 18px;
+    color: var(--text);
+    letter-spacing: 0.5px;
+    line-height: 1.3;
+  }
+
+  .toc-title span {
+    color: var(--accent);
+  }
+
+  .toc-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .toc-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 20px;
+    text-decoration: none;
+    color: var(--text-dim);
+    font-size: 12.5px;
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
+    line-height: 1.4;
+  }
+
+  .toc-link:hover {
+    color: var(--text);
+    background: var(--surface2);
+    border-left-color: var(--accent2);
+  }
+
+  .toc-link.active {
+    color: var(--accent);
+    background: rgba(56,189,248,0.07);
+    border-left-color: var(--accent);
+  }
+
+  .toc-num {
+    font-family: var(--code-font);
+    font-size: 10px;
+    color: var(--accent);
+    min-width: 24px;
+    margin-top: 2px;
+    opacity: 0.7;
+  }
+
+  .toc-link.active .toc-num { opacity: 1; }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    padding: 0 0 80px;
+    max-width: 960px;
+    overflow-x: hidden;
+  }
+
+  .page-hero {
+    background: linear-gradient(135deg, #0d1629 0%, #111827 50%, #0d1f2d 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 56px 60px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(56,189,248,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(56,189,248,0.1);
+    border: 1px solid rgba(56,189,248,0.25);
+    color: var(--accent);
+    font-family: var(--code-font);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  .hero-title {
+    font-family: var(--heading-font);
+    font-size: 42px;
+    letter-spacing: 1px;
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+
+  .hero-title em {
+    color: var(--accent);
+    font-style: normal;
+  }
+
+  .hero-desc {
+    color: var(--text-dim);
+    font-size: 14px;
+    max-width: 540px;
+  }
+
+  .hero-meta {
+    margin-top: 24px;
+    display: flex;
+    gap: 24px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--code-font);
+  }
+
+  .hero-meta span { color: var(--text-dim); }
+
+  /* ── SECTIONS ── */
+  .section {
+    padding: 48px 60px 0;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-num {
+    font-family: var(--heading-font);
+    font-size: 42px;
+    color: var(--border);
+    letter-spacing: -1px;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .section-title {
+    font-family: var(--heading-font);
+    font-size: 24px;
+    color: var(--text);
+    letter-spacing: 0.5px;
+  }
+
+  .section-title .hl { color: var(--accent); }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent2);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    font-family: var(--code-font);
+  }
+
+  .card-split {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .card-split .desc { flex: 1; min-width: 0; }
+  .card-split .graph { flex: 1; min-width: 0; }
+
+  /* ── FORMULA ── */
+  .formula-box {
+    background: #0a1628;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 20px;
+    font-family: var(--code-font);
+    font-size: 14px;
+    color: var(--accent);
+    margin: 14px 0;
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+
+  .formula-box.green { border-color: var(--accent3); color: var(--accent3); }
+  .formula-box.purple { border-color: var(--accent2); color: var(--accent2); }
+  .formula-box.orange { border-color: var(--accent4); color: var(--accent4); }
+
+  /* ── BULLET LIST ── */
+  .bullet-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .bullet-list li {
+    padding: 5px 0 5px 18px;
+    position: relative;
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  .bullet-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 10px;
+    top: 8px;
+  }
+
+  .bullet-list li strong { color: var(--text); }
+  .bullet-list li .hl { color: var(--accent); }
+  .bullet-list li .hl2 { color: var(--accent3); }
+  .bullet-list li .hl3 { color: var(--accent4); }
+  .bullet-list li .hl4 { color: var(--accent5); }
+  .bullet-list li .bad { color: var(--red); }
+  .bullet-list li .good { color: var(--green); }
+
+  /* ── COMPARISON TABLE ── */
+  .cmp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  .cmp-table th {
+    background: var(--surface2);
+    color: var(--accent);
+    font-family: var(--code-font);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cmp-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(31,48,80,0.5);
+    color: var(--text-dim);
+    vertical-align: top;
+  }
+
+  .cmp-table tr:last-child td { border-bottom: none; }
+  .cmp-table tr:hover td { background: rgba(56,189,248,0.03); }
+  .cmp-table td:first-child { color: var(--text); font-weight: 600; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-left: 3px solid var(--accent3);
+    background: rgba(52,211,153,0.05);
+    padding: 14px 18px;
+    border-radius: 0 6px 6px 0;
+    margin: 16px 0;
+    font-size: 13.5px;
+    color: var(--text-dim);
+  }
+
+  .callout.warn {
+    border-color: var(--red);
+    background: rgba(248,113,113,0.05);
+  }
+
+  .callout.info {
+    border-color: var(--accent);
+    background: rgba(56,189,248,0.05);
+  }
+
+  .callout strong { color: var(--text); }
+
+  /* ── DATA GRID ── */
+  .data-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+
+  .data-cell {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+  }
+
+  .data-cell-title {
+    font-family: var(--code-font);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .data-cell code {
+    display: block;
+    font-family: var(--code-font);
+    font-size: 12.5px;
+    color: var(--accent3);
+    line-height: 1.8;
+  }
+
+  /* ── STEP FLOW ── */
+  .step-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 14px 0;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: var(--surface2);
+    border-radius: 6px;
+    font-size: 13px;
+  }
+
+  .step-arrow {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    padding: 1px 0;
+  }
+
+  .step-num {
+    font-family: var(--code-font);
+    font-size: 10px;
+    background: rgba(56,189,248,0.15);
+    color: var(--accent);
+    border-radius: 3px;
+    padding: 2px 6px;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  /* ── SUMMARY BOX ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-top: 20px;
+  }
+
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    border-top: 3px solid var(--accent);
+  }
+
+  .summary-card:nth-child(2) { border-top-color: var(--accent2); }
+  .summary-card:nth-child(3) { border-top-color: var(--accent3); }
+
+  .summary-card-title {
+    font-family: var(--heading-font);
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+
+  .summary-card p {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  /* ── SVG GRAPH ── */
+  svg { display: block; width: 100%; overflow: visible; }
+
+  /* ── DERIVATION BLOCK ── */
+  .derivation {
+    background: #080d1a;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 14px 0;
+  }
+
+  .derivation-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 5px 0;
+    font-family: var(--code-font);
+    font-size: 13px;
+  }
+
+  .derivation-op {
+    min-width: 32px;
+    color: var(--text-muted);
+    text-align: right;
+    font-size: 12px;
+  }
+
+  .derivation-expr { color: var(--text-dim); }
+  .derivation-note {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .derivation-row.highlight .derivation-expr { color: var(--accent3); }
+  .derivation-row.result .derivation-expr {
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  /* scrollbar for main */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── SPACER ── */
+  .spacer { height: 40px; }
+</style>
+</head>
+<body>
+
+<!-- ════════ TOC ════════ -->
+<nav id="toc">
+  <div class="toc-header">
+    <div class="toc-course">Data Mining · FE06064001</div>
+    <div class="toc-title">Linear Model <span>(3)</span></div>
+    <div class="toc-subtitle">Jangho Lee · CSE INU</div>
+  </div>
+  <a class="toc-link active" href="#s01"><span class="toc-num">01</span>Linear Models Overview</a>
+  <a class="toc-link" href="#s02"><span class="toc-num">02</span>Logistic Regression 소개</a>
+  <a class="toc-link" href="#s03"><span class="toc-num">03</span>Logistic Function θ(s)</a>
+  <a class="toc-link" href="#s04"><span class="toc-num">04</span>Hyperbolic Tangent & 비교</a>
+  <a class="toc-link" href="#s05"><span class="toc-num">05</span>Big Picture</a>
+  <a class="toc-link" href="#s06"><span class="toc-num">06</span>오차 측정: Cross-Entropy</a>
+  <a class="toc-link" href="#s07"><span class="toc-num">07</span>Maximum Likelihood 유도</a>
+  <a class="toc-link" href="#s08"><span class="toc-num">08</span>요약</a>
+</nav>
+
+<!-- ════════ MAIN ════════ -->
+<main>
+
+  <!-- HERO -->
+  <div class="page-hero">
+    <div class="hero-badge">✦ Lecture 8</div>
+    <h1 class="hero-title">Linear Model <em>(3)</em></h1>
+    <p class="hero-desc">로지스틱 회귀(Logistic Regression) · 시그모이드 함수 · 크로스 엔트로피 오차 · 최대 우도 추정</p>
+    <div class="hero-meta">
+      <div>슬라이드 <span>1–29</span></div>
+      <div>담당 <span>이장호 교수</span></div>
+      <div>학수번호 <span>FE06064001</span></div>
+    </div>
+  </div>
+
+  <!-- ══ S01 ══ -->
+  <div class="section" id="s01">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <div class="section-title">Linear Models <span class="hl">Overview</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Signal & 3가지 선형 모델</div>
+      <div class="formula-box">s = w<sup>T</sup>x = Σ w<sub>i</sub>x<sub>i</sub> &nbsp;(i = 0 to d)</div>
+      <p style="font-size:13.5px;color:var(--text-dim);margin-bottom:16px;">모든 선형 모델은 동일한 <strong style="color:var(--accent)">signal s</strong>를 공유하고, 활성화 함수(activation)만 다르다.</p>
+
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th>모델</th>
+            <th>활성화 함수 h(x)</th>
+            <th>출력 범위</th>
+            <th>용도</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Linear Classification</td>
+            <td style="font-family:var(--code-font);color:var(--accent4)">sign(w<sup>T</sup>x)</td>
+            <td>{+1, −1}</td>
+            <td>이진 결정 (하드)</td>
+          </tr>
+          <tr>
+            <td>Linear Regression</td>
+            <td style="font-family:var(--code-font);color:var(--accent3)">w<sup>T</sup>x</td>
+            <td>(−∞, +∞)</td>
+            <td>연속값 예측</td>
+          </tr>
+          <tr>
+            <td>Logistic Regression</td>
+            <td style="font-family:var(--code-font);color:var(--accent)">θ(w<sup>T</sup>x)</td>
+            <td>(0, 1)</td>
+            <td>확률 예측 (소프트)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <strong>핵심 아이디어:</strong> Logistic Regression은 Linear Classification과 Linear Regression의 중간 — 실수 출력(like regression)이지만 [0,1]로 제한(like classification). <strong>불확실성을 확률로 표현</strong>한다.
+    </div>
+
+    <!-- Signal flow SVG -->
+    <div class="card">
+      <div class="card-title">Signal Flow Diagram — 3종 선형 모델</div>
+      <svg viewBox="0 0 860 240" xmlns="http://www.w3.org/2000/svg" style="max-height:240px">
+        <!-- inputs -->
+        <text x="30" y="55" fill="#94a3b8" font-size="13" font-family="Menlo,monospace">x₀</text>
+        <text x="30" y="95" fill="#94a3b8" font-size="13" font-family="Menlo,monospace">x₁</text>
+        <text x="30" y="135" fill="#94a3b8" font-size="13" font-family="Menlo,monospace">x₂</text>
+        <text x="30" y="175" fill="#94a3b8" font-size="13" font-family="Menlo,monospace">xd</text>
+
+        <!-- lines to aggregator -->
+        <line x1="50" y1="52" x2="130" y2="100" stroke="#1f3050" stroke-width="1.5"/>
+        <line x1="50" y1="92" x2="130" y2="100" stroke="#1f3050" stroke-width="1.5"/>
+        <line x1="50" y1="132" x2="130" y2="100" stroke="#1f3050" stroke-width="1.5"/>
+        <line x1="50" y1="172" x2="130" y2="100" stroke="#1f3050" stroke-width="1.5"/>
+
+        <!-- aggregator -->
+        <polygon points="130,78 165,100 130,122" fill="#1a2235" stroke="#38bdf8" stroke-width="1.5"/>
+        <text x="137" y="105" fill="#38bdf8" font-size="11" font-family="Menlo,monospace">Σ</text>
+
+        <!-- s label -->
+        <text x="172" y="95" fill="#94a3b8" font-size="12" font-family="Menlo,monospace">s</text>
+        <line x1="165" y1="100" x2="195" y2="100" stroke="#38bdf8" stroke-width="1.5"/>
+
+        <!-- ── Model 1: Linear Classification ── -->
+        <!-- circle -->
+        <circle cx="240" cy="60" r="26" fill="#111827" stroke="#fb923c" stroke-width="1.5"/>
+        <!-- hard threshold icon -->
+        <polyline points="220,65 232,65 232,55 252,55 252,65 264,65" fill="none" stroke="#fb923c" stroke-width="2"/>
+        <!-- line s to circle1 -->
+        <line x1="195" y1="100" x2="205" y2="90" stroke="#1f3050" stroke-width="1" stroke-dasharray="4,2"/>
+        <line x1="205" y1="90" x2="214" y2="65" stroke="#1f3050" stroke-width="1" stroke-dasharray="4,2"/>
+        <!-- output arrow -->
+        <line x1="266" y1="60" x2="300" y2="60" stroke="#fb923c" stroke-width="1.5"/>
+        <polygon points="300,55 312,60 300,65" fill="#fb923c"/>
+        <text x="318" y="55" fill="#fb923c" font-size="11" font-family="Menlo,monospace">h(x)=sign(s)</text>
+        <text x="220" y="100" fill="#94a3b8" font-size="11">Linear Classification</text>
+
+        <!-- ── Model 2: Linear Regression ── -->
+        <circle cx="240" cy="140" r="26" fill="#111827" stroke="#34d399" stroke-width="1.5"/>
+        <!-- diagonal line icon (identity) -->
+        <line x1="225" y1="155" x2="255" y2="125" stroke="#34d399" stroke-width="2"/>
+        <!-- line s to circle2 -->
+        <line x1="195" y1="100" x2="214" y2="140" stroke="#1f3050" stroke-width="1" stroke-dasharray="4,2"/>
+        <!-- output arrow -->
+        <line x1="266" y1="140" x2="300" y2="140" stroke="#34d399" stroke-width="1.5"/>
+        <polygon points="300,135 312,140 300,145" fill="#34d399"/>
+        <text x="318" y="135" fill="#34d399" font-size="11" font-family="Menlo,monospace">h(x) = s</text>
+        <text x="225" y="180" fill="#94a3b8" font-size="11">Linear Regression</text>
+
+        <!-- ── Model 3: Logistic Regression ── -->
+        <circle cx="240" cy="210" r="26" fill="#111827" stroke="#38bdf8" stroke-width="1.5"/>
+        <!-- sigmoid icon -->
+        <path d="M224,220 Q228,220 232,215 Q236,210 240,210 Q244,210 248,205 Q252,200 256,200" fill="none" stroke="#38bdf8" stroke-width="2"/>
+        <!-- line s to circle3 -->
+        <line x1="195" y1="100" x2="195" y2="210" stroke="#1f3050" stroke-width="1" stroke-dasharray="4,2"/>
+        <line x1="195" y1="210" x2="214" y2="210" stroke="#1f3050" stroke-width="1" stroke-dasharray="4,2"/>
+        <!-- output arrow -->
+        <line x1="266" y1="210" x2="300" y2="210" stroke="#38bdf8" stroke-width="1.5"/>
+        <polygon points="300,205 312,210 300,215" fill="#38bdf8"/>
+        <text x="318" y="205" fill="#38bdf8" font-size="11" font-family="Menlo,monospace">h(x) = θ(s)</text>
+        <text x="215" y="248" fill="#94a3b8" font-size="11">Logistic Regression</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ══ S02 ══ -->
+  <div class="section" id="s02">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <div class="section-title">Logistic Regression <span class="hl">소개</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">동기: 심장마비 예측 예시 (슬라이드 3–4)</div>
+      <ul class="bullet-list">
+        <li><strong>입력 x:</strong> 콜레스테롤 수치, 혈압, 나이, 몸무게 등</li>
+        <li>심장마비를 <span class="bad">확실히</span> 예측하기는 어려움 → 발생 <span class="hl">확률</span>을 예측하는 것이 적절</li>
+        <li>원하는 출력: <strong>0과 1 사이를 연속적으로 변하는 y</strong> (y가 1에 가까울수록 심장마비 발생 가능성 높음)</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Linear Regression vs Logistic Regression (슬라이드 6)</div>
+      <div class="card-split">
+        <div class="desc">
+          <ul class="bullet-list">
+            <li><span class="bad">Linear Regression (a):</span><br>일부 확률값이 음수(< 0) — 확률로 부적절</li>
+            <li><span class="hl2">Logistic Regression (b):</span><br>모든 확률값이 0과 1 사이 — 확률로 적절</li>
+            <li>binary event를 다루지만, logistic은 <strong>불확실성 허용</strong> → 중간값이 불확실성 반영</li>
+          </ul>
+          <div class="callout" style="margin-top:14px">
+            <strong>핵심 차이:</strong> Logistic Regression은 출력을 확률 범위 [0,1]로 smooth하게 제한한다.
+          </div>
+        </div>
+        <div class="graph">
+          <!-- Linear vs Logistic probability graph -->
+          <svg viewBox="0 0 380 220" xmlns="http://www.w3.org/2000/svg">
+            <!-- background -->
+            <rect x="0" y="0" width="380" height="220" fill="#0d1629" rx="6"/>
+            <!-- titles -->
+            <text x="75" y="18" fill="#f87171" font-size="10" font-family="Menlo,monospace" text-anchor="middle">(a) linear</text>
+            <text x="265" y="18" fill="#34d399" font-size="10" font-family="Menlo,monospace" text-anchor="middle">(b) logistic</text>
+
+            <!-- ── LEFT: Linear regression ── -->
+            <!-- axes -->
+            <line x1="30" y1="190" x2="140" y2="190" stroke="#1f3050" stroke-width="1"/>
+            <line x1="30" y1="30" x2="30" y2="190" stroke="#1f3050" stroke-width="1"/>
+            <!-- y-axis ticks -->
+            <line x1="26" y1="190" x2="30" y2="190" stroke="#475569" stroke-width="1"/>
+            <text x="22" y="193" fill="#475569" font-size="8" text-anchor="end">0.0</text>
+            <line x1="26" y1="150" x2="30" y2="150" stroke="#475569" stroke-width="1"/>
+            <text x="22" y="153" fill="#475569" font-size="8" text-anchor="end">0.2</text>
+            <line x1="26" y1="110" x2="30" y2="110" stroke="#475569" stroke-width="1"/>
+            <text x="22" y="113" fill="#475569" font-size="8" text-anchor="end">0.4</text>
+            <line x1="26" y1="70" x2="30" y2="70" stroke="#475569" stroke-width="1"/>
+            <text x="22" y="73" fill="#475569" font-size="8" text-anchor="end">0.6</text>
+            <line x1="26" y1="30" x2="30" y2="30" stroke="#475569" stroke-width="1"/>
+            <text x="22" y="33" fill="#475569" font-size="8" text-anchor="end">1.0</text>
+            <!-- dashed 0 and 1 lines -->
+            <line x1="30" y1="190" x2="140" y2="190" stroke="#475569" stroke-width="0.5" stroke-dasharray="3,3"/>
+            <line x1="30" y1="30" x2="140" y2="30" stroke="#475569" stroke-width="0.5" stroke-dasharray="3,3"/>
+            <!-- x-axis labels -->
+            <text x="30" y="202" fill="#475569" font-size="7" text-anchor="middle">0</text>
+            <text x="75" y="202" fill="#475569" font-size="7" text-anchor="middle">1000</text>
+            <text x="120" y="202" fill="#475569" font-size="7" text-anchor="middle">2000</text>
+            <text x="85" y="213" fill="#94a3b8" font-size="8" text-anchor="middle">Balance</text>
+            <!-- linear line: goes negative at low balance, > 1 possible -->
+            <line x1="30" y1="205" x2="140" y2="75" stroke="#f87171" stroke-width="2"/>
+            <!-- negative region indicator -->
+            <rect x="30" y="190" width="110" height="15" fill="rgba(248,113,113,0.08)"/>
+            <text x="55" y="200" fill="#f87171" font-size="7" text-anchor="middle">음수 구간 발생</text>
+
+            <!-- ── RIGHT: Logistic regression ── -->
+            <!-- axes -->
+            <line x1="180" y1="190" x2="365" y2="190" stroke="#1f3050" stroke-width="1"/>
+            <line x1="180" y1="30" x2="180" y2="190" stroke="#1f3050" stroke-width="1"/>
+            <!-- y-axis ticks right -->
+            <line x1="176" y1="190" x2="180" y2="190" stroke="#475569" stroke-width="1"/>
+            <text x="172" y="193" fill="#475569" font-size="8" text-anchor="end">0.0</text>
+            <line x1="176" y1="30" x2="180" y2="30" stroke="#475569" stroke-width="1"/>
+            <text x="172" y="33" fill="#475569" font-size="8" text-anchor="end">1.0</text>
+            <line x1="176" y1="110" x2="180" y2="110" stroke="#475569" stroke-width="1"/>
+            <text x="172" y="113" fill="#475569" font-size="8" text-anchor="end">0.5</text>
+            <!-- dashed lines -->
+            <line x1="180" y1="190" x2="365" y2="190" stroke="#475569" stroke-width="0.5" stroke-dasharray="3,3"/>
+            <line x1="180" y1="30" x2="365" y2="30" stroke="#475569" stroke-width="0.5" stroke-dasharray="3,3"/>
+            <!-- x-axis labels right -->
+            <text x="180" y="202" fill="#475569" font-size="7" text-anchor="middle">0</text>
+            <text x="252" y="202" fill="#475569" font-size="7" text-anchor="middle">1000</text>
+            <text x="325" y="202" fill="#475569" font-size="7" text-anchor="middle">2000</text>
+            <text x="272" y="213" fill="#94a3b8" font-size="8" text-anchor="middle">Balance</text>
+            <!-- sigmoid curve: s-curve from ~190 at x=180 to ~30 at x=365 -->
+            <path d="M180,188 Q210,187 230,183 Q250,178 262,165 Q272,150 278,130 Q284,110 290,97 Q300,78 315,50 Q330,35 355,31 Q360,30 365,30" fill="none" stroke="#34d399" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ S03 ══ -->
+  <div class="section" id="s03">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <div class="section-title">Logistic Function <span class="hl">θ(s)</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-split">
+        <div class="desc">
+          <div class="card-title">정의 (슬라이드 8)</div>
+          <div class="formula-box">θ(s) = eˢ / (1 + eˢ) = 1 / (1 + e⁻ˢ)</div>
+          <ul class="bullet-list">
+            <li>정의역: −∞ &lt; s &lt; ∞</li>
+            <li>출력 범위: <span class="hl">(0, 1)</span> — 확률로 해석 가능</li>
+            <li>별명 <strong>"soft threshold"</strong>: 하드 임계값의 부드러운 버전</li>
+            <li>별명 <strong>"sigmoid"</strong>: 모양이 납작한 'S'자</li>
+          </ul>
+          <div class="formula-box green" style="margin-top:16px">1 − θ(s) = θ(−s)</div>
+          <p style="font-size:12.5px;color:var(--text-muted);margin-top:6px;">→ 이 성질 덕분에 오차함수를 θ(yw<sup>T</sup>x)로 단순화 가능 (슬라이드 9)</p>
+        </div>
+        <div class="graph">
+          <!-- Logistic function SVG -->
+          <svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="320" height="240" fill="#0d1629" rx="6"/>
+            <!-- axes -->
+            <line x1="40" y1="210" x2="300" y2="210" stroke="#1f3050" stroke-width="1.2"/>
+            <line x1="160" y1="20" x2="160" y2="215" stroke="#1f3050" stroke-width="1.2"/>
+            <!-- y-axis ticks -->
+            <line x1="155" y1="30" x2="160" y2="30" stroke="#475569" stroke-width="1"/>
+            <text x="148" y="33" fill="#94a3b8" font-size="9" text-anchor="end">1</text>
+            <line x1="155" y1="120" x2="160" y2="120" stroke="#475569" stroke-width="1"/>
+            <text x="148" y="123" fill="#94a3b8" font-size="9" text-anchor="end">0.5</text>
+            <line x1="155" y1="210" x2="160" y2="210" stroke="#475569" stroke-width="1"/>
+            <text x="148" y="213" fill="#94a3b8" font-size="9" text-anchor="end">0</text>
+            <!-- x-axis ticks -->
+            <line x1="40" y1="210" x2="40" y2="215" stroke="#475569" stroke-width="1"/>
+            <text x="40" y="225" fill="#94a3b8" font-size="9" text-anchor="middle">−6</text>
+            <line x1="80" y1="210" x2="80" y2="215" stroke="#475569" stroke-width="1"/>
+            <text x="80" y="225" fill="#94a3b8" font-size="9" text-anchor="middle">−4</text>
+            <line x1="120" y1="210" x2="120" y2="215" stroke="#475569" stroke-width="1"/>
+            <text x="120" y="225" fill="#94a3b8" font-size="9" text-anchor="middle">−2</text>
+            <text x="160" y="225" fill="#94a3b8" font-size="9" text-anchor="middle">0</text>
+            <line x1="200" y1="210" x2="200" y2="215" stroke="#475569" stroke-width="1"/>
+            <text x="200" y="225" fill="#94a3b8" font-size="9" text-anchor="middle">2</text>
+            <line x1="240" y1="210" x2="240" y2="215" stroke="#475569" stroke-width="1"/>
+            <text x="240" y="225" fill="#94a3b8" font-size="9" text-anchor="middle">4</text>
+            <line x1="280" y1="210" x2="280" y2="215" stroke="#475569" stroke-width="1"/>
+            <text x="280" y="225" fill="#94a3b8" font-size="9" text-anchor="middle">6</text>
+            <!-- axis labels -->
+            <text x="305" y="213" fill="#94a3b8" font-size="9">s</text>
+            <text x="163" y="16" fill="#94a3b8" font-size="9">θ(s)</text>
+            <!-- dashed lines -->
+            <line x1="40" y1="30" x2="300" y2="30" stroke="#1f3050" stroke-width="1" stroke-dasharray="3,3"/>
+            <!-- sigmoid curve: θ(s) = 1/(1+e^-s) mapped to pixel coords
+                 x: s from -6 to 6 → pixel 40 to 280, step ~20px per unit
+                 y: θ from 0 to 1 → pixel 210 to 30 -->
+            <path d="
+              M40,208
+              L60,206
+              L80,202
+              L100,192
+              L120,172
+              L140,143
+              L160,120
+              L180,97
+              L200,68
+              L220,48
+              L240,38
+              L260,32
+              L280,31
+            " fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linejoin="round"/>
+            <!-- annotation -->
+            <text x="195" y="75" fill="#38bdf8" font-size="10" font-family="Menlo,monospace">θ(s)</text>
+            <!-- horizontal asymptote markers -->
+            <text x="45" y="27" fill="#475569" font-size="8">→ 1 as s→∞</text>
+            <text x="45" y="207" fill="#475569" font-size="8">→ 0 as s→−∞</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <strong>왜 θ(s) = eˢ/(1+eˢ) 형태로 정의하는가?</strong><br>
+      이 형태 덕분에 <code style="font-family:var(--code-font);color:var(--accent)">1 − θ(s) = θ(−s)</code> 가 성립하고, P(y|x) = θ(yw<sup>T</sup>x)로 깔끔하게 표현되어 오차 함수를 편리하게 최소화할 수 있다.
+    </div>
+  </div>
+
+  <!-- ══ S04 ══ -->
+  <div class="section" id="s04">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <div class="section-title">Hyperbolic Tangent &amp; <span class="hl">함수 비교</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-split">
+        <div class="desc">
+          <div class="card-title">tanh(s) — 또 다른 시그모이드 (슬라이드 12)</div>
+          <div class="formula-box purple">tanh(s) = (eˢ − e⁻ˢ) / (eˢ + e⁻ˢ)</div>
+          <ul class="bullet-list">
+            <li>출력 범위: <span class="hl2">(−1, +1)</span></li>
+            <li>|s|가 크면: <strong>하드 임계값</strong>에 수렴 (±1)</li>
+            <li>|s|가 작으면: 임계값 없이 거의 선형</li>
+            <li>신경망(Neural Network)에서 <strong>활성화 함수</strong>로 자주 사용</li>
+          </ul>
+        </div>
+        <div class="graph">
+          <!-- tanh graph -->
+          <svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="320" height="220" fill="#0d1629" rx="6"/>
+            <!-- axes -->
+            <line x1="40" y1="200" x2="300" y2="200" stroke="#1f3050" stroke-width="1.2"/>
+            <line x1="160" y1="20" x2="160" y2="205" stroke="#1f3050" stroke-width="1.2"/>
+            <!-- center axis (y=0) -->
+            <line x1="40" y1="110" x2="300" y2="110" stroke="#1f3050" stroke-width="0.8" stroke-dasharray="3,3"/>
+            <!-- y-axis ticks -->
+            <text x="148" y="23" fill="#94a3b8" font-size="9" text-anchor="end">1</text>
+            <text x="148" y="113" fill="#94a3b8" font-size="9" text-anchor="end">0</text>
+            <text x="148" y="203" fill="#94a3b8" font-size="9" text-anchor="end">−1</text>
+            <!-- x-axis ticks -->
+            <text x="40" y="212" fill="#94a3b8" font-size="9" text-anchor="middle">−6</text>
+            <text x="80" y="212" fill="#94a3b8" font-size="9" text-anchor="middle">−4</text>
+            <text x="120" y="212" fill="#94a3b8" font-size="9" text-anchor="middle">−2</text>
+            <text x="160" y="212" fill="#94a3b8" font-size="9" text-anchor="middle">0</text>
+            <text x="200" y="212" fill="#94a3b8" font-size="9" text-anchor="middle">2</text>
+            <text x="240" y="212" fill="#94a3b8" font-size="9" text-anchor="middle">4</text>
+            <text x="280" y="212" fill="#94a3b8" font-size="9" text-anchor="middle">6</text>
+            <text x="302" y="203" fill="#94a3b8" font-size="9">s</text>
+            <!-- dashed asymptotes -->
+            <line x1="40" y1="25" x2="300" y2="25" stroke="#1f3050" stroke-width="0.8" stroke-dasharray="3,3"/>
+            <!-- tanh curve -->
+            <path d="
+              M40,198
+              L60,196
+              L80,192
+              L100,178
+              L120,150
+              L140,122
+              L160,110
+              L180,98
+              L200,70
+              L220,42
+              L240,28
+              L260,24
+              L280,23
+            " fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linejoin="round"/>
+            <text x="195" y="65" fill="#818cf8" font-size="10" font-family="Menlo,monospace">tanh(s)</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4종 함수 비교 그래프 -->
+    <div class="card">
+      <div class="card-title">4가지 함수 비교 그래프 (슬라이드 13)</div>
+      <svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="0" width="680" height="320" fill="#080d1a" rx="8"/>
+        <!-- axes -->
+        <line x1="60" y1="290" x2="620" y2="290" stroke="#1f3050" stroke-width="1.5"/>
+        <line x1="340" y1="20" x2="340" y2="295" stroke="#1f3050" stroke-width="1.5"/>
+        <!-- y gridlines -->
+        <line x1="60" y1="35" x2="620" y2="35" stroke="#111827" stroke-width="1"/>
+        <line x1="60" y1="162" x2="620" y2="162" stroke="#111827" stroke-width="1"/>
+        <line x1="60" y1="105" x2="620" y2="105" stroke="#111827" stroke-width="1"/>
+        <line x1="60" y1="220" x2="620" y2="220" stroke="#111827" stroke-width="1"/>
+        <!-- y-axis labels -->
+        <text x="52" y="38" fill="#475569" font-size="10" text-anchor="end">1</text>
+        <text x="52" y="108" fill="#475569" font-size="10" text-anchor="end">0.5</text>
+        <text x="52" y="165" fill="#475569" font-size="10" text-anchor="end">0</text>
+        <text x="52" y="223" fill="#475569" font-size="10" text-anchor="end">−0.5</text>
+        <text x="52" y="293" fill="#475569" font-size="10" text-anchor="end">−1</text>
+        <!-- x-axis ticks & labels: s from −6 to 6, center=340, scale ~46.7 per unit -->
+        <text x="60" y="306" fill="#475569" font-size="10" text-anchor="middle">−6</text>
+        <text x="153" y="306" fill="#475569" font-size="10" text-anchor="middle">−4</text>
+        <text x="247" y="306" fill="#475569" font-size="10" text-anchor="middle">−2</text>
+        <text x="340" y="306" fill="#475569" font-size="10" text-anchor="middle">0</text>
+        <text x="434" y="306" fill="#475569" font-size="10" text-anchor="middle">2</text>
+        <text x="527" y="306" fill="#475569" font-size="10" text-anchor="middle">4</text>
+        <text x="620" y="306" fill="#475569" font-size="10" text-anchor="middle">6</text>
+        <text x="625" y="293" fill="#94a3b8" font-size="10">s</text>
+
+        <!-- ── HARD THRESHOLD (black) ── -->
+        <line x1="60" y1="290" x2="340" y2="290" stroke="#e2e8f0" stroke-width="2"/>
+        <line x1="340" y1="35" x2="620" y2="35" stroke="#e2e8f0" stroke-width="2"/>
+        <line x1="340" y1="290" x2="340" y2="35" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="4,3"/>
+        <text x="450" y="52" fill="#e2e8f0" font-size="11">hard threshold</text>
+
+        <!-- ── LINEAR (green) ── 
+             center: (340,162), slope: output range needs to span -1 to 1 over reasonable s
+             map output 1→y=35, output -1→y=290, center s=0→y=162
+             slope in pixels: (290-35)/12 = 21.25 per unit, or scale=46.7px/s-unit
+             line goes from (-6, 1 cap) to (6, 1 cap) — actually linear h=s, clip visible -->
+        <!-- linear: y = 162 - s*(290-35)/12 = 162 - s*21.25 -->
+        <!-- at s=-6: y=162+127.5=289.5≈290; at s=6: y=162-127.5=34.5≈35 but then clips at y=35 -->
+        <!-- we'll just draw the line and note it exceeds bounds -->
+        <line x1="60" y1="290" x2="620" y2="35" stroke="#4ade80" stroke-width="2"/>
+        <text x="560" y="60" fill="#4ade80" font-size="11">linear</text>
+
+        <!-- ── LOGISTIC θ(s) (blue) ── 
+             θ(-6)≈0.0025→y≈289, θ(-4)≈0.018→y≈286, θ(-2)≈0.119→y≈258
+             θ(0)=0.5→y=162, θ(2)≈0.881→y≈68, θ(4)≈0.982→y≈39, θ(6)≈0.9975→y≈36 -->
+        <path d="M60,289 L153,286 L247,258 L340,162 L434,68 L527,39 L620,36"
+              fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linejoin="round"/>
+        <text x="180" y="230" fill="#38bdf8" font-size="11">logistic: θ(s)</text>
+
+        <!-- ── TANH (red/purple) ── 
+             tanh(-6)≈-1→y=290, tanh(-4)≈-0.9993→y≈288, tanh(-2)≈-0.9640→y≈262
+             tanh(0)=0→y=162, tanh(2)≈0.9640→y≈62, tanh(4)≈0.9993→y≈37, tanh(6)≈1→y=35 -->
+        <path d="M60,290 L153,288 L247,262 L340,162 L434,62 L527,37 L620,35"
+              fill="none" stroke="#f87171" stroke-width="2.5" stroke-linejoin="round"/>
+        <text x="170" y="260" fill="#f87171" font-size="11">tanh(s)</text>
+      </svg>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:10px;">logistic θ(s)는 [0,1], tanh는 [−1,+1], linear는 unbounded, hard threshold는 {−1,+1}</p>
+    </div>
+  </div>
+
+  <!-- ══ S05 ══ -->
+  <div class="section" id="s05">
+    <div class="section-header">
+      <div class="section-num">05</div>
+      <div class="section-title">Big Picture — <span class="hl">확률 모델링 구조</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">학습 목표 (슬라이드 15)</div>
+      <ul class="bullet-list">
+        <li>학습 목표 f(x) = <span class="hl">ℙ[y = +1 | x]</span> : 입력 x가 주어졌을 때 +1 사건이 발생할 확률</li>
+        <li>예: 환자 정보 x가 주어졌을 때 심장마비(y=+1) 확률</li>
+        <li>훈련 데이터는 f(x)를 <span class="bad">직접 제공하지 않음</span> → 이 확률에 의해 <strong>생성된 샘플</strong>만 제공</li>
+      </ul>
+      <div class="data-grid" style="margin-top:16px">
+        <div class="data-cell">
+          <div class="data-cell-title" style="color:var(--accent3)">이상적 데이터 (probability)</div>
+          <code>
+            (x₁, f₁ = 0.99 = ℙ[+1|x₁])<br>
+            (x₂, f₂ = 0.13 = ℙ[+1|x₂])<br>
+            ⋮<br>
+            (xN, fN = 0.51 = ℙ[+1|xN])
+          </code>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-title" style="color:var(--accent4)">실제 데이터 (binary event)</div>
+          <code>
+            (x₁, y₁ = +1)<br>
+            (x₂, y₂ = −1)<br>
+            ⋮<br>
+            (xN, yN = −1)
+          </code>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">확률 모델 공식 (슬라이드 14, 19)</div>
+      <div class="formula-box">ℙ[y = +1 | x] = f(x) ~ h(x) = θ(w<sup>T</sup>x)</div>
+      <div class="formula-box green">P(y|x) = h(x)<sup>[y=+1]</sup> · (1−h(x))<sup>[y=−1]</sup> = θ(yw<sup>T</sup>x)</div>
+      <ul class="bullet-list" style="margin-top:14px">
+        <li>y=+1이면: P = h(x) = θ(w<sup>T</sup>x)</li>
+        <li>y=−1이면: P = 1−h(x) = θ(−w<sup>T</sup>x) (1−θ(s)=θ(−s) 이용)</li>
+        <li>두 경우를 <strong>하나의 식</strong> <span class="hl">θ(yw<sup>T</sup>x)</span>로 통합 — 이것이 logistic function 정의의 핵심 이유</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══ S06 ══ -->
+  <div class="section" id="s06">
+    <div class="section-header">
+      <div class="section-num">06</div>
+      <div class="section-title">오차 측정: <span class="hl">Cross-Entropy Error</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">단순 오차 vs 크로스 엔트로피 (슬라이드 16–17)</div>
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th>오차 유형</th>
+            <th>수식</th>
+            <th>특징</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>단순 오차 Ei</td>
+            <td style="font-family:var(--code-font);font-size:12px;color:var(--red)">(1/N) Σ |h(xₙ) − ½(1+yₙ)|²</td>
+            <td>직관적이나 최소화 어려움</td>
+          </tr>
+          <tr>
+            <td><strong>Cross-Entropy</strong></td>
+            <td style="font-family:var(--code-font);font-size:12px;color:var(--accent)">(1/N) Σ ln(1 + e^(−yₙwᵀxₙ))</td>
+            <td>확률 해석 + 미분 최적화 유리</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-split">
+        <div class="desc">
+          <div class="card-title">Cross-Entropy 오차의 의미 (슬라이드 18)</div>
+          <div class="formula-box" style="font-size:12px">Eᵢₙ(w) = (1/N) Σ ln(1 + e^(−yₙwᵀxₙ))</div>
+          <ul class="bullet-list">
+            <li>yₙ = +1일 때: <span class="hl">wᵀxₙ ≫ 0</span>이면 오차↓ → θ(wᵀxₙ) ≈ 1 ✓</li>
+            <li>yₙ = −1일 때: <span class="hl">wᵀxₙ ≪ 0</span>이면 오차↓ → θ(wᵀxₙ) ≈ 0 ✓</li>
+            <li>오차가 작으려면 <strong>signal이 레이블과 같은 부호</strong>여야 함</li>
+          </ul>
+
+          <div class="callout" style="margin-top:14px">
+            <strong>Cross Entropy 정의 (슬라이드 25)</strong><br>
+            두 확률분포 {p, 1−p}와 {q, 1−q}에 대해:<br>
+            <code style="font-family:var(--code-font);color:var(--accent);font-size:12px">p·log(1/q) + (1−p)·log(1/(1−q))</code><br>
+            → 관측 분포를 피팅 분포로 근사하는 오차
+          </div>
+        </div>
+        <div class="graph">
+          <!-- Cross-entropy loss graph -->
+          <svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="320" height="240" fill="#0d1629" rx="6"/>
+            <!-- axes -->
+            <line x1="40" y1="210" x2="300" y2="210" stroke="#1f3050" stroke-width="1.2"/>
+            <line x1="170" y1="20" x2="170" y2="215" stroke="#1f3050" stroke-width="1.2"/>
+            <!-- y-axis ticks -->
+            <text x="32" y="23" fill="#94a3b8" font-size="8" text-anchor="end">4</text>
+            <text x="32" y="73" fill="#94a3b8" font-size="8" text-anchor="end">3</text>
+            <text x="32" y="123" fill="#94a3b8" font-size="8" text-anchor="end">2</text>
+            <text x="32" y="173" fill="#94a3b8" font-size="8" text-anchor="end">1</text>
+            <text x="32" y="213" fill="#94a3b8" font-size="8" text-anchor="end">0</text>
+            <!-- x-axis ticks -->
+            <text x="40" y="224" fill="#94a3b8" font-size="8" text-anchor="middle">−6</text>
+            <text x="80" y="224" fill="#94a3b8" font-size="8" text-anchor="middle">−4</text>
+            <text x="120" y="224" fill="#94a3b8" font-size="8" text-anchor="middle">−2</text>
+            <text x="170" y="224" fill="#94a3b8" font-size="8" text-anchor="middle">0</text>
+            <text x="220" y="224" fill="#94a3b8" font-size="8" text-anchor="middle">2</text>
+            <text x="260" y="224" fill="#94a3b8" font-size="8" text-anchor="middle">4</text>
+            <text x="300" y="224" fill="#94a3b8" font-size="8" text-anchor="middle">6</text>
+            <text x="302" y="213" fill="#94a3b8" font-size="8">w·x</text>
+            <!-- gridlines -->
+            <line x1="40" y1="20" x2="300" y2="20" stroke="#111827" stroke-width="0.8"/>
+            <line x1="40" y1="70" x2="300" y2="70" stroke="#111827" stroke-width="0.8"/>
+            <line x1="40" y1="120" x2="300" y2="120" stroke="#111827" stroke-width="0.8"/>
+            <line x1="40" y1="170" x2="300" y2="170" stroke="#111827" stroke-width="0.8"/>
+            <!-- y=-1 curve (blue): ln(1+e^(s)) → large for large s, ~0 for s<<0 
+                 pixel: x: s=-6→40, s=6→300, step=21.67/unit
+                        y: val 0→210, val 4→20, scale=(210-20)/4=47.5/unit
+                 y=-1: ln(1+e^s) → s=-6: ln(1+e^-6)≈0.0025→y=210; s=0: ln(2)≈0.693→y=177; s=6: ln(1+e^6)≈6→y=-75(off top)
+                 capped at top=20 -->
+            <!-- y=-1 means error = ln(1 + e^(s)) where s = w^T x -->
+            <!-- at s=-6: 0.0025, -4: 0.018, -2: 0.127, 0: 0.693, 2: 2.127, 4: 4.018, 6: 6.003 -->
+            <!-- pixels: y_px = 210 - val*47.5 -->
+            <path d="M40,209 L80,209 L120,204 L170,177 L220,108 L260,20 L285,20"
+                  fill="none" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round"/>
+            <text x="210" y="100" fill="#38bdf8" font-size="10">y = −1</text>
+
+            <!-- y=+1 curve (red): ln(1+e^(-s)) → large for large -s, ~0 for s>>0
+                 at s=-6: 6.003, s=-4: 4.018, s=-2: 2.127, s=0: 0.693, s=2: 0.127, s=4: 0.018, s=6: 0.0025 -->
+            <path d="M40,20 L60,20 L80,20 L120,108 L170,177 L220,204 L260,209 L300,209"
+                  fill="none" stroke="#f87171" stroke-width="2" stroke-linejoin="round"/>
+            <text x="60" y="100" fill="#f87171" font-size="10">y = +1</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ S07 ══ -->
+  <div class="section" id="s07">
+    <div class="section-header">
+      <div class="section-num">07</div>
+      <div class="section-title">Maximum Likelihood <span class="hl">유도</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">최대 우도 추정 (슬라이드 20–23)</div>
+      <ul class="bullet-list">
+        <li>훈련 데이터 (x₁,y₁), …, (xN,yN) 은 <strong>독립적으로 생성</strong>되었다고 가정</li>
+        <li>전체 데이터의 우도(Likelihood): <span class="hl">∏ P(yₙ|xₙ)</span></li>
+        <li>최대 우도법: 이 확률을 최대화하는 w 선택</li>
+      </ul>
+
+      <div class="derivation" style="margin-top:16px">
+        <div class="derivation-row">
+          <span class="derivation-op">max</span>
+          <span class="derivation-expr">∏ P(yₙ|xₙ)</span>
+          <span class="derivation-note">← maximize likelihood</span>
+        </div>
+        <div class="derivation-row">
+          <span class="derivation-op">⇔ max</span>
+          <span class="derivation-expr">ln(∏ P(yₙ|xₙ))</span>
+          <span class="derivation-note">← log monotone 변환</span>
+        </div>
+        <div class="derivation-row">
+          <span class="derivation-op">≡ max</span>
+          <span class="derivation-expr">Σ ln P(yₙ|xₙ)</span>
+          <span class="derivation-note">← log product = sum</span>
+        </div>
+        <div class="derivation-row">
+          <span class="derivation-op">⇔ min</span>
+          <span class="derivation-expr">−(1/N) Σ ln P(yₙ|xₙ)</span>
+          <span class="derivation-note">← NLL (부호 반전)</span>
+        </div>
+        <div class="derivation-row">
+          <span class="derivation-op">≡ min</span>
+          <span class="derivation-expr">(1/N) Σ ln(1 / θ(yₙwᵀxₙ))</span>
+          <span class="derivation-note">← P(y|x) = θ(ywᵀx) 대입</span>
+        </div>
+        <div class="derivation-row highlight">
+          <span class="derivation-op">≡ min</span>
+          <span class="derivation-expr">(1/N) Σ ln(1 + e^(−yₙwᵀxₙ))</span>
+          <span class="derivation-note">← 1/θ(s) = 1 + e^(-s)</span>
+        </div>
+        <div class="derivation-row result">
+          <span class="derivation-op">= </span>
+          <span class="derivation-expr">Eᵢₙ(w) &nbsp;← Cross-Entropy Error!</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Cross-Entropy Loss 유도 요약 (슬라이드 25–28)</div>
+      <div class="card-split">
+        <div class="desc">
+          <ul class="bullet-list">
+            <li><strong>n번째 항</strong>의 cross-entropy:<br>
+              관측 pmf: {[yₙ=+1], [yₙ=−1]}<br>
+              피팅 pmf: {h(xₙ), 1−h(xₙ)}
+            </li>
+            <li>Cross-entropy formula:<br>
+              <code style="font-family:var(--code-font);font-size:12px;color:var(--accent)">[yₙ=+1]·ln(1/h(xₙ)) + [yₙ=−1]·ln(1/(1−h(xₙ)))</code>
+            </li>
+            <li>이것이 <span class="hl2">ln(1 + e^(−yₙwᵀxₙ))</span>와 같음을 보일 수 있다</li>
+          </ul>
+          <div class="callout" style="margin-top:14px">
+            <strong>결론: 3가지 관점이 동치</strong><br>
+            <code style="font-family:var(--code-font);color:var(--accent3);font-size:12px">
+            최소화 Eᵢₙ(w)<br>
+            = 최소화 NLL(w)<br>
+            = 최대화 Likelihood ∏P(yₙ|xₙ)
+            </code>
+          </div>
+        </div>
+        <div class="desc">
+          <div class="formula-box orange" style="font-size:12px">
+            Eᵢₙ(w) = (1/N) Σ ln(1 + e^(−yₙwᵀxₙ))
+          </div>
+          <ul class="bullet-list" style="margin-top:12px">
+            <li>오차가 작으려면 <strong>yₙwᵀxₙ이 크고 양수</strong>여야 함</li>
+            <li>즉 sign(wᵀx) = yₙ → 분류 정확</li>
+            <li>오차함수가 각 xₙ을 올바르게 "분류"하도록 w를 유도</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ S08 ══ -->
+  <div class="section" id="s08">
+    <div class="section-header">
+      <div class="section-num">08</div>
+      <div class="section-title"><span class="hl">요약</span> — 핵심 정리</div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-card-title">🔵 Logistic Regression</div>
+        <p>h(x) = θ(w<sup>T</sup>x). 출력이 (0,1)로 제한된 확률값. Binary event를 불확실성을 허용하며 예측. Linear와 Hard threshold의 중간.</p>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-title">🟣 Logistic Function θ</div>
+        <p>θ(s) = 1/(1+e<sup>-s</sup>). 핵심 성질: 1−θ(s) = θ(−s). 이 덕분에 P(y|x) = θ(yw<sup>T</sup>x)로 통합 표현 가능.</p>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-title">🟢 Cross-Entropy Error</div>
+        <p>Eᵢₙ(w) = (1/N)Σln(1+e<sup>-yₙwᵀxₙ</sup>). 최대 우도 추정(MLE)과 동치. 확률론적 해석 + gradient 최적화에 유리.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <div class="card-title">전체 학습 흐름</div>
+      <div class="step-flow">
+        <div class="step"><span class="step-num">1</span> 학습 목표: f(x) = ℙ[y=+1|x] 추정</div>
+        <div class="step-arrow">↓</div>
+        <div class="step"><span class="step-num">2</span> 모델: h(x) = θ(w<sup>T</sup>x)로 근사</div>
+        <div class="step-arrow">↓</div>
+        <div class="step"><span class="step-num">3</span> 오차: Cross-Entropy Eᵢₙ(w) = (1/N)Σln(1+e<sup>-yₙwᵀxₙ</sup>)</div>
+        <div class="step-arrow">↓</div>
+        <div class="step"><span class="step-num">4</span> 최적화: Eᵢₙ(w) 최소화 ⟺ Likelihood 최대화</div>
+        <div class="step-arrow">↓</div>
+        <div class="step" style="border-color:var(--accent);background:rgba(56,189,248,0.05)"><span class="step-num" style="background:rgba(56,189,248,0.25)">5</span> 결과: 각 xₙ을 올바르게 분류하는 w 획득</div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+  </div>
+
+</main>
+
+<script>
+  // Active TOC tracking
+  const sections = document.querySelectorAll('.section');
+  const tocLinks = document.querySelectorAll('.toc-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        tocLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
