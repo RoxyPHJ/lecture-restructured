@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기계학습 8강 — PCA와 Feature Selection</title>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --surface3: #1e2d42;
+  --border: #2a3a52;
+  --accent: #3b82f6;
+  --accent2: #f59e0b;
+  --accent3: #10b981;
+  --accent4: #ec4899;
+  --accent5: #8b5cf6;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --code-bg: #0d1117;
+  --code-border: #1e3a5f;
+  --green: #10b981;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+  --blue: #3b82f6;
+  --purple: #8b5cf6;
+  --pink: #ec4899;
+  --toc-width: 260px;
+  --ff-body: 'Apple SD Gothic Neo', 'Malgun Gothic', 'NanumGothic', sans-serif;
+  --ff-code: 'Menlo', 'Courier New', monospace;
+  --ff-head: 'Impact', 'Arial Narrow', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--ff-body);
+  font-size: 15px;
+  line-height: 1.7;
+  display: flex;
+}
+
+/* ── TOC ── */
+#toc {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--toc-width);
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 100;
+  padding: 0 0 40px;
+}
+#toc-header {
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0;
+  background: var(--surface);
+  z-index: 10;
+}
+#toc-header h1 {
+  font-family: var(--ff-head);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+#toc-header p { font-size: 11px; color: var(--text-dim); }
+.toc-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  cursor: pointer;
+  transition: all .2s;
+  border-left: 3px solid transparent;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+.toc-item:hover { background: var(--surface2); color: var(--text); }
+.toc-item.active {
+  border-left-color: var(--accent);
+  background: rgba(59,130,246,.08);
+  color: var(--accent);
+}
+.toc-num {
+  font-family: var(--ff-head);
+  font-size: 10px;
+  color: var(--accent);
+  min-width: 22px;
+  letter-spacing: 1px;
+}
+
+/* ── MAIN ── */
+#main {
+  margin-left: var(--toc-width);
+  flex: 1;
+  padding: 0 40px 80px;
+  max-width: 960px;
+}
+
+/* ── HERO ── */
+#hero {
+  padding: 60px 0 50px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 60px;
+}
+.hero-tag {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(59,130,246,.12);
+  border: 1px solid rgba(59,130,246,.3);
+  padding: 4px 12px;
+  border-radius: 4px;
+  margin-bottom: 18px;
+}
+#hero h1 {
+  font-family: var(--ff-head);
+  font-size: 42px;
+  letter-spacing: -1px;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+#hero h1 span { color: var(--accent); }
+#hero p { font-size: 14px; color: var(--text-muted); }
+.hero-meta {
+  display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap;
+}
+.hero-meta span {
+  font-size: 12px; color: var(--text-dim);
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+/* ── SECTION ── */
+.section {
+  margin-bottom: 80px;
+  scroll-margin-top: 24px;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.section-num {
+  font-family: var(--ff-head);
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  background: rgba(59,130,246,.1);
+  border: 1px solid rgba(59,130,246,.25);
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+.section h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+}
+.card-title {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.card.green { border-color: rgba(16,185,129,.3); }
+.card.yellow { border-color: rgba(245,158,11,.3); }
+.card.red { border-color: rgba(239,68,68,.3); }
+.card.purple { border-color: rgba(139,92,246,.3); }
+.card.blue { border-color: rgba(59,130,246,.3); }
+
+/* ── HIGHLIGHT BOX ── */
+.highlight {
+  background: rgba(59,130,246,.07);
+  border: 1px solid rgba(59,130,246,.25);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 18px;
+  margin: 16px 0;
+  font-size: 14px;
+}
+.highlight.green {
+  background: rgba(16,185,129,.07);
+  border-color: rgba(16,185,129,.25);
+  border-left-color: var(--green);
+}
+.highlight.yellow {
+  background: rgba(245,158,11,.07);
+  border-color: rgba(245,158,11,.25);
+  border-left-color: var(--yellow);
+}
+.highlight.red {
+  background: rgba(239,68,68,.07);
+  border-color: rgba(239,68,68,.25);
+  border-left-color: var(--red);
+}
+.highlight.purple {
+  background: rgba(139,92,246,.07);
+  border-color: rgba(139,92,246,.25);
+  border-left-color: var(--purple);
+}
+
+/* ── GRID ── */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* ── CODE ── */
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  overflow-x: auto;
+  font-family: var(--ff-code);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 14px 0;
+}
+.kw { color: #ff7b72; }
+.fn { color: #d2a8ff; }
+.st { color: #a5d6ff; }
+.cm { color: #8b949e; font-style: italic; }
+.nm { color: #79c0ff; }
+
+/* ── TABLE ── */
+.tbl-wrap { overflow-x: auto; margin: 14px 0; }
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13.5px;
+}
+th {
+  background: var(--surface2);
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+td {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+tr:nth-child(even) td { background: rgba(255,255,255,.025); }
+tr:hover td { background: rgba(59,130,246,.05); }
+
+/* ── FORMULA ── */
+.formula {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 20px;
+  font-family: var(--ff-code);
+  font-size: 14px;
+  text-align: center;
+  margin: 12px 0;
+  color: var(--accent2);
+  letter-spacing: 0.5px;
+}
+
+/* ── STEP FLOW ── */
+.steps { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+.step {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+.step-num {
+  width: 28px; height: 28px; min-width: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 2px;
+}
+.step-content h4 { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.step-content p { font-size: 13px; color: var(--text-muted); }
+
+/* ── SVG wrapper ── */
+.svg-wrap {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 14px 0;
+}
+svg { display: block; width: 100%; }
+
+/* ── BADGE ── */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.badge-blue { background: rgba(59,130,246,.2); color: #93c5fd; border: 1px solid rgba(59,130,246,.4); }
+.badge-green { background: rgba(16,185,129,.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,.4); }
+.badge-red { background: rgba(239,68,68,.2); color: #fca5a5; border: 1px solid rgba(239,68,68,.4); }
+.badge-yellow { background: rgba(245,158,11,.2); color: #fcd34d; border: 1px solid rgba(245,158,11,.4); }
+.badge-purple { background: rgba(139,92,246,.2); color: #c4b5fd; border: 1px solid rgba(139,92,246,.4); }
+
+/* ── SUMMARY BOX ── */
+.summary-box {
+  background: linear-gradient(135deg, rgba(59,130,246,.1), rgba(139,92,246,.1));
+  border: 1px solid rgba(59,130,246,.3);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-top: 30px;
+}
+.summary-box h3 {
+  font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 14px;
+}
+.summary-box ul { list-style: none; }
+.summary-box li {
+  padding: 6px 0;
+  padding-left: 16px;
+  position: relative;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.summary-box li::before {
+  content: '▸';
+  position: absolute; left: 0;
+  color: var(--accent);
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+p { margin-bottom: 8px; }
+ul { padding-left: 20px; margin-bottom: 8px; }
+li { margin-bottom: 4px; }
+strong { color: var(--text); font-weight: 700; }
+em { color: var(--accent2); font-style: normal; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ TOC ═══════════════ -->
+<nav id="toc">
+  <div id="toc-header">
+    <h1>기계학습 · 8강</h1>
+    <p>PCA와 Feature Selection</p>
+  </div>
+  <a class="toc-item active" href="#s01" onclick="setActive(this)">
+    <span class="toc-num">01</span>차원 축소의 필요성
+  </a>
+  <a class="toc-item" href="#s02" onclick="setActive(this)">
+    <span class="toc-num">02</span>행렬식 (Determinant)
+  </a>
+  <a class="toc-item" href="#s03" onclick="setActive(this)">
+    <span class="toc-num">03</span>고유값 (Eigenvalue)
+  </a>
+  <a class="toc-item" href="#s04" onclick="setActive(this)">
+    <span class="toc-num">04</span>고유벡터 (Eigenvector)
+  </a>
+  <a class="toc-item" href="#s05" onclick="setActive(this)">
+    <span class="toc-num">05</span>핵심 성질 & PCA 연결
+  </a>
+  <a class="toc-item" href="#s06" onclick="setActive(this)">
+    <span class="toc-num">06</span>PCA 개요 & 분산
+  </a>
+  <a class="toc-item" href="#s07" onclick="setActive(this)">
+    <span class="toc-num">07</span>공분산 행렬
+  </a>
+  <a class="toc-item" href="#s08" onclick="setActive(this)">
+    <span class="toc-num">08</span>PCA 알고리즘 & 예시
+  </a>
+  <a class="toc-item" href="#s09" onclick="setActive(this)">
+    <span class="toc-num">09</span>분산 설명력 & 투영
+  </a>
+  <a class="toc-item" href="#s10" onclick="setActive(this)">
+    <span class="toc-num">10</span>Feature Selection
+  </a>
+  <a class="toc-item" href="#s11" onclick="setActive(this)">
+    <span class="toc-num">11</span>실제 응용 & Python
+  </a>
+  <a class="toc-item" href="#s12" onclick="setActive(this)">
+    <span class="toc-num">12</span>PCA의 한계
+  </a>
+</nav>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main id="main">
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-tag">Machine Learning · Lecture 08</div>
+  <h1>PCA와<br><span>Feature Selection</span></h1>
+  <p>고유값·고유벡터의 수학적 기반부터 주성분 분석의 실전 응용까지</p>
+  <div class="hero-meta">
+    <span>인천대학교 컴퓨터공학부</span>
+    <span>김인수 교수</span>
+    <span>2026 1학기</span>
+    <span>슬라이드 1–22</span>
+  </div>
+</section>
+
+<!-- ══ 01 ══ -->
+<section class="section" id="s01">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2>차원 축소의 필요성 — 차원의 저주</h2>
+  </div>
+
+  <div class="highlight">
+    <strong>차원의 저주 (Curse of Dimensionality)</strong><br>
+    유클리드 거리 공식에서 모든 특성이 "똑같이 중요하게" 계산됨 →
+    <em>d(x,z) = √(Σᵢ (xᵢ − zᵢ)²)</em><br>
+    변수가 늘어날수록 발생하는 3가지 핵심 문제
+  </div>
+
+  <div class="grid3">
+    <div class="card red">
+      <div class="card-title">① 거리 집중 현상</div>
+      <p>모든 점들이 거의 같은 거리에 위치</p>
+      <p>→ <strong>'가장 가까운 이웃'</strong> 구분 불가</p>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">② 노이즈의 증가</div>
+      <p>예측과 무관한 변수가 늘어날 확률 ↑</p>
+      <p>→ 혈액형 같은 환자 ≠ 가장 가까운 이웃</p>
+    </div>
+    <div class="card purple">
+      <div class="card-title">③ 계산 비용 증가</div>
+      <p>거리 계산 비용 <strong>O(n·d)</strong></p>
+      <p>→ d가 크면 예측이 매우 느려짐</p>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>특성</th><th>변수</th><th>예측과의 연관성</th></tr></thead>
+      <tbody>
+        <tr><td>종양 크기</td><td>x₁</td><td><span class="badge badge-green">매우 높음</span></td></tr>
+        <tr><td>세포 모양 불규칙도</td><td>x₂</td><td><span class="badge badge-green">매우 높음</span></td></tr>
+        <tr><td>환자 혈액형</td><td>x₃</td><td><span class="badge badge-red">거의 없음</span></td></tr>
+        <tr><td>환자 생년월일</td><td>x₄</td><td><span class="badge badge-red">거의 없음</span></td></tr>
+        <tr><td>병원 방문 요일</td><td>x₅</td><td><span class="badge badge-red">거의 없음</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="highlight green">
+    <strong>해결 방향 → PCA / 차원 축소</strong><br>
+    변수가 너무 많아서 문제라면 꼭 필요한 변수들만 사용하자!
+  </div>
+</section>
+
+<!-- ══ 02 ══ -->
+<section class="section" id="s02">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2>행렬식 (Determinant)</h2>
+  </div>
+
+  <p>행렬의 열벡터들이 span하는 공간의 <strong>넓이(부피)</strong>, 선형 독립의 정도를 나타냄</p>
+
+  <div class="grid2" style="margin-top:16px;">
+    <!-- det != 0 -->
+    <div class="card green">
+      <div class="card-title" style="color:var(--green)">✓ det ≠ 0 : 열벡터들이 선형 독립</div>
+      <!-- SVG: parallelogram -->
+      <div class="svg-wrap">
+        <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg">
+          <!-- axes -->
+          <line x1="30" y1="170" x2="250" y2="170" stroke="#334155" stroke-width="1"/>
+          <line x1="30" y1="170" x2="30" y2="20" stroke="#334155" stroke-width="1"/>
+          <!-- tick labels x -->
+          <text x="100" y="185" font-size="11" fill="#64748b" font-family="monospace" text-anchor="middle">2</text>
+          <text x="170" y="185" font-size="11" fill="#64748b" font-family="monospace" text-anchor="middle">4</text>
+          <text x="240" y="185" font-size="11" fill="#64748b" font-family="monospace" text-anchor="middle">6</text>
+          <!-- tick labels y -->
+          <text x="20" y="132" font-size="11" fill="#64748b" font-family="monospace" text-anchor="end">1</text>
+          <text x="20" y="92" font-size="11" fill="#64748b" font-family="monospace" text-anchor="end">2</text>
+          <text x="20" y="52" font-size="11" fill="#64748b" font-family="monospace" text-anchor="end">3</text>
+          <!-- c1=(2,1): from origin(30,170) → (30+70=100, 170-40=130) scale: 35px/unit -->
+          <!-- c2=(0,2): from origin → (30, 170-80=90) -->
+          <!-- parallelogram: O, c1, c1+c2, c2 -->
+          <!-- O=(30,170), c1=(100,130), c1+c2=(100,90), c2=(30,90) -->
+          <polygon points="30,170 100,130 100,90 30,90"
+                   fill="rgba(59,130,246,0.18)" stroke="#3b82f6" stroke-width="1.5"/>
+          <!-- c1 vector arrow -->
+          <line x1="30" y1="170" x2="97" y2="132" stroke="#3b82f6" stroke-width="2"/>
+          <polygon points="100,130 91,138 97,132" fill="#3b82f6"/>
+          <!-- c2 vector arrow -->
+          <line x1="30" y1="170" x2="30" y2="93" stroke="#f59e0b" stroke-width="2"/>
+          <polygon points="30,90 24,101 30,93" fill="#f59e0b"/>
+          <!-- labels -->
+          <text x="108" y="128" font-size="12" fill="#3b82f6" font-family="monospace">c₁=(2,1)</text>
+          <text x="34" y="80" font-size="12" fill="#f59e0b" font-family="monospace">c₂=(0,2)</text>
+          <!-- det annotation -->
+          <text x="56" y="118" font-size="11" fill="#10b981" font-family="monospace">넓이=4</text>
+          <!-- axis labels -->
+          <text x="255" y="173" font-size="11" fill="#64748b">x</text>
+          <text x="32" y="16" font-size="11" fill="#64748b">y</text>
+        </svg>
+      </div>
+      <ul style="font-size:13px; color:var(--text-muted); list-style:none; padding:0;">
+        <li>• 넓이 = |det(A)| = <strong style="color:var(--green)">4</strong></li>
+        <li>• → 두 벡터가 선형 독립</li>
+        <li>• → R²를 완전히 Span!</li>
+        <li>• → <strong>역행렬이 존재함!</strong></li>
+      </ul>
+    </div>
+
+    <!-- det = 0 -->
+    <div class="card red">
+      <div class="card-title" style="color:var(--red)">✗ det = 0 : 열벡터들이 선형 종속</div>
+      <div class="svg-wrap">
+        <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg">
+          <!-- axes -->
+          <line x1="30" y1="170" x2="250" y2="170" stroke="#334155" stroke-width="1"/>
+          <line x1="30" y1="170" x2="30" y2="20" stroke="#334155" stroke-width="1"/>
+          <!-- tick labels -->
+          <text x="100" y="185" font-size="11" fill="#64748b" font-family="monospace" text-anchor="middle">2</text>
+          <text x="170" y="185" font-size="11" fill="#64748b" font-family="monospace" text-anchor="middle">4</text>
+          <text x="20" y="132" font-size="11" fill="#64748b" font-family="monospace" text-anchor="end">1</text>
+          <text x="20" y="92" font-size="11" fill="#64748b" font-family="monospace" text-anchor="end">2</text>
+          <!-- c1=(2,1): O→(100,130) -->
+          <!-- c2=(4,2)=2c1: O→(170,90) -->
+          <!-- same line: annotate -->
+          <line x1="30" y1="170" x2="200" y2="90" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>
+          <!-- c1 -->
+          <line x1="30" y1="170" x2="97" y2="132" stroke="#ef4444" stroke-width="2"/>
+          <polygon points="100,130 91,138 97,132" fill="#ef4444"/>
+          <!-- c2 -->
+          <line x1="30" y1="170" x2="166" y2="92" stroke="#f59e0b" stroke-width="2"/>
+          <polygon points="170,90 160,98 166,92" fill="#f59e0b"/>
+          <!-- labels -->
+          <text x="104" y="130" font-size="12" fill="#ef4444" font-family="monospace">c₁=(2,1)</text>
+          <text x="174" y="88" font-size="12" fill="#f59e0b" font-family="monospace">c₂=2c₁</text>
+          <!-- annotation -->
+          <text x="50" y="158" font-size="11" fill="#64748b">같은 직선 위에!</text>
+          <text x="60" y="62" font-size="11" fill="#ef4444" font-family="monospace">넓이=0</text>
+          <text x="255" y="173" font-size="11" fill="#64748b">x</text>
+          <text x="32" y="16" font-size="11" fill="#64748b">y</text>
+        </svg>
+      </div>
+      <ul style="font-size:13px; color:var(--text-muted); list-style:none; padding:0;">
+        <li>• 넓이 = |det(A)| = <strong style="color:var(--red)">0</strong></li>
+        <li>• → 두 벡터가 선형 종속</li>
+        <li>• → R²를 Span 못함 (1D만)</li>
+        <li>• → <strong>역행렬이 없음!</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="highlight purple">
+    <strong>det(A) = 0 ⟺ 열벡터들이 선형 종속 ⟺ 전체 공간을 Span하지 못함 → 역행렬 없음, PCA에서 제외!</strong>
+  </div>
+
+  <h3 style="font-size:16px; margin: 24px 0 12px;">Determinant 계산 방법</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">2×2 행렬</div>
+      <div class="formula">det(A) = ad − bc</div>
+      <p style="font-size:13px; color:var(--text-muted);">예시: A = [[1,2],[3,4]]</p>
+      <div class="formula" style="color:var(--green)">det = 1×4 − 2×3 = −2 ≠ 0 → 선형 독립</div>
+    </div>
+    <div class="card">
+      <div class="card-title">3×3 행렬 (여인수 전개)</div>
+      <div class="formula" style="font-size:12px;">a(ei−fh) − b(di−fg) + c(dh−eg)</div>
+      <p style="font-size:13px; color:var(--text-muted);">예시: A = [[1,0,1],[0,1,1],[1,0,1]]</p>
+      <div class="formula" style="color:var(--red)">det = 1(1−0) − 0 + 1(0−1) = 0 → 선형 종속</div>
+    </div>
+  </div>
+
+  <div class="highlight yellow">
+    <strong>PCA 핵심 연결:</strong> <em>det(Σ − λI) = 0</em> → 이 방정식의 해 λ가 Eigenvalue!
+  </div>
+</section>
+
+<!-- ══ 03 ══ -->
+<section class="section" id="s03">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2>고유값 (Eigenvalue)</h2>
+  </div>
+
+  <div class="highlight">
+    어떤 벡터 <strong>v</strong>에 행렬 A를 곱해도 <strong>방향은 그대로</strong>이고 <strong>크기만 λ배</strong>가 되는 경우<br>
+    <em>A · v = λ · v</em> &nbsp;&nbsp; (v ≠ 0)<br>
+    이때 <strong>λ</strong>를 행렬 A의 <strong>고유값(eigenvalue)</strong>, <strong>v</strong>를 <strong>고유벡터(eigenvector)</strong>라 함
+  </div>
+
+  <div class="grid2" style="margin: 20px 0;">
+    <div class="card green">
+      <div class="card-title" style="color:var(--green)">λ = 3 이면?</div>
+      <p>그 방향으로 <strong>3배 늘어남</strong></p>
+      <p style="color:var(--text-muted); font-size:13px;">(λ &gt; 1 : 팽창)</p>
+    </div>
+    <div class="card yellow">
+      <div class="card-title" style="color:var(--yellow)">λ = 0.5 이면?</div>
+      <p>그 방향으로 <strong>절반으로 줄어듦</strong></p>
+      <p style="color:var(--text-muted); font-size:13px;">(0 &lt; λ &lt; 1 : 수축)</p>
+    </div>
+    <div class="card red">
+      <div class="card-title" style="color:var(--red)">λ = 0 이면?</div>
+      <p>그 방향으로 <strong>완전히 납작해짐 (정보 소실!)</strong></p>
+      <p style="color:var(--text-muted); font-size:13px;">A의 역행렬이 없음 → det(A) = 0</p>
+    </div>
+    <div class="card blue">
+      <div class="card-title">마치 '고무줄' 같은 방향</div>
+      <p>어떤 방향으로 잡아당기면 그 방향 그대로 늘어나거나 줄어드는 특별한 방향</p>
+      <p style="color:var(--accent); font-size:13px;">그 방향이 바로 Eigenvector!</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:16px; margin: 24px 0 12px;">Eigenvalue(λ) 구하기 : 특성방정식</h3>
+  <div class="highlight">
+    A·v = λ·v → (A − λI)·v = 0 → v ≠ 0이 되려면 역행렬이 없어야 함<br>
+    → <strong><em>det(A − λI) = 0</em></strong>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">①</div>
+      <div class="step-content">
+        <h4>A − λI 를 구한다</h4>
+        <p>단위행렬 I에 λ를 곱해 A에서 뺌</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">②</div>
+      <div class="step-content">
+        <h4>det(A − λI) = 0 으로 방정식을 세운다</h4>
+        <p>Characteristic Equation (특성방정식)</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">③</div>
+      <div class="step-content">
+        <h4>λ에 대해 방정식을 푼다 → Eigenvalue!</h4>
+        <p>n×n 행렬은 최대 n개의 고유값을 가짐</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title">📋 예제: A = [[4,1],[2,3]] 의 Eigenvalue를 구하라</div>
+    <div class="formula" style="text-align:left; font-size:13px;">
+      ① (A − λI) = [[4−λ, 1], [2, 3−λ]]<br>
+      ② det(A − λI) = (4−λ)(3−λ) − 1·2 = λ² − 7λ + 10 = 0<br>
+      ③ (λ−5)(λ−2) = 0 &nbsp;→&nbsp; <span style="color:var(--green)">λ₁ = 5, λ₂ = 2</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 04 ══ -->
+<section class="section" id="s04">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2>고유벡터 (Eigenvector) 구하기</h2>
+  </div>
+
+  <p>Eigenvalue λ를 구했다면 <em>(A − λI) · v = 0</em> 에 대입하여 <strong>v</strong>를 구함</p>
+
+  <div class="grid2" style="margin-top:16px;">
+    <div class="card blue">
+      <div class="card-title">λ₁ = 5 일 때 (A = [[4,1],[2,3]])</div>
+      <div class="formula" style="text-align:left; font-size:12.5px;">
+        (A − 5I)·v = 0<br>
+        [[-1, 1], [2, -2]] · [v₁, v₂]ᵀ = 0<br>
+        → v₁ = v₂<br>
+        ∴ v = [1, 1]ᵀ<br>
+        <span style="color:var(--accent2)">정규화: [1/√2, 1/√2]ᵀ</span>
+      </div>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">λ₂ = 2 일 때 (A = [[4,1],[2,3]])</div>
+      <div class="formula" style="text-align:left; font-size:12.5px;">
+        (A − 2I)·v = 0<br>
+        [[2, 1], [2, 1]] · [v₁, v₂]ᵀ = 0<br>
+        → 2v₁ = −v₂<br>
+        ∴ v = [2, -1]ᵀ<br>
+        <span style="color:var(--accent2)">정규화: [2/√5, -1/√5]ᵀ</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight yellow">
+    <strong>Eigenvector는 방향만 중요합니다.</strong> 크기는 보통 1로 정규화(normalize)합니다.
+  </div>
+
+  <!-- SVG: eigenvector visualization -->
+  <div class="svg-wrap" style="margin-top:20px;">
+    <svg viewBox="0 0 560 200" xmlns="http://www.w3.org/2000/svg">
+      <!-- title -->
+      <text x="280" y="18" font-size="12" fill="#94a3b8" text-anchor="middle" font-family="monospace">Eigenvector 방향 시각화 (λ₁=5, λ₂=2)</text>
+      <!-- LEFT: coordinate system for v1 -->
+      <g transform="translate(60,110)">
+        <line x1="-50" y1="0" x2="80" y2="0" stroke="#334155" stroke-width="1"/>
+        <line x1="0" y1="60" x2="0" y2="-60" stroke="#334155" stroke-width="1"/>
+        <!-- axis labels -->
+        <text x="84" y="4" font-size="10" fill="#64748b">x</text>
+        <text x="4" y="-62" font-size="10" fill="#64748b">y</text>
+        <!-- tick marks -->
+        <line x1="35" y1="-3" x2="35" y2="3" stroke="#334155" stroke-width="1"/>
+        <text x="35" y="14" font-size="9" fill="#64748b" text-anchor="middle">1</text>
+        <line x1="-3" y1="-35" x2="3" y2="-35" stroke="#334155" stroke-width="1"/>
+        <text x="-12" y="-32" font-size="9" fill="#64748b">1</text>
+        <!-- v1=[1,1]/sqrt2 direction, scaled to length 50 -->
+        <line x1="0" y1="0" x2="35" y2="-35" stroke="#3b82f6" stroke-width="2.5"/>
+        <polygon points="35,-35 24,-32 32,-24" fill="#3b82f6"/>
+        <text x="38" y="-38" font-size="11" fill="#3b82f6" font-family="monospace">v₁=[1,1]</text>
+        <text x="38" y="-26" font-size="10" fill="#94a3b8" font-family="monospace">λ₁=5</text>
+      </g>
+      <!-- RIGHT: coordinate system for v2 -->
+      <g transform="translate(340,110)">
+        <line x1="-50" y1="0" x2="100" y2="0" stroke="#334155" stroke-width="1"/>
+        <line x1="0" y1="60" x2="0" y2="-60" stroke="#334155" stroke-width="1"/>
+        <text x="104" y="4" font-size="10" fill="#64748b">x</text>
+        <text x="4" y="-62" font-size="10" fill="#64748b">y</text>
+        <line x1="70" y1="-3" x2="70" y2="3" stroke="#334155" stroke-width="1"/>
+        <text x="70" y="14" font-size="9" fill="#64748b" text-anchor="middle">2</text>
+        <line x1="-3" y1="35" x2="3" y2="35" stroke="#334155" stroke-width="1"/>
+        <text x="-12" y="38" font-size="9" fill="#64748b">-1</text>
+        <!-- v2=[2,-1]/sqrt5 direction -->
+        <line x1="0" y1="0" x2="62" y2="31" stroke="#f59e0b" stroke-width="2.5"/>
+        <polygon points="62,31 52,24 54,34" fill="#f59e0b"/>
+        <text x="66" y="28" font-size="11" fill="#f59e0b" font-family="monospace">v₂=[2,-1]</text>
+        <text x="66" y="40" font-size="10" fill="#94a3b8" font-family="monospace">λ₂=2</text>
+      </g>
+      <!-- labels below -->
+      <text x="140" y="190" font-size="11" fill="#64748b" text-anchor="middle">주성분 방향 1</text>
+      <text x="420" y="190" font-size="11" fill="#64748b" text-anchor="middle">주성분 방향 2</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ══ 05 ══ -->
+<section class="section" id="s05">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2>핵심 성질 &amp; PCA 연결</h2>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h3 style="font-size:14px; color:var(--accent); margin-bottom:12px;">Eigenvalue / Eigenvector 핵심 성질</h3>
+      <ul style="font-size:14px; line-height:2;">
+        <li>N×N 행렬은 최대 <strong>N개의 Eigenvalue</strong>를 가진다</li>
+        <li>모든 Eigenvalue가 nonzero → <strong>역행렬 존재</strong> (det A ≠ 0)</li>
+        <li>하나라도 0이면 → <strong>역행렬 없음</strong> (det A = 0)</li>
+        <li><strong>대칭행렬</strong>은 항상 <em>실수 Eigenvalue</em>를 가짐 → 공분산 행렬은 대칭!</li>
+        <li>대칭행렬의 서로 다른 Eigenvalue의 Eigenvector → <strong>서로 직교</strong></li>
+        <li>Eigenvector는 방향만 의미, 크기는 보통 <strong>1로 정규화</strong></li>
+        <li>모든 Eigenvalue의 곱 = <em>det(A)</em>, 합 = <em>trace(A)</em></li>
+      </ul>
+    </div>
+    <div>
+      <h3 style="font-size:14px; color:var(--accent); margin-bottom:12px;">Eigenvalue에서 PCA로</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num" style="background:var(--blue)">1</div>
+          <div class="step-content">
+            <h4>공분산 행렬 계산</h4>
+            <p>특성 간 선형 관계 파악 → <strong>대칭 행렬!</strong></p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:var(--yellow); color:#000">2</div>
+          <div class="step-content">
+            <h4>Eigenvalue 분해</h4>
+            <p>공분산 행렬의 λ와 v를 구함</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:var(--green)">3</div>
+          <div class="step-content">
+            <h4>Eigenvalue = 분산의 크기</h4>
+            <p>큰 λ = 데이터가 많이 퍼진 방향 = <strong>중요한 방향!</strong></p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:var(--purple)">4</div>
+          <div class="step-content">
+            <h4>Eigenvector = 새 축(주성분)</h4>
+            <p>데이터를 가장 잘 설명하는 방향</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight purple">
+    <strong>공분산 행렬의 Eigenvector = 주성분(Principal Component)</strong><br>
+    <strong>Eigenvalue = 그 방향의 분산!</strong>
+  </div>
+</section>
+
+<!-- ══ 06 ══ -->
+<section class="section" id="s06">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <h2>PCA 개요 &amp; 분산</h2>
+  </div>
+
+  <div class="highlight">
+    <strong>PCA (Principal Component Analysis)</strong>: 고차원 데이터를 가장 "중요한 방향"으로 투영하여 차원을 줄이는 기법<br>
+    '중요한 방향' = 데이터의 <em>분산(variance)이 최대인 방향</em>
+  </div>
+
+  <div class="grid3" style="margin: 16px 0;">
+    <div class="card blue">
+      <div class="card-title">분산 최대화</div>
+      <p>데이터가 가장 많이 퍼진 방향</p>
+      <p>→ 데이터를 가장 잘 구분할 수 있는 방향!</p>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">직교 방향들</div>
+      <p>첫 번째 주성분 방향에 수직인 두 번째, 세 번째...</p>
+      <p>→ 각 PC는 서로 <strong>독립적인 정보</strong> 보유</p>
+    </div>
+    <div class="card green">
+      <div class="card-title">정보 손실 최소화</div>
+      <p>차원을 줄이면서도 원래 데이터의 정보를 최대한 보존</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:16px; margin: 24px 0 12px;">분산(Variance) vs 공분산(Covariance)</h3>
+
+  <div class="grid2">
+    <div>
+      <h4 style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">분산 = 한 축이 담고 있는 정보의 양</h4>
+      <!-- SVG: high vs low variance -->
+      <div class="svg-wrap">
+        <svg viewBox="0 0 280 110" xmlns="http://www.w3.org/2000/svg">
+          <!-- axis -->
+          <line x1="20" y1="55" x2="260" y2="55" stroke="#334155" stroke-width="1"/>
+          <!-- tick marks -->
+          <text x="20" y="68" font-size="9" fill="#64748b">0</text>
+          <text x="140" y="68" font-size="9" fill="#64748b" text-anchor="middle">5</text>
+          <text x="255" y="68" font-size="9" fill="#64748b">10</text>
+          <!-- HIGH variance points (spread) -->
+          <g>
+            <circle cx="30" cy="40" r="5" fill="#3b82f6" opacity="0.8"/>
+            <circle cx="60" cy="55" r="5" fill="#3b82f6" opacity="0.8"/>
+            <circle cx="90" cy="45" r="5" fill="#3b82f6" opacity="0.8"/>
+            <circle cx="120" cy="55" r="5" fill="#3b82f6" opacity="0.8"/>
+            <circle cx="150" cy="40" r="5" fill="#3b82f6" opacity="0.8"/>
+            <circle cx="180" cy="55" r="5" fill="#3b82f6" opacity="0.8"/>
+            <circle cx="210" cy="45" r="5" fill="#3b82f6" opacity="0.8"/>
+            <circle cx="240" cy="55" r="5" fill="#3b82f6" opacity="0.8"/>
+          </g>
+          <!-- Label -->
+          <text x="140" y="15" font-size="11" fill="#3b82f6" text-anchor="middle">분산 크다 → 정보 많다 ✓</text>
+          <!-- LOW variance: cluster at center -->
+          <circle cx="122" cy="95" r="5" fill="#64748b" opacity="0.7"/>
+          <circle cx="128" cy="90" r="5" fill="#64748b" opacity="0.7"/>
+          <circle cx="135" cy="95" r="5" fill="#64748b" opacity="0.7"/>
+          <circle cx="130" cy="100" r="5" fill="#64748b" opacity="0.7"/>
+          <circle cx="118" cy="98" r="5" fill="#64748b" opacity="0.7"/>
+          <!-- axis for low -->
+          <line x1="20" y1="95" x2="260" y2="95" stroke="#334155" stroke-width="1"/>
+          <text x="140" y="80" font-size="11" fill="#ef4444" text-anchor="middle">분산 작다 → 제거 후보 ✗</text>
+        </svg>
+      </div>
+    </div>
+    <div>
+      <h4 style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">공분산 = 두 축 사이의 중복 정보</h4>
+      <div class="card" style="font-size:13px; margin-bottom:10px;">
+        <div class="card-title" style="color:var(--yellow)">Cov의 절대값이 크다</div>
+        <p>x₁↑ 이면 x₂↑ or x₂↓</p>
+        <p>→ 두 축이 거의 같은 정보</p>
+        <p>→ <strong>하나로 합칠 수 있다!</strong></p>
+      </div>
+      <div class="card" style="font-size:13px;">
+        <div class="card-title" style="color:var(--green)">Cov ≈ 0</div>
+        <p>x₁과 x₂가 서로 독립</p>
+        <p>→ 겹치는 정보가 없음</p>
+        <p>→ <strong>둘 다 필요</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:16px;">
+    <div class="highlight red">
+      <strong>Q1. 어떤 축을 없앨 수 있나?</strong><br>
+      분산이 매우 작은 축 → 정보가 적으므로 제거
+    </div>
+    <div class="highlight green">
+      <strong>Q2. 어떤 축들을 하나로 합칠 수 있나?</strong><br>
+      공분산이 큰 축들 → 중복 정보이므로 선형 결합으로 통합
+    </div>
+  </div>
+</section>
+
+<!-- ══ 07 ══ -->
+<section class="section" id="s07">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <h2>공분산 행렬</h2>
+  </div>
+
+  <p>공분산 행렬은 어느 축을 버리고 어느 축을 합칠지 결정하는 <strong>PCA의 입력값</strong></p>
+
+  <div class="grid2" style="margin-top:16px;">
+    <div>
+      <div class="card-title" style="margin-bottom:8px;">공분산 행렬 Σ 구조</div>
+      <div class="formula" style="font-size:12px; text-align:left; line-height:2;">
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x₁&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x₂&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x₃<br>
+        Σ = [ Var(x₁)&nbsp;&nbsp;&nbsp; Cov(x₁,x₂) Cov(x₁,x₃) ]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;[ Cov(x₂,x₁) Var(x₂)&nbsp;&nbsp;&nbsp; Cov(x₂,x₃) ]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;[ Cov(x₃,x₁) Cov(x₃,x₂) Var(x₃)&nbsp;&nbsp;&nbsp; ]
+      </div>
+      <div class="grid2" style="margin-top:10px; gap:8px;">
+        <div class="card blue" style="padding:12px;">
+          <div class="card-title" style="font-size:11px;">대각선</div>
+          <p style="font-size:12px;">각 축의 분산 = 그 축이 담은 정보의 양</p>
+        </div>
+        <div class="card yellow" style="padding:12px;">
+          <div class="card-title" style="font-size:11px; color:var(--yellow);">비대각선</div>
+          <p style="font-size:12px;">두 축의 공분산 = 두 축 사이의 중복 정보</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card-title" style="margin-bottom:8px;">구체적인 예시 (키·체중·성적)</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th></th><th>x₁ (키)</th><th>x₂ (체중)</th><th>x₃ (성적)</th></tr></thead>
+          <tbody>
+            <tr><td>x₁ (키)</td><td><strong>70</strong></td><td style="color:var(--red)">70</td><td>3</td></tr>
+            <tr><td>x₂ (체중)</td><td style="color:var(--red)">70</td><td><strong>80</strong></td><td>2</td></tr>
+            <tr><td>x₃ (성적)</td><td>3</td><td>2</td><td><strong>60</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="highlight red" style="margin-top:8px; font-size:13px;">
+        키·체중 공분산 = 70 (매우 큼!) → 하나로 통합 가능
+      </div>
+      <div class="highlight green" style="font-size:13px;">
+        성적은 다른 두 축과 거의 무관 (공분산 ≈ 2~3) → 독립적으로 필요
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title">이 행렬로 PCA가 하는 일</div>
+    <div class="grid3">
+      <div>
+        <p style="font-size:13px; color:var(--accent); font-weight:700;">① 정보량 파악</p>
+        <p style="font-size:13px;">대각선(분산)을 보고 각 축 중요도 판단 → 분산이 작은 축: 제거 대상</p>
+      </div>
+      <div>
+        <p style="font-size:13px; color:var(--accent); font-weight:700;">② 중복 정보 파악</p>
+        <p style="font-size:13px;">비대각선(공분산)이 크면 두 축이 비슷한 정보 → 새로운 축으로 통합</p>
+      </div>
+      <div>
+        <p style="font-size:13px; color:var(--accent); font-weight:700;">③ Eigenvalue 분해</p>
+        <p style="font-size:13px;">Σ의 Eigenvalue = 새 축의 정보량, Eigenvector = 새 축의 방향</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight purple">
+    <strong>공분산 행렬 계산 공식:</strong> Σ = (1/N) XᵀX &nbsp; (X는 평균 제거된 데이터 행렬)
+  </div>
+</section>
+
+<!-- ══ 08 ══ -->
+<section class="section" id="s08">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <h2>PCA 알고리즘 &amp; 예시</h2>
+  </div>
+
+  <h3 style="font-size:15px; margin-bottom:14px;">단계별 절차</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num" style="background:var(--blue)">1</div>
+      <div class="step-content">
+        <h4>데이터 표준화 (Standardization)</h4>
+        <p>각 특성의 평균을 0으로, 표준편차를 1로 조정: <em>x'ᵢ = (xᵢ − μ) / σ</em></p>
+        <p>→ 단위가 다른 특성들을 공정하게 비교하기 위해 <strong>필수!</strong></p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:var(--yellow); color:#000">2</div>
+      <div class="step-content">
+        <h4>공분산 행렬 계산</h4>
+        <p><em>Σ = (1/N) XᵀX</em> &nbsp; (X는 평균 제거된 데이터 행렬)</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:var(--green)">3</div>
+      <div class="step-content">
+        <h4>Eigenvalue 분해</h4>
+        <p><em>Σ · vᵢ = λᵢ · vᵢ</em> 를 풀어 Eigenvalue {λ₁≥λ₂≥...≥λd}와 Eigenvector {v₁, ..., vd} 구함</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:var(--purple)">4</div>
+      <div class="step-content">
+        <h4>주성분 선택</h4>
+        <p>Eigenvalue가 큰 순서대로 k개의 Eigenvector 선택 → k는 원하는 최종 차원 수</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:var(--pink)">5</div>
+      <div class="step-content">
+        <h4>데이터 투영 (Projection)</h4>
+        <p><em>Z = X · W</em> &nbsp; (W: 선택된 k개 Eigenvector로 구성된 행렬)</p>
+        <p>→ 원래 d차원 데이터를 k차원으로 변환 완료!</p>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px; margin: 28px 0 14px;">구체적인 예시 (4개 포인트 → 1D)</h3>
+  <div class="grid3">
+    <div class="card">
+      <div class="card-title">① 원본 데이터</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>x₁</th><th>x₂</th></tr></thead>
+          <tbody>
+            <tr><td>2</td><td>1</td></tr>
+            <tr><td>4</td><td>3</td></tr>
+            <tr><td>6</td><td>5</td></tr>
+            <tr><td>8</td><td>7</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">평균: (5, 4)<br>평균 제거: (-3,-3), (-1,-1), (1,1), (3,3)</p>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">② 공분산 행렬 & Eigenvalue</div>
+      <div class="formula" style="font-size:13px;">
+        Σ = [[5, 5],<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[5, 5]]
+      </div>
+      <p style="font-size:12px; color:var(--text-muted);">det(Σ − λI) = 0</p>
+      <div class="formula" style="font-size:13px; color:var(--green);">λ₁ = 10, λ₂ = 0</div>
+      <p style="font-size:12px;">v₁ = [1/√2, 1/√2]ᵀ</p>
+    </div>
+    <div class="card green">
+      <div class="card-title">④ 1D 투영 결과</div>
+      <p style="font-size:12px;">PC1 = v₁ = [1/√2, 1/√2]ᵀ</p>
+      <ul style="font-size:12px; list-style:none; padding:0; margin-top:8px;">
+        <li>(-3,-3) → <strong>-4.24</strong></li>
+        <li>(-1,-1) → <strong>-1.41</strong></li>
+        <li>(1,1) → <strong>+1.41</strong></li>
+        <li>(3,3) → <strong>+4.24</strong></li>
+      </ul>
+      <div class="badge badge-green" style="margin-top:8px;">1D로 완벽 분리!</div>
+    </div>
+  </div>
+
+  <div class="highlight green" style="margin-top:16px;">
+    λ₂ = 0이므로 PC2 방향으로는 정보가 없음 → 제거해도 정보 손실 없음<br>
+    <strong>분산 설명률: PC1 = 10/(10+0) = 100%</strong> → 1개의 주성분으로 모든 정보 보존!
+  </div>
+</section>
+
+<!-- ══ 09 ══ -->
+<section class="section" id="s09">
+  <div class="section-header">
+    <span class="section-num">09</span>
+    <h2>분산 설명력 &amp; 데이터 투영</h2>
+  </div>
+
+  <div class="highlight">
+    <strong>분산 설명률(PC_k)</strong> = λ_k / (λ₁ + λ₂ + … + λ_d)<br>
+    <strong>누적 분산 설명률</strong> = Σᵢ₌₁ᵏ λᵢ / Σλ
+  </div>
+
+  <div class="grid2" style="margin-top:18px;">
+    <div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>주성분</th><th>Eigenvalue</th><th>설명률</th><th>누적</th></tr></thead>
+          <tbody>
+            <tr><td><strong>PC1</strong></td><td>4.5</td><td><span class="badge badge-blue">50.0%</span></td><td>50.0%</td></tr>
+            <tr><td><strong>PC2</strong></td><td>2.0</td><td><span class="badge badge-blue">22.2%</span></td><td>72.2%</td></tr>
+            <tr><td><strong>PC3</strong></td><td>1.2</td><td><span class="badge badge-yellow">13.3%</span></td><td>85.5%</td></tr>
+            <tr><td><strong>PC4</strong></td><td>0.8</td><td><span class="badge badge-yellow">8.9%</span></td><td>94.4%</td></tr>
+            <tr><td><strong>PC5</strong></td><td>0.5</td><td><span class="badge badge-red">5.6%</span></td><td>100.0%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="highlight green" style="margin-top:12px; font-size:13px;">
+        일반적으로 누적 분산 설명률이 <strong>90~95%</strong>가 되도록 k를 선택<br>
+        이 예시: PC1+PC2+PC3 = 85.5% → <strong>k=3 선택 적합!</strong>
+      </div>
+    </div>
+    <!-- Scree Plot SVG -->
+    <div class="svg-wrap">
+      <svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg">
+        <text x="140" y="18" font-size="12" fill="#94a3b8" text-anchor="middle">Scree Plot (분산 설명률)</text>
+        <!-- axes -->
+        <line x1="40" y1="190" x2="260" y2="190" stroke="#334155" stroke-width="1.5"/>
+        <line x1="40" y1="25" x2="40" y2="190" stroke="#334155" stroke-width="1.5"/>
+        <!-- y axis ticks -->
+        <line x1="36" y1="190" x2="40" y2="190" stroke="#334155" stroke-width="1"/>
+        <text x="32" y="193" font-size="9" fill="#64748b" text-anchor="end">0</text>
+        <line x1="36" y1="152" x2="40" y2="152" stroke="#334155" stroke-width="1"/>
+        <text x="32" y="155" font-size="9" fill="#64748b" text-anchor="end">10</text>
+        <line x1="36" y1="114" x2="40" y2="114" stroke="#334155" stroke-width="1"/>
+        <text x="32" y="117" font-size="9" fill="#64748b" text-anchor="end">20</text>
+        <line x1="36" y1="76" x2="40" y2="76" stroke="#334155" stroke-width="1"/>
+        <text x="32" y="79" font-size="9" fill="#64748b" text-anchor="end">30</text>
+        <line x1="36" y1="38" x2="40" y2="38" stroke="#334155" stroke-width="1"/>
+        <text x="32" y="41" font-size="9" fill="#64748b" text-anchor="end">40</text>
+        <!-- y label -->
+        <text x="14" y="110" font-size="10" fill="#94a3b8" text-anchor="middle" transform="rotate(-90,14,110)">분산 설명률(%)</text>
+        <!-- bars: scale = 190 - (val/50*152) -->
+        <!-- PC1=50%: bar height=152px, top=190-152=38 -->
+        <rect x="55" y="38" width="28" height="152" fill="#3b82f6" rx="3"/>
+        <text x="69" y="34" font-size="10" fill="#3b82f6" text-anchor="middle">50</text>
+        <!-- PC2=22%: height=67, top=123 -->
+        <rect x="97" y="123" width="28" height="67" fill="#3b82f6" rx="3" opacity="0.8"/>
+        <text x="111" y="119" font-size="10" fill="#3b82f6" text-anchor="middle">22</text>
+        <!-- PC3=13%: height=40, top=150 -->
+        <rect x="139" y="150" width="28" height="40" fill="#f59e0b" rx="3" opacity="0.8"/>
+        <text x="153" y="146" font-size="10" fill="#f59e0b" text-anchor="middle">13</text>
+        <!-- PC4=9%: height=27, top=163 -->
+        <rect x="181" y="163" width="28" height="27" fill="#f59e0b" rx="3" opacity="0.6"/>
+        <text x="195" y="159" font-size="10" fill="#f59e0b" text-anchor="middle">9</text>
+        <!-- PC5=6%: height=18, top=172 -->
+        <rect x="223" y="172" width="28" height="18" fill="#64748b" rx="3"/>
+        <text x="237" y="168" font-size="10" fill="#64748b" text-anchor="middle">6</text>
+        <!-- x labels -->
+        <text x="69" y="204" font-size="10" fill="#94a3b8" text-anchor="middle">PC1</text>
+        <text x="111" y="204" font-size="10" fill="#94a3b8" text-anchor="middle">PC2</text>
+        <text x="153" y="204" font-size="10" fill="#94a3b8" text-anchor="middle">PC3</text>
+        <text x="195" y="204" font-size="10" fill="#94a3b8" text-anchor="middle">PC4</text>
+        <text x="237" y="204" font-size="10" fill="#94a3b8" text-anchor="middle">PC5</text>
+        <!-- 90% line (Scree) -->
+        <line x1="40" y1="64" x2="260" y2="64" stroke="#10b981" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="262" y="67" font-size="9" fill="#10b981">90%</text>
+      </svg>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px; margin: 28px 0 14px;">데이터 투영 (Projection)</h3>
+  <div class="highlight">
+    <strong>변환 공식: Z = X · W</strong><br>
+    원래 데이터 X [N×d] &nbsp;×&nbsp; 투영 행렬 W [d×k] &nbsp;=&nbsp; 변환된 데이터 Z [N×k]<br>
+    예시: 500개 샘플, 100개 특성 → k=10 선택 → Z: [500×10] (90% 정보 보존!)
+  </div>
+
+  <div class="grid2" style="margin-top:14px;">
+    <div class="card red">
+      <div class="card-title" style="color:var(--red);">변환 전 (원래 공간)</div>
+      <ul style="font-size:13px; list-style:none; padding:0;">
+        <li>• 특성: x₁, x₂, ..., x₁₀₀</li>
+        <li>• 100개의 축이 필요</li>
+        <li>• 거리 계산 비용이 매우 높음</li>
+        <li>• 시각화 불가능</li>
+        <li>• 노이즈 특성 포함</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <div class="card-title" style="color:var(--green);">변환 후 (주성분 공간)</div>
+      <ul style="font-size:13px; list-style:none; padding:0;">
+        <li>• 특성: PC1, PC2, ..., PC10</li>
+        <li>• 10개의 축만 필요</li>
+        <li>• 빠른 거리 계산 가능</li>
+        <li>• 2D/3D 시각화 가능!</li>
+        <li>• 노이즈 제거 효과</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 10 ══ -->
+<section class="section" id="s10">
+  <div class="section-header">
+    <span class="section-num">10</span>
+    <h2>Feature Selection &amp; 차원 축소 비교</h2>
+  </div>
+
+  <div class="highlight">
+    PCA를 통해 각 특성이 주성분에 얼마나 기여하는지 <strong>Loading(부하량)</strong>을 분석하면 원래 특성의 중요도를 파악할 수 있음
+  </div>
+
+  <div class="grid2" style="margin:16px 0;">
+    <div class="card">
+      <div class="card-title">PC Loading (부하량)이란?</div>
+      <p style="font-size:13px;">각 원래 특성과 주성분의 <strong>상관관계</strong></p>
+      <p style="font-size:13px; margin-top:8px;">Eigenvector의 각 원소 = 해당 특성의 기여도</p>
+      <p style="font-size:13px; color:var(--accent);">절댓값이 클수록 그 특성이 PC에 많이 기여</p>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>특성</th><th>PC1</th><th>PC2</th></tr></thead>
+        <tbody>
+          <tr><td>나이</td><td>0.39</td><td>0.60</td></tr>
+          <tr><td>혈압</td><td>0.31</td><td>0.42</td></tr>
+          <tr><td>혈당</td><td>0.37</td><td>0.30</td></tr>
+          <tr><td><strong>키</strong></td><td style="color:var(--green)"><strong>0.56</strong></td><td>-0.48</td></tr>
+          <tr><td><strong>체중</strong></td><td style="color:var(--green)"><strong>0.54</strong></td><td>-0.37</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px; margin: 20px 0 12px;">PCA 기반 Feature Selection 방법</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">①</div><div class="step-content"><h4>PCA 수행 후 주요 PC 선택</h4><p>예: 누적 분산 90%</p></div></div>
+    <div class="step"><div class="step-num">②</div><div class="step-content"><h4>각 원래 특성의 Loading 값 확인</h4><p>|Loading|이 클수록 중요</p></div></div>
+    <div class="step"><div class="step-num">③</div><div class="step-content"><h4>주요 PC에서 Loading이 높은 특성들을 선택</h4></div></div>
+    <div class="step"><div class="step-num">④</div><div class="step-content"><h4>선택된 원래 특성만으로 모델 재학습</h4><p>해석력 확보</p></div></div>
+  </div>
+
+  <h3 style="font-size:15px; margin: 28px 0 14px;">PCA 차원 축소 vs 원래 특성 선택 비교</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>구분</th><th>PCA 차원 축소</th><th>원래 특성 선택 (Feature Selection)</th></tr></thead>
+      <tbody>
+        <tr><td>출력</td><td>새로운 주성분 (PC1, PC2, ...)</td><td>원래 특성의 부분집합</td></tr>
+        <tr><td>해석</td><td style="color:var(--red)">어렵다 (PC의 의미 불명확)</td><td style="color:var(--green)">쉽다 (원래 의미 보존)</td></tr>
+        <tr><td>정보 보존</td><td style="color:var(--green)">최대 보존 가능</td><td style="color:var(--yellow)">일부 정보 손실 가능</td></tr>
+        <tr><td>특성 간 관계</td><td>공분산 구조 활용</td><td>독립적으로 평가</td></tr>
+        <tr><td>계산 비용</td><td>행렬 분해 필요</td><td>상대적으로 빠름</td></tr>
+        <tr><td>권장 상황</td><td>고차원, 특성 간 상관관계 높을 때</td><td>해석력이 중요할 때</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ 11 ══ -->
+<section class="section" id="s11">
+  <div class="section-header">
+    <span class="section-num">11</span>
+    <h2>실제 응용 &amp; Python 코드</h2>
+  </div>
+
+  <h3 style="font-size:15px; margin-bottom:14px;">추천 시스템 (Collaborative Filtering)</h3>
+  <div class="grid2">
+    <div>
+      <div class="card-title" style="margin-bottom:8px;">원래 평점 행렬 R [사용자 × 영화]</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th></th><th>영화A</th><th>영화B</th><th>영화C</th><th>영화D</th><th>영화E</th></tr></thead>
+          <tbody>
+            <tr><td>유저1</td><td>5</td><td>4</td><td style="color:var(--text-dim)">?</td><td style="color:var(--text-dim)">?</td><td>1</td></tr>
+            <tr><td>유저2</td><td style="color:var(--text-dim)">?</td><td>5</td><td>4</td><td style="color:var(--text-dim)">?</td><td>2</td></tr>
+            <tr><td>유저3</td><td>1</td><td style="color:var(--text-dim)">?</td><td style="color:var(--text-dim)">?</td><td>5</td><td>4</td></tr>
+            <tr><td>유저4</td><td>4</td><td style="color:var(--text-dim)">?</td><td>5</td><td style="color:var(--text-dim)">?</td><td style="color:var(--text-dim)">?</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12px; color:var(--text-dim); margin-top:6px;">'?' = 아직 보지 않은 영화 → 이 칸을 예측하는 것이 목표!</p>
+    </div>
+    <div>
+      <div class="card-title" style="margin-bottom:8px;">PCA 후: 잠재 요인 공간 [사용자 × k]</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th></th><th>액션선호</th><th>로맨스선호</th></tr></thead>
+          <tbody>
+            <tr><td>유저1</td><td style="color:var(--blue)"><strong>0.91</strong></td><td>0.12</td></tr>
+            <tr><td>유저2</td><td style="color:var(--blue)"><strong>0.85</strong></td><td>0.31</td></tr>
+            <tr><td>유저3</td><td>0.08</td><td style="color:var(--pink)"><strong>0.94</strong></td></tr>
+            <tr><td>유저4</td><td style="color:var(--blue)"><strong>0.78</strong></td><td>0.22</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="highlight green" style="margin-top:8px; font-size:12px;">
+        k개 잠재 요인으로 압축! '?'는 잠재 벡터로 예측<br>
+        Netflix Prize(2009) 우승 알고리즘의 핵심
+      </div>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px; margin: 28px 0 14px;">Python 코드 (scikit-learn)</h3>
+  <pre><span class="kw">from</span> sklearn.decomposition <span class="kw">import</span> <span class="nm">PCA</span>
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> <span class="nm">StandardScaler</span>
+<span class="kw">import</span> numpy <span class="kw">as</span> <span class="nm">np</span>
+
+<span class="cm"># 1. 데이터 표준화</span>
+X = np.random.random((<span class="nm">100</span>, <span class="nm">20</span>))
+X[:, <span class="nm">10</span>:<span class="nm">20</span>] = X[:, :<span class="nm">10</span>] * X[:, :<span class="nm">10</span>]
+scaler = <span class="fn">StandardScaler</span>()
+X_scaled = scaler.<span class="fn">fit_transform</span>(X)  <span class="cm"># X: [N × d] 행렬</span>
+
+<span class="cm"># 2. PCA 수행 (주성분 10개 선택)</span>
+pca = <span class="fn">PCA</span>(n_components=<span class="nm">10</span>)
+Z = pca.<span class="fn">fit_transform</span>(X_scaled)  <span class="cm"># Z: [N × 10] 행렬</span>
+
+<span class="cm"># 3. 분산 설명률 확인</span>
+<span class="fn">print</span>(pca.explained_variance_ratio_)        <span class="cm"># 각 PC의 분산 설명률</span>
+<span class="fn">print</span>(pca.explained_variance_ratio_.<span class="fn">cumsum</span>()) <span class="cm"># 누적 분산 설명률</span>
+
+<span class="cm"># 4. Loading 행렬 확인 (Feature Importance)</span>
+<span class="fn">print</span>(pca.components_)  <span class="cm"># shape: [10 × d]</span></pre>
+
+  <div class="grid3" style="margin-top:14px;">
+    <div class="card blue">
+      <div class="card-title">pca.components_</div>
+      <p style="font-size:13px;">각 PC의 Loading 벡터<br>(shape: k×d)</p>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">pca.explained_variance_ratio_</div>
+      <p style="font-size:13px;">각 PC의 분산 설명률<br>(합 &lt; 1.0)</p>
+    </div>
+    <div class="card green">
+      <div class="card-title">pca.explained_variance_</div>
+      <p style="font-size:13px;">각 PC의 Eigenvalue 값</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 12 ══ -->
+<section class="section" id="s12">
+  <div class="section-header">
+    <span class="section-num">12</span>
+    <h2>PCA의 한계와 주의사항</h2>
+  </div>
+
+  <div class="grid2">
+    <div class="card red">
+      <div class="card-title" style="color:var(--red);">선형 가정 (Linear Assumption)</div>
+      <p>PCA는 데이터가 <strong>선형으로 분포</strong>한다고 가정</p>
+      <p>비선형 구조(나선형, 원형 등)를 제대로 포착하지 못함</p>
+      <div class="highlight red" style="margin-top:10px; font-size:13px;">
+        대안: <strong>Kernel PCA, t-SNE, UMAP</strong>
+      </div>
+    </div>
+    <div class="card yellow">
+      <div class="card-title" style="color:var(--yellow);">해석의 어려움 (Interpretability)</div>
+      <p>주성분은 원래 특성들의 선형 조합</p>
+      <p>'PC1이 클수록 ??에 해당한다' 라고 말하기 어려움</p>
+      <div class="highlight yellow" style="margin-top:10px; font-size:13px;">
+        → 의료, 법률 등 설명이 필요한 분야에서 주의
+      </div>
+    </div>
+    <div class="card purple">
+      <div class="card-title" style="color:var(--purple);">분산 = 중요도 가정</div>
+      <p>PCA는 분산이 큰 방향 = 중요한 방향이라고 가정</p>
+      <p>Label 정보를 사용하지 않아 분류에 중요한 방향을 놓칠 수 있음</p>
+      <div class="highlight purple" style="margin-top:10px; font-size:13px;">
+        → 지도학습 문제에는 <strong>LDA(선형 판별 분석)</strong>도 고려
+      </div>
+    </div>
+    <div class="card green">
+      <div class="card-title" style="color:var(--green);">스케일에 민감 (Scale Sensitivity)</div>
+      <p>특성의 단위/스케일이 다르면 Eigenvalue가 편향됨</p>
+      <p>반드시 PCA 전에 <strong>표준화(StandardScaler)</strong>를 수행!</p>
+      <div class="highlight green" style="margin-top:10px; font-size:13px;">
+        x'ᵢ = (xᵢ − μ) / σ → 필수 전처리!
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-box">
+    <h3>🎯 핵심 요약</h3>
+    <ul>
+      <li>차원의 저주 → 거리 집중·노이즈·계산 비용 문제 → PCA로 해결</li>
+      <li>det(A) = 0 ⟺ 선형 종속 ⟺ 역행렬 없음 → PCA에서 제외</li>
+      <li>특성방정식 det(A − λI) = 0 → Eigenvalue 계산</li>
+      <li>(A − λI)·v = 0 → Eigenvector 계산 (크기는 1로 정규화)</li>
+      <li>공분산 행렬(대칭!) → Eigenvalue = 분산, Eigenvector = 주성분 방향</li>
+      <li>PCA 5단계: 표준화 → 공분산 → Eigen분해 → 주성분 선택 → 투영</li>
+      <li>분산 설명률 90~95%가 되도록 k 선택</li>
+      <li>PCA 한계: 선형 가정, 해석 어려움, 분산≠중요도, 스케일 민감</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<script>
+function setActive(el) {
+  document.querySelectorAll('.toc-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// 스크롤 기반 active 업데이트
+const sections = document.querySelectorAll('.section');
+const tocItems = document.querySelectorAll('.toc-item');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      tocItems.forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('href') === '#' + id) {
+          item.classList.add('active');
+        }
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
