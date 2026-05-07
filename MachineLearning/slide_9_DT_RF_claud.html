@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>09. Decision Tree와 Random Forest</title>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --surface3: #1f2d44;
+  --border: #2a3a55;
+  --accent1: #3b82f6;
+  --accent2: #10b981;
+  --accent3: #f59e0b;
+  --accent4: #ef4444;
+  --accent5: #8b5cf6;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --malignant: #ef4444;
+  --benign: #10b981;
+  --code-bg: #0d1117;
+  --code-kw: #ff7b72;
+  --code-fn: #d2a8ff;
+  --code-str: #a5d6ff;
+  --code-cm: #8b949e;
+  --code-num: #79c0ff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* ── LAYOUT ── */
+.layout { display: flex; min-height: 100vh; }
+
+/* ── TOC SIDEBAR ── */
+.toc {
+  width: 260px;
+  min-width: 260px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 0 0 32px 0;
+  z-index: 100;
+}
+.toc-header {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+.toc-title {
+  font-family: 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--accent1);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.toc-subject {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+}
+.toc a {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 20px;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.4;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+.toc a:hover {
+  color: var(--text);
+  background: var(--surface2);
+  border-left-color: var(--accent1);
+}
+.toc a.active {
+  color: var(--accent1);
+  background: rgba(59,130,246,0.08);
+  border-left-color: var(--accent1);
+  font-weight: 600;
+}
+.toc-num {
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-size: 10px;
+  color: var(--accent1);
+  min-width: 22px;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+.toc a.active .toc-num { opacity: 1; }
+.toc-group-label {
+  padding: 14px 20px 4px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+/* ── MAIN CONTENT ── */
+.main {
+  flex: 1;
+  max-width: 960px;
+  padding: 48px 48px 80px;
+  margin: 0 auto;
+}
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(135deg, #0f1f3d 0%, #1a2f50 50%, #0d1b2e 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px 40px;
+  margin-bottom: 48px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.hero-label {
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--accent1);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.hero h1 {
+  font-family: 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 36px;
+  line-height: 1.2;
+  color: #fff;
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+}
+.hero-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.hero-tags {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.tag {
+  background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--accent1);
+}
+.tag.green { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: var(--accent2); }
+.tag.yellow { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--accent3); }
+
+/* ── SECTION ── */
+.section {
+  margin-bottom: 56px;
+  scroll-margin-top: 24px;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.section-num {
+  font-family: 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--accent1);
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 6px;
+  padding: 4px 10px;
+  min-width: 44px;
+  text-align: center;
+}
+.section-header h2 {
+  font-family: 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 22px;
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+.section-header .slide-ref {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: 'Menlo', 'Courier New', monospace;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent1);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.card.green .card-title { color: var(--accent2); }
+.card.yellow .card-title { color: var(--accent3); }
+.card.red .card-title { color: var(--accent4); }
+.card.purple .card-title { color: var(--accent5); }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.card-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* ── FORMULA BOX ── */
+.formula {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent1);
+  border-radius: 8px;
+  padding: 16px 20px;
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-size: 14px;
+  color: var(--accent1);
+  margin: 12px 0;
+  line-height: 1.8;
+}
+
+/* ── CODE BLOCK ── */
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  overflow-x: auto;
+  margin: 16px 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+code {
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-size: 13px;
+}
+.kw { color: var(--code-kw); }
+.fn { color: var(--code-fn); }
+.st { color: var(--code-str); }
+.cm { color: var(--code-cm); font-style: italic; }
+.nm { color: var(--code-num); }
+
+/* ── INFO BOX ── */
+.info-box {
+  background: rgba(59,130,246,0.06);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 13.5px;
+  color: var(--text);
+  margin-bottom: 16px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.info-box.warn { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.2); }
+.info-box.success { background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.2); }
+.info-box.danger { background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.2); }
+.info-icon { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+
+/* ── TABLE ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  margin: 16px 0;
+}
+th {
+  background: var(--surface2);
+  color: var(--accent1);
+  font-weight: 700;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* ── STEP CARDS ── */
+.step-list { display: flex; flex-direction: column; gap: 10px; }
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+.step-num {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent1);
+  color: #fff;
+  font-family: 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.step:nth-child(2) .step-num { background: var(--accent3); }
+.step:nth-child(3) .step-num { background: var(--accent2); }
+.step:nth-child(4) .step-num { background: var(--accent5); }
+.step:nth-child(5) .step-num { background: #06b6d4; }
+.step:nth-child(6) .step-num { background: #f97316; }
+.step-content { flex: 1; }
+.step-title { font-weight: 700; color: var(--text); margin-bottom: 4px; font-size: 14px; }
+.step-desc { font-size: 13px; color: var(--text-muted); }
+
+/* ── HIGHLIGHT TEXT ── */
+.hl { color: var(--accent1); font-weight: 700; }
+.hl-g { color: var(--accent2); font-weight: 700; }
+.hl-y { color: var(--accent3); font-weight: 700; }
+.hl-r { color: var(--accent4); font-weight: 700; }
+
+/* ── BADGE ── */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Menlo', 'Courier New', monospace;
+}
+.badge-blue { background: rgba(59,130,246,0.2); color: var(--accent1); }
+.badge-green { background: rgba(16,185,129,0.2); color: var(--accent2); }
+
+/* ── SVG DIAGRAM ── */
+.svg-wrap {
+  width: 100%;
+  overflow: hidden;
+}
+.svg-wrap svg {
+  width: 100%;
+  display: block;
+}
+.graph-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.graph-desc { }
+.graph-desc p { font-size: 13.5px; color: var(--text-muted); margin-bottom: 8px; }
+
+/* ── SUMMARY ── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.summary-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.summary-key {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.summary-val {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+@media (max-width: 900px) {
+  .toc { display: none; }
+  .main { padding: 24px 20px 60px; }
+  .card-grid, .card-grid-3, .graph-card, .summary-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ───────── TOC ───────── -->
+<nav class="toc" id="toc">
+  <div class="toc-header">
+    <div class="toc-title">기계학습 · 09강</div>
+    <div class="toc-subject">Decision Tree &amp;<br>Random Forest</div>
+  </div>
+  <div class="toc-group-label">Part 1 — Decision Tree</div>
+  <a href="#s01"><span class="toc-num">01</span>Decision Tree란?</a>
+  <a href="#s02"><span class="toc-num">02</span>트리 구조</a>
+  <a href="#s03"><span class="toc-num">03</span>불순도 (Impurity)</a>
+  <a href="#s04"><span class="toc-num">04</span>Entropy &amp; 정보이득</a>
+  <a href="#s05"><span class="toc-num">05</span>Gini 불순도</a>
+  <a href="#s06"><span class="toc-num">06</span>알고리즘 절차</a>
+  <a href="#s07"><span class="toc-num">07</span>수치 예제</a>
+  <a href="#s08"><span class="toc-num">08</span>과적합 &amp; Pruning</a>
+  <div class="toc-group-label">Part 2 — Random Forest</div>
+  <a href="#s09"><span class="toc-num">09</span>DT의 한계</a>
+  <a href="#s10"><span class="toc-num">10</span>앙상블 학습</a>
+  <a href="#s11"><span class="toc-num">11</span>Bagging</a>
+  <a href="#s12"><span class="toc-num">12</span>Random Forest</a>
+  <a href="#s13"><span class="toc-num">13</span>RF 알고리즘 절차</a>
+  <a href="#s14"><span class="toc-num">14</span>Feature Importance</a>
+  <a href="#s15"><span class="toc-num">15</span>DT vs RF 비교</a>
+  <a href="#s16"><span class="toc-num">16</span>Hyperparameter</a>
+  <a href="#s17"><span class="toc-num">17</span>Python 코드</a>
+  <a href="#s18"><span class="toc-num">18</span>응용 사례 &amp; 한계</a>
+  <div class="toc-group-label">종합</div>
+  <a href="#s19"><span class="toc-num">★</span>핵심 요약</a>
+</nav>
+
+<!-- ───────── MAIN ───────── -->
+<main class="main">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">Machine Learning · Lecture 09</div>
+  <h1>Decision Tree &amp;<br>Random Forest</h1>
+  <div class="hero-meta">컴퓨터공학부 · 김인수 · 2026 1학기 · 인천대학교</div>
+  <div class="hero-tags">
+    <span class="tag">분류 / 회귀</span>
+    <span class="tag green">앙상블</span>
+    <span class="tag yellow">Gini · Entropy</span>
+    <span class="tag">Bagging</span>
+    <span class="tag green">scikit-learn</span>
+  </div>
+</div>
+
+<!-- ── S01 ── -->
+<section class="section" id="s01">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2>Decision Tree란?</h2>
+    <span class="slide-ref">slide 3</span>
+  </div>
+  <div class="info-box">
+    <span class="info-icon">🔑</span>
+    <span><strong>핵심 아이디어:</strong> 데이터를 분류할 때 <span class="hl">"이 조건을 만족하는가?"</span>를 반복해서 물어보다 보면 결론에 도달합니다. — if-then 규칙의 연속.</span>
+  </div>
+
+  <!-- 암 진단 트리 SVG -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">예시: 암 진단을 위한 의사의 판단 과정</div>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 520 230" xmlns="http://www.w3.org/2000/svg">
+        <!-- Root node -->
+        <rect x="160" y="16" width="200" height="44" rx="8" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="260" y="43" text-anchor="middle" fill="#93c5fd" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="13" font-weight="700">종양 크기 &gt; 2cm?</text>
+
+        <!-- 아니오 branch -->
+        <line x1="210" y1="60" x2="130" y2="118" stroke="#10b981" stroke-width="1.5"/>
+        <text x="148" y="102" text-anchor="middle" fill="#10b981" font-size="12" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">아니오</text>
+
+        <!-- 예 branch -->
+        <line x1="310" y1="60" x2="390" y2="118" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="372" y="102" text-anchor="middle" fill="#ef4444" font-size="12" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">예</text>
+
+        <!-- Internal node -->
+        <rect x="40" y="120" width="180" height="40" rx="8" fill="#1a2d40" stroke="#10b981" stroke-width="1.5"/>
+        <text x="130" y="145" text-anchor="middle" fill="#6ee7b7" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="12" font-weight="700">세포 불규칙도 있음?</text>
+
+        <!-- 악성 right -->
+        <rect x="330" y="120" width="130" height="40" rx="8" fill="#3b1a1a" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="395" y="145" text-anchor="middle" fill="#fca5a5" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="13" font-weight="700">● 악성 (Malignant)</text>
+
+        <!-- 아니오 from internal -->
+        <line x1="90" y1="160" x2="60" y2="185" stroke="#10b981" stroke-width="1.5"/>
+        <text x="58" y="180" text-anchor="middle" fill="#10b981" font-size="11" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">아니오</text>
+
+        <!-- 예 from internal -->
+        <line x1="170" y1="160" x2="200" y2="185" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="202" y="180" text-anchor="end" fill="#ef4444" font-size="11" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">예</text>
+
+        <!-- 양성 leaf -->
+        <rect x="20" y="188" width="80" height="34" rx="6" fill="#1a3a2a" stroke="#10b981" stroke-width="1.5"/>
+        <text x="60" y="210" text-anchor="middle" fill="#6ee7b7" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="12" font-weight="700">● 양성</text>
+
+        <!-- 악성 leaf -->
+        <rect x="150" y="188" width="80" height="34" rx="6" fill="#3b1a1a" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="190" y="210" text-anchor="middle" fill="#fca5a5" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="12" font-weight="700">● 악성</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card green">
+      <div class="card-title">✅ 직관적</div>
+      <p style="font-size:13.5px;color:var(--text-muted);">"if-then" 규칙의 연속 → 비전문가도 결과를 이해할 수 있다</p>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 분류 + 회귀 모두 가능</div>
+      <p style="font-size:13.5px;color:var(--text-muted);">연속값 예측(회귀)과 카테고리 분류에 모두 사용 가능</p>
+    </div>
+    <div class="card green">
+      <div class="card-title">⚡ 전처리 최소화</div>
+      <p style="font-size:13.5px;color:var(--text-muted);">정규화·표준화 없이도 작동. 수치형·범주형 특성 모두 처리</p>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">⚠ 과적합 위험</div>
+      <p style="font-size:13.5px;color:var(--text-muted);">너무 깊어지면 훈련 데이터에 맞춰버림 → 해결책: Random Forest</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── S02 ── -->
+<section class="section" id="s02">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2>Decision Tree 구조</h2>
+    <span class="slide-ref">slide 4</span>
+  </div>
+
+  <div class="card-grid">
+    <div>
+      <div class="card">
+        <div class="card-title">루트 노드 (Root Node)</div>
+        <p style="font-size:13.5px;color:var(--text-muted);">트리의 시작점. 전체 데이터셋에 첫 번째 질문을 던지는 곳.<br>→ <span class="hl">가장 중요한 특성</span>이 여기에 위치</p>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <div class="card-title" style="color:var(--accent2);">내부 노드 (Internal Node)</div>
+        <p style="font-size:13.5px;color:var(--text-muted);">중간 질문 지점. "이 조건을 만족하는가?"를 판단.<br>→ 각 내부 노드마다 하나의 특성(feature)에 대한 조건</p>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <div class="card-title" style="color:var(--accent3);">브랜치 (Branch)</div>
+        <p style="font-size:13.5px;color:var(--text-muted);">노드에서 나오는 가지. 조건의 예/아니오 결과에 따라 분기.<br>→ 2개(이진 분기) 또는 그 이상</p>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <div class="card-title" style="color:var(--accent5);">리프 노드 (Leaf Node)</div>
+        <p style="font-size:13.5px;color:var(--text-muted);">트리의 끝점. 최종 답을 제공.<br>→ 분류: 클래스 레이블 / 회귀: 평균값</p>
+      </div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;justify-content:center;">
+      <div class="card-title" style="text-align:center;margin-bottom:12px;">트리 구조 예시</div>
+      <div class="svg-wrap">
+        <svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg">
+          <!-- Root -->
+          <rect x="65" y="10" width="150" height="36" rx="7" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+          <text x="140" y="32" text-anchor="middle" fill="#93c5fd" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="11" font-weight="700">루트: 종양 크기?</text>
+          <text x="4" y="30" fill="#64748b" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">루트 노드</text>
+
+          <!-- Branch labels -->
+          <line x1="105" y1="46" x2="60" y2="100" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
+          <line x1="175" y1="46" x2="220" y2="100" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
+          <text x="68" y="80" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">≤ 2cm</text>
+          <text x="188" y="80" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">&gt; 2cm</text>
+          <text x="150" y="75" fill="#64748b" font-size="9" font-style="italic" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">브랜치</text>
+
+          <!-- Internal node -->
+          <rect x="10" y="100" width="110" height="32" rx="6" fill="#1a2d40" stroke="#10b981" stroke-width="1.5"/>
+          <text x="65" y="120" text-anchor="middle" fill="#6ee7b7" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="11" font-weight="700">불규칙도?</text>
+          <text x="-1" y="115" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">내부 노드</text>
+
+          <!-- Malignant right -->
+          <rect x="175" y="100" width="90" height="32" rx="6" fill="#3b1a1a" stroke="#ef4444" stroke-width="1.5"/>
+          <text x="220" y="120" text-anchor="middle" fill="#fca5a5" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="11" font-weight="700">악성</text>
+
+          <!-- Leaf branches -->
+          <line x1="40" y1="132" x2="25" y2="168" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
+          <line x1="90" y1="132" x2="105" y2="168" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
+
+          <!-- Benign leaf -->
+          <rect x="5" y="168" width="60" height="30" rx="6" fill="#1a3a2a" stroke="#10b981" stroke-width="1.5"/>
+          <text x="35" y="188" text-anchor="middle" fill="#6ee7b7" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="11" font-weight="700">양성</text>
+
+          <!-- Malignant leaf -->
+          <rect x="75" y="168" width="60" height="30" rx="6" fill="#3b1a1a" stroke="#ef4444" stroke-width="1.5"/>
+          <text x="105" y="188" text-anchor="middle" fill="#fca5a5" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="11" font-weight="700">악성</text>
+          <text x="62" y="210" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">리프 노드</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box warn">
+    <span class="info-icon">⚠️</span>
+    <span><strong>깊이(Depth):</strong> 루트 → 리프까지의 질문 수. 깊을수록 복잡한 경계를 학습하지만 <span class="hl-y">과적합 위험 증가!</span></span>
+  </div>
+</section>
+
+<!-- ── S03 ── -->
+<section class="section" id="s03">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2>분기 기준: 불순도 (Impurity)</h2>
+    <span class="slide-ref">slide 5</span>
+  </div>
+  <div class="info-box">
+    <span class="info-icon">🔑</span>
+    <span><strong>핵심:</strong> 좋은 분기란 나눈 후 각 그룹이 최대한 <span class="hl">'순수'</span>해지는 것. 순수 = 한 그룹에 같은 클래스만 존재. 불순도는 이 '섞인 정도'를 수치로 표현.</span>
+  </div>
+
+  <div class="card-grid">
+    <div class="card red">
+      <div class="card-title">나쁜 분기 (불순도 높음)</div>
+      <div class="svg-wrap">
+        <svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="80" height="60" rx="6" fill="#2a1a1a" stroke="#ef4444" stroke-width="1"/>
+          <text x="50" y="26" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">그룹 A</text>
+          <circle cx="27" cy="46" r="8" fill="#ef4444"/>
+          <circle cx="45" cy="46" r="8" fill="#10b981"/>
+          <circle cx="63" cy="46" r="8" fill="#ef4444"/>
+          <circle cx="36" cy="62" r="8" fill="#10b981"/>
+          <circle cx="54" cy="62" r="8" fill="#ef4444"/>
+          <rect x="110" y="10" width="80" height="60" rx="6" fill="#2a1a1a" stroke="#ef4444" stroke-width="1"/>
+          <text x="150" y="26" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">그룹 B</text>
+          <circle cx="127" cy="46" r="8" fill="#10b981"/>
+          <circle cx="145" cy="46" r="8" fill="#ef4444"/>
+          <circle cx="163" cy="46" r="8" fill="#10b981"/>
+          <circle cx="136" cy="62" r="8" fill="#ef4444"/>
+          <circle cx="154" cy="62" r="8" fill="#10b981"/>
+        </svg>
+      </div>
+      <p style="font-size:12px;color:#94a3b8;margin-top:6px;">→ 나눠도 여전히 뒤섞여 있음 / 불순도 ↑</p>
+    </div>
+    <div class="card green">
+      <div class="card-title">좋은 분기 (불순도 낮음)</div>
+      <div class="svg-wrap">
+        <svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="80" height="60" rx="6" fill="#0f2a1a" stroke="#10b981" stroke-width="1"/>
+          <text x="50" y="26" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">그룹 A</text>
+          <circle cx="27" cy="46" r="8" fill="#ef4444"/>
+          <circle cx="45" cy="46" r="8" fill="#ef4444"/>
+          <circle cx="63" cy="46" r="8" fill="#ef4444"/>
+          <circle cx="36" cy="62" r="8" fill="#ef4444"/>
+          <circle cx="54" cy="62" r="8" fill="#ef4444"/>
+          <rect x="110" y="10" width="80" height="60" rx="6" fill="#0f2a1a" stroke="#10b981" stroke-width="1"/>
+          <text x="150" y="26" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">그룹 B</text>
+          <circle cx="127" cy="46" r="8" fill="#10b981"/>
+          <circle cx="145" cy="46" r="8" fill="#10b981"/>
+          <circle cx="163" cy="46" r="8" fill="#10b981"/>
+          <circle cx="136" cy="62" r="8" fill="#10b981"/>
+          <circle cx="154" cy="62" r="8" fill="#10b981"/>
+        </svg>
+      </div>
+      <p style="font-size:12px;color:#94a3b8;margin-top:6px;">→ 각 그룹이 한 클래스로만 구성 / 불순도 ↓</p>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title">📊 Entropy (정보이득 기반)</div>
+      <p style="font-size:13.5px;color:var(--text-muted);">정보이론에서 유래. 완전 순수 = <span class="hl">0</span>, 완전 혼합 = <span class="hl">1</span></p>
+    </div>
+    <div class="card green">
+      <div class="card-title">🎯 Gini 불순도</div>
+      <p style="font-size:13.5px;color:var(--text-muted);">계산이 더 빠름. 완전 순수 = <span class="hl-g">0</span>, 완전 혼합 = <span class="hl-g">0.5</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ── S04 ── -->
+<section class="section" id="s04">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2>Entropy와 정보이득 (Information Gain)</h2>
+    <span class="slide-ref">slide 6</span>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title">📊 Entropy 공식</div>
+      <div class="formula">H(S) = −Σₖ pₖ · log₂(pₖ)</div>
+      <p style="font-size:13px;color:var(--text-muted);">pₖ = 클래스 k의 비율<br>완전 순수: H = <span class="hl">0</span> (한 클래스만 존재)<br>완전 혼합: H = <span class="hl">1</span> (클래스가 동일 비율)</p>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">✏ 정보이득 (Information Gain)</div>
+      <div class="formula" style="border-left-color:var(--accent3);color:var(--accent3);">IG(S,A) = H(S) − Σᵥ (|Sᵥ|/|S|)·H(Sᵥ)</div>
+      <p style="font-size:13px;color:var(--text-muted);">H(S): 분기 전 Entropy<br>H(Sᵥ): 분기 후 각 그룹의 Entropy<br>→ <span class="hl-y">IG가 클수록 좋은 분기!</span></p>
+    </div>
+  </div>
+
+  <div class="card" style="background:var(--surface2);">
+    <div class="card-title">📋 예제: 10개 데이터 (악성 7개, 양성 3개)</div>
+    <div class="card-grid" style="margin-top:12px;">
+      <div>
+        <p style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;">분기 전 Entropy:</p>
+        <div class="formula" style="font-size:12px;">H(S) = −(7/10)·log₂(7/10) − (3/10)·log₂(3/10)<br>= −0.7·(−0.515) − 0.3·(−1.737)<br>= 0.360 + 0.521 = <span style="color:#f59e0b;">0.881</span></div>
+      </div>
+      <div>
+        <p style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;">분기 후 (특성 A 사용 시):</p>
+        <p style="font-size:13px;color:var(--text-muted);">그룹1 (6개): H = <span class="hl-g">0.0</span> (순수!)<br>그룹2 (4개): H = <span class="hl-y">0.811</span></p>
+        <div class="formula" style="font-size:12px;margin-top:8px;">IG = 0.881 − (6/10·0.0 + 4/10·0.811)<br>= 0.881 − 0.324 = <span style="color:#f59e0b;">0.557</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box success">
+    <span class="info-icon">⚡</span>
+    <span>Decision Tree는 각 노드에서 <strong>정보이득(IG)이 가장 큰 특성</strong>을 선택하여 분기합니다!</span>
+  </div>
+</section>
+
+<!-- ── S05 ── -->
+<section class="section" id="s05">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2>Gini 불순도 (Gini Impurity)</h2>
+    <span class="slide-ref">slide 7</span>
+  </div>
+
+  <div class="info-box">
+    <span class="info-icon">💡</span>
+    <span>Gini 불순도는 Entropy보다 <strong>계산이 빠르고 비슷한 성능</strong>. scikit-learn의 <code>DecisionTreeClassifier</code> 기본값.</span>
+  </div>
+
+  <div class="card-grid">
+    <div class="card green">
+      <div class="card-title">🎯 Gini 불순도 공식</div>
+      <div class="formula" style="border-left-color:var(--accent2);color:var(--accent2);">Gini(S) = 1 − Σₖ pₖ²</div>
+      <p style="font-size:13px;color:var(--text-muted);">pₖ = 클래스 k의 비율<br>완전 순수: Gini = <span class="hl-g">0</span><br>완전 혼합 (2클래스): Gini = <span class="hl-g">0.5</span></p>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th>구분</th><th>Entropy</th><th>Gini</th></tr></thead>
+        <tbody>
+          <tr><td>범위</td><td>0 ~ 1</td><td>0 ~ 0.5</td></tr>
+          <tr><td>계산 속도</td><td>상대적으로 느림</td><td><span class="hl-g">빠름</span></td></tr>
+          <tr><td>로그 사용</td><td>✓ 사용</td><td>✗ 미사용</td></tr>
+          <tr><td>결과 차이</td><td colspan="2" style="text-align:center;">거의 동일</td></tr>
+          <tr><td>기본 사용처</td><td>ID3, C4.5</td><td><span class="hl-g">CART, sklearn</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="background:var(--surface2);">
+    <div class="card-title">📋 예제: 악성 6개, 양성 4개</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;"><strong style="color:var(--text);">분기 전 Gini:</strong></p>
+    <div class="formula" style="font-size:12.5px;">1 − ((6/10)² + (4/10)²) = 1 − (0.36 + 0.16) = <span style="color:#f59e0b;">0.48</span></div>
+    <p style="font-size:13px;color:var(--text-muted);margin:10px 0 6px;"><strong style="color:var(--text);">분기 후:</strong> 그룹1(순수) = 0.0 / 그룹2 = 1−((1/4)²+(3/4)²) = 1−(0.0625+0.5625) = <span class="hl-y">0.375</span></p>
+    <div class="formula" style="font-size:12.5px;">가중 평균 Gini: (6/10)·0.0 + (4/10)·0.375 = 0.15<br>감소량 = 0.48 − 0.15 = <span style="color:#10b981;">0.33</span> (분기 효과!)</div>
+  </div>
+
+  <div class="info-box success">
+    <span class="info-icon">⚡</span>
+    <span>각 노드에서 <strong>Gini 감소량이 가장 큰 특성·임계값을 선택</strong> → Decision Tree 알고리즘의 핵심 반복 과정!</span>
+  </div>
+</section>
+
+<!-- ── S06 ── -->
+<section class="section" id="s06">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <h2>Decision Tree 알고리즘: 단계별 절차</h2>
+    <span class="slide-ref">slide 8</span>
+  </div>
+  <div class="step-list">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">루트 노드에서 시작</div>
+        <div class="step-desc">전체 훈련 데이터를 하나의 그룹으로 시작합니다.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">최선의 분기 특성·임계값 탐색</div>
+        <div class="step-desc">모든 특성, 모든 가능한 임계값을 시도 → Gini(또는 IG)가 가장 많이 줄어드는 조합 선택</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">데이터 분할</div>
+        <div class="step-desc">선택된 조건으로 데이터를 두 그룹(왼쪽·오른쪽 자식 노드)으로 나눕니다.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">재귀적 반복</div>
+        <div class="step-desc">각 자식 노드에 대해 2~3 단계를 반복합니다. 각 노드는 독립적으로 최선의 분기를 찾습니다.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <div class="step-title">종료 조건 확인 (중요!)</div>
+        <div class="step-desc">① 노드가 완전히 순수 (Gini = 0) &nbsp; ② 최소 샘플 수 이하 &nbsp; ③ 최대 깊이 도달 → 리프 노드로 확정</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <div class="step-title">리프 노드 결정</div>
+        <div class="step-desc">분류: 해당 노드에서 가장 많은 클래스를 예측값으로 / 회귀: 해당 노드의 평균값을 예측값으로</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── S07 ── -->
+<section class="section" id="s07">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <h2>Decision Tree 수치 예제</h2>
+    <span class="slide-ref">slide 9</span>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title">📋 데이터셋 (6개 환자)</div>
+      <table>
+        <thead><tr><th>환자</th><th>크기</th><th>불규칙</th><th>진단</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td>작음</td><td>없음</td><td style="color:var(--accent2);">● 양성</td></tr>
+          <tr><td>B</td><td>작음</td><td>있음</td><td style="color:var(--accent2);">● 양성</td></tr>
+          <tr><td>C</td><td>작음</td><td>있음</td><td style="color:var(--accent4);">● 악성</td></tr>
+          <tr><td>D</td><td>큼</td><td>없음</td><td style="color:var(--accent4);">● 악성</td></tr>
+          <tr><td>E</td><td>큼</td><td>있음</td><td style="color:var(--accent4);">● 악성</td></tr>
+          <tr><td>F</td><td>큼</td><td>있음</td><td style="color:var(--accent4);">● 악성</td></tr>
+        </tbody>
+      </table>
+      <div class="formula" style="font-size:12px;margin-top:10px;">전체 Gini = 1−((2/6)²+(4/6)²) = <span style="color:#f59e0b;">0.444</span></div>
+    </div>
+    <div>
+      <div class="card yellow" style="margin-bottom:12px;">
+        <div class="card-title">① 종양 크기로 분기하면?</div>
+        <p style="font-size:12.5px;color:var(--text-muted);">크기=작음 {A,B,C}: Gini = 1−((2/3)²+(1/3)²) = <strong style="color:var(--text);">0.444</strong><br>크기=큼 {D,E,F}: Gini = <span class="hl-g">0.0</span> (순수!)<br>가중 Gini = (3/6)·0.444 + (3/6)·0.0 = <strong style="color:var(--text);">0.222</strong></p>
+        <div class="formula" style="font-size:12px;border-left-color:var(--accent3);color:var(--accent3);">Gini 감소 = 0.444 − 0.222 = <strong>0.222</strong></div>
+      </div>
+      <div class="card">
+        <div class="card-title">② 불규칙도로 분기하면?</div>
+        <p style="font-size:12.5px;color:var(--text-muted);">불규칙=없음 {A,D}: Gini = 0.5<br>불규칙=있음 {B,C,E,F}: Gini = 0.375<br>가중 Gini = (2/6)·0.5 + (4/6)·0.375 = <strong style="color:var(--text);">0.417</strong></p>
+        <div class="formula" style="font-size:12px;">Gini 감소 = 0.444 − 0.417 = <span style="color:var(--text-dim);">0.027</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="info-box success">
+    <span class="info-icon">✅</span>
+    <span>종양 크기의 Gini 감소(<span class="hl-g">0.222</span>) &gt; 불규칙도(<span class="hl-r">0.027</span>) → <strong>루트 노드: 종양 크기로 분기!</strong> 이후 왼쪽 그룹에서 반복.</span>
+  </div>
+</section>
+
+<!-- ── S08 ── -->
+<section class="section" id="s08">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <h2>과적합(Overfitting)과 가지치기(Pruning)</h2>
+    <span class="slide-ref">slide 10</span>
+  </div>
+  <div class="info-box danger">
+    <span class="info-icon">⚠️</span>
+    <span>Decision Tree는 제한 없이 성장하면 훈련 데이터의 노이즈까지 외워버립니다. 깊이가 깊을수록 훈련 정확도는 올라가지만, 새로운 데이터에 대한 성능은 오히려 떨어집니다.</span>
+  </div>
+
+  <!-- 깊이에 따른 정확도 SVG 그래프 -->
+  <div class="graph-card">
+    <div class="graph-desc">
+      <div class="card-title" style="color:var(--text);font-size:13px;margin-bottom:10px;">깊이에 따른 정확도 변화</div>
+      <p>트리 깊이가 증가할수록:</p>
+      <p>• <span class="hl">훈련 정확도</span>는 지속 상승</p>
+      <p>• <span class="hl-r">테스트 정확도</span>는 깊이 4~5 이후 하락</p>
+      <p style="margin-top:10px;">→ 과적합(Overfitting) 현상</p>
+      <p style="margin-top:8px;font-size:12px;color:var(--text-dim);">적당히 제한된 트리가 더 좋은 일반화 성능을 냅니다.</p>
+    </div>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg">
+        <!-- Axes -->
+        <line x1="44" y1="10" x2="44" y2="160" stroke="#2a3a55" stroke-width="1.5"/>
+        <line x1="44" y1="160" x2="270" y2="160" stroke="#2a3a55" stroke-width="1.5"/>
+
+        <!-- Y axis labels -->
+        <text x="38" y="164" text-anchor="end" fill="#64748b" font-size="9" font-family="'Menlo','Courier New',monospace">0</text>
+        <text x="38" y="131" text-anchor="end" fill="#64748b" font-size="9" font-family="'Menlo','Courier New',monospace">20</text>
+        <text x="38" y="98" text-anchor="end" fill="#64748b" font-size="9" font-family="'Menlo','Courier New',monospace">40</text>
+        <text x="38" y="65" text-anchor="end" fill="#64748b" font-size="9" font-family="'Menlo','Courier New',monospace">60</text>
+        <text x="38" y="32" text-anchor="end" fill="#64748b" font-size="9" font-family="'Menlo','Courier New',monospace">80</text>
+        <text x="38" y="18" text-anchor="end" fill="#64748b" font-size="9" font-family="'Menlo','Courier New',monospace">100</text>
+
+        <!-- Y gridlines -->
+        <line x1="44" y1="131" x2="270" y2="131" stroke="#1e2d42" stroke-width="1"/>
+        <line x1="44" y1="98" x2="270" y2="98" stroke="#1e2d42" stroke-width="1"/>
+        <line x1="44" y1="65" x2="270" y2="65" stroke="#1e2d42" stroke-width="1"/>
+        <line x1="44" y1="32" x2="270" y2="32" stroke="#1e2d42" stroke-width="1"/>
+
+        <!-- X axis labels: 깊이1~6 -->
+        <!-- x positions: 70,112,154,196,238,260 -->
+        <text x="70"  y="174" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">깊이1</text>
+        <text x="112" y="174" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">깊이2</text>
+        <text x="154" y="174" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">깊이3</text>
+        <text x="196" y="174" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">깊이4</text>
+        <text x="238" y="174" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">깊이5</text>
+        <text x="262" y="174" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">깊이6</text>
+
+        <!-- Train accuracy line (70→80→85→90→95→100) scaled: 100→y10, 0→y160 each unit=1.5px -->
+        <!-- y = 160 - val*1.5 -->
+        <!-- 70->55, 80->40, 85->32.5, 90->25, 95->17.5, 100->10 -->
+        <polyline points="70,55 112,40 154,32 196,25 238,17 262,10"
+          fill="none" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="70"  cy="55" r="4" fill="#3b82f6"/>
+        <circle cx="112" cy="40" r="4" fill="#3b82f6"/>
+        <circle cx="154" cy="32" r="4" fill="#3b82f6"/>
+        <circle cx="196" cy="25" r="4" fill="#3b82f6"/>
+        <circle cx="238" cy="17" r="4" fill="#3b82f6"/>
+        <circle cx="262" cy="10" r="4" fill="#3b82f6"/>
+
+        <!-- Test accuracy line (68→79→82→80→76→72) -->
+        <!-- 68->58, 79->41.5, 82->37, 80->40, 76->46, 72->52 -->
+        <polyline points="70,58 112,41 154,37 196,40 238,46 262,52"
+          fill="none" stroke="#ef4444" stroke-width="2"/>
+        <circle cx="70"  cy="58" r="4" fill="#ef4444"/>
+        <circle cx="112" cy="41" r="4" fill="#ef4444"/>
+        <circle cx="154" cy="37" r="4" fill="#ef4444"/>
+        <circle cx="196" cy="40" r="4" fill="#ef4444"/>
+        <circle cx="238" cy="46" r="4" fill="#ef4444"/>
+        <circle cx="262" cy="52" r="4" fill="#ef4444"/>
+
+        <!-- Legend -->
+        <line x1="55" y1="190" x2="75" y2="190" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="65" cy="190" r="3" fill="#3b82f6"/>
+        <text x="78" y="194" fill="#94a3b8" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">훈련 정확도</text>
+        <line x1="158" y1="190" x2="178" y2="190" stroke="#ef4444" stroke-width="2"/>
+        <circle cx="168" cy="190" r="3" fill="#ef4444"/>
+        <text x="181" y="194" fill="#94a3b8" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">테스트 정확도</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title">✂ 사전 가지치기 (Pre-pruning)</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">성장 중 조기 중단</p>
+      <p style="font-size:13px;color:var(--text-muted);">• <code>max_depth</code>: 최대 깊이 제한<br>• <code>min_samples_split</code>: 분기에 필요한 최소 샘플 수<br>• <code>min_samples_leaf</code>: 리프의 최소 샘플 수</p>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">✂ 사후 가지치기 (Post-pruning)</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">완전히 키운 뒤 가지 제거</p>
+      <p style="font-size:13px;color:var(--text-muted);">• 검증 세트 성능이 떨어지는 서브트리 제거<br>• Cost-Complexity Pruning (<code>ccp_alpha</code>)</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── S09 ── -->
+<section class="section" id="s09">
+  <div class="section-header">
+    <span class="section-num">09</span>
+    <h2>Decision Tree의 한계</h2>
+    <span class="slide-ref">slide 11</span>
+  </div>
+  <div class="card-grid-3">
+    <div class="card red">
+      <div class="card-title">⚠ 과적합에 취약</div>
+      <p style="font-size:13px;color:var(--text-muted);">깊어질수록 훈련 데이터 노이즈까지 학습. 가지치기를 해도 여전히 불안정.</p>
+    </div>
+    <div class="card red">
+      <div class="card-title">⚠ 높은 분산 (High Variance)</div>
+      <p style="font-size:13px;color:var(--text-muted);">데이터를 조금만 바꿔도 트리 구조가 크게 달라집니다. 예측이 불안정.</p>
+    </div>
+    <div class="card red">
+      <div class="card-title">⚠ 편향된 특성 선택</div>
+      <p style="font-size:13px;color:var(--text-muted);">값의 개수가 많은 특성을 선호하는 경향 → 공평하지 않은 분기 가능성.</p>
+    </div>
+  </div>
+  <div class="info-box success" style="margin-top:8px;">
+    <span class="info-icon">💡</span>
+    <span><strong>해결책 → Random Forest:</strong> 여러 트리를 만들어 투표 / 데이터를 랜덤으로 샘플링 / 특성도 랜덤으로 선택</span>
+  </div>
+</section>
+
+<!-- ── S10 ── -->
+<section class="section" id="s10">
+  <div class="section-header">
+    <span class="section-num">10</span>
+    <h2>앙상블(Ensemble) 학습이란?</h2>
+    <span class="slide-ref">slide 12</span>
+  </div>
+  <div class="info-box">
+    <span class="info-icon">🔑</span>
+    <span><strong>핵심 아이디어:</strong> 한 명의 전문가보다 여러 명의 다양한 전문가가 모여 다수결로 결정하면 더 정확. 여러 개의 <span class="hl">약한 모델(weak learner)</span>을 합치면 강한 모델(strong learner)을 만들 수 있음.</span>
+  </div>
+
+  <!-- 앙상블 다이어그램 SVG -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">다수결의 힘: 직관적 이해</div>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 580 110" xmlns="http://www.w3.org/2000/svg">
+        <!-- Experts -->
+        <!-- Expert 1 -->
+        <rect x="10" y="10" width="76" height="80" rx="7" fill="#1e2d40" stroke="#3b82f6" stroke-width="1"/>
+        <text x="48" y="30" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">전문가 1</text>
+        <circle cx="48" cy="56" r="12" fill="#ef4444"/>
+        <text x="48" y="61" text-anchor="middle" fill="#fff" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">악성</text>
+        <text x="48" y="82" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">정확도 70%</text>
+
+        <!-- Expert 2 -->
+        <rect x="96" y="10" width="76" height="80" rx="7" fill="#1e2d40" stroke="#3b82f6" stroke-width="1"/>
+        <text x="134" y="30" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">전문가 2</text>
+        <circle cx="134" cy="56" r="12" fill="#ef4444"/>
+        <text x="134" y="61" text-anchor="middle" fill="#fff" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">악성</text>
+        <text x="134" y="82" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">정확도 68%</text>
+
+        <!-- Expert 3 -->
+        <rect x="182" y="10" width="76" height="80" rx="7" fill="#1e2d40" stroke="#10b981" stroke-width="1"/>
+        <text x="220" y="30" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">전문가 3</text>
+        <circle cx="220" cy="56" r="12" fill="#10b981"/>
+        <text x="220" y="61" text-anchor="middle" fill="#fff" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">양성</text>
+        <text x="220" y="82" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">정확도 72%</text>
+
+        <!-- Expert 4 -->
+        <rect x="268" y="10" width="76" height="80" rx="7" fill="#1e2d40" stroke="#3b82f6" stroke-width="1"/>
+        <text x="306" y="30" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">전문가 4</text>
+        <circle cx="306" cy="56" r="12" fill="#ef4444"/>
+        <text x="306" y="61" text-anchor="middle" fill="#fff" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">악성</text>
+        <text x="306" y="82" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">정확도 65%</text>
+
+        <!-- Expert 5 -->
+        <rect x="354" y="10" width="76" height="80" rx="7" fill="#1e2d40" stroke="#3b82f6" stroke-width="1"/>
+        <text x="392" y="30" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">전문가 5</text>
+        <circle cx="392" cy="56" r="12" fill="#ef4444"/>
+        <text x="392" y="61" text-anchor="middle" fill="#fff" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">악성</text>
+        <text x="392" y="82" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">정확도 71%</text>
+
+        <!-- Arrow -->
+        <text x="441" y="58" fill="#64748b" font-size="18" font-family="'Menlo','Courier New',monospace">→</text>
+        <text x="438" y="74" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">다수결</text>
+
+        <!-- Result -->
+        <rect x="458" y="10" width="110" height="80" rx="7" fill="#2a1a1a" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="513" y="30" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">앙상블 결과</text>
+        <circle cx="513" cy="54" r="14" fill="#ef4444"/>
+        <text x="513" y="59" text-anchor="middle" fill="#fff" font-size="11" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">악성(4:1)</text>
+        <text x="513" y="82" text-anchor="middle" fill="#10b981" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">정확도 ≈ 80%+</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card green">
+      <div class="card-title">Bagging (병렬)</div>
+      <p style="font-size:13.5px;color:var(--text-muted);">독립적인 모델들을 동시에 학습 → 결과를 평균/다수결<br>예) <strong style="color:var(--text);">Random Forest</strong></p>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">Boosting (순차)</div>
+      <p style="font-size:13.5px;color:var(--text-muted);">앞 모델이 틀린 것에 집중해 다음 모델을 학습<br>예) <strong style="color:var(--text);">AdaBoost, XGBoost, LightGBM</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- ── S11 ── -->
+<section class="section" id="s11">
+  <div class="section-header">
+    <span class="section-num">11</span>
+    <h2>Bagging: Bootstrap Aggregating</h2>
+    <span class="slide-ref">slide 13</span>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">개념 정의</div>
+    <p style="font-size:13.5px;color:var(--text-muted);"><strong style="color:var(--text);">Bootstrap:</strong> 원본 데이터에서 <span class="hl">복원 추출</span>로 여러 개의 서로 다른 데이터셋을 만든다.<br><strong style="color:var(--text);">Aggregating:</strong> 각 모델의 예측을 합쳐 최종 답을 만든다.</p>
+  </div>
+
+  <!-- Bootstrap Sampling 다이어그램 SVG -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">Bootstrap Sampling 과정</div>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 580 160" xmlns="http://www.w3.org/2000/svg">
+        <!-- Original data box -->
+        <rect x="10" y="40" width="100" height="80" rx="8" fill="#1e2d40" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="60" y="60" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">원본 데이터</text>
+        <text x="60" y="75" text-anchor="middle" fill="#64748b" font-size="10" font-family="'Menlo','Courier New',monospace">(N=6)</text>
+        <text x="60" y="96" text-anchor="middle" fill="#93c5fd" font-size="11" font-family="'Menlo','Courier New',monospace">A B C D E F</text>
+        <text x="60" y="112" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">(6개의 데이터)</text>
+
+        <!-- Arrow -->
+        <text x="120" y="84" fill="#64748b" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">복원</text>
+        <text x="120" y="96" fill="#64748b" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">추출</text>
+        <line x1="116" y1="100" x2="116" y2="136" stroke="#64748b" stroke-width="1"/>
+        <polygon points="116,140 113,134 119,134" fill="#64748b"/>
+        <line x1="116" y1="56" x2="116" y2="26" stroke="#64748b" stroke-width="1"/>
+        <polygon points="116,22 113,28 119,28" fill="#64748b"/>
+
+        <!-- Sample 1 -->
+        <rect x="144" y="10" width="130" height="32" rx="6" fill="#1a2d20" stroke="#10b981" stroke-width="1"/>
+        <text x="192" y="26" text-anchor="middle" fill="#6ee7b7" font-size="10" font-family="'Menlo','Courier New',monospace">샘플1: A A C D E F</text>
+        <text x="246" y="38" fill="#64748b" font-size="9" font-style="italic" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">(A 중복!)</text>
+
+        <!-- Sample 2 -->
+        <rect x="144" y="64" width="130" height="32" rx="6" fill="#1a2d20" stroke="#10b981" stroke-width="1"/>
+        <text x="192" y="80" text-anchor="middle" fill="#6ee7b7" font-size="10" font-family="'Menlo','Courier New',monospace">샘플2: A B B D E F</text>
+        <text x="246" y="92" fill="#64748b" font-size="9" font-style="italic" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">(B 중복!)</text>
+
+        <!-- Sample 3 -->
+        <rect x="144" y="118" width="130" height="32" rx="6" fill="#1a2d20" stroke="#10b981" stroke-width="1"/>
+        <text x="192" y="134" text-anchor="middle" fill="#6ee7b7" font-size="10" font-family="'Menlo','Courier New',monospace">샘플3: A C D D F F</text>
+        <text x="246" y="146" fill="#64748b" font-size="9" font-style="italic" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">(D,F 중복!)</text>
+
+        <!-- Tree 1 -->
+        <rect x="296" y="10" width="66" height="32" rx="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="329" y="30" text-anchor="middle" fill="#93c5fd" font-size="11" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">🌲 트리 1</text>
+        <line x1="274" y1="26" x2="296" y2="26" stroke="#94a3b8" stroke-width="1"/>
+
+        <!-- Tree 2 -->
+        <rect x="296" y="64" width="66" height="32" rx="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="329" y="84" text-anchor="middle" fill="#93c5fd" font-size="11" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">🌲 트리 2</text>
+        <line x1="274" y1="80" x2="296" y2="80" stroke="#94a3b8" stroke-width="1"/>
+
+        <!-- Tree 3 -->
+        <rect x="296" y="118" width="66" height="32" rx="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="329" y="138" text-anchor="middle" fill="#93c5fd" font-size="11" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">🌲 트리 3</text>
+        <line x1="274" y1="134" x2="296" y2="134" stroke="#94a3b8" stroke-width="1"/>
+
+        <!-- Vote box -->
+        <line x1="362" y1="26" x2="388" y2="80" stroke="#94a3b8" stroke-width="1"/>
+        <line x1="362" y1="80" x2="388" y2="80" stroke="#94a3b8" stroke-width="1"/>
+        <line x1="362" y1="134" x2="388" y2="80" stroke="#94a3b8" stroke-width="1"/>
+        <rect x="388" y="58" width="80" height="44" rx="7" fill="#1e2d40" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="428" y="76" text-anchor="middle" fill="#fcd34d" font-size="11" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">다수결</text>
+        <text x="428" y="92" text-anchor="middle" fill="#fcd34d" font-size="11" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">투표</text>
+
+        <!-- Final -->
+        <line x1="468" y1="80" x2="492" y2="80" stroke="#94a3b8" stroke-width="1"/>
+        <rect x="492" y="58" width="72" height="44" rx="7" fill="#2a1a1a" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="528" y="76" text-anchor="middle" fill="#fca5a5" font-size="11" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">최종</text>
+        <text x="528" y="92" text-anchor="middle" fill="#fca5a5" font-size="11" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">예측</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="info-box success">
+    <span class="info-icon">💡</span>
+    <span><strong>왜 다양성이 중요한가?</strong> 각 트리가 같은 데이터를 보면 같은 실수를 합니다. 서로 다른 Bootstrap 샘플을 보면 서로 다른 실수를 합니다. → 다수결을 하면 각자의 실수가 상쇄되어 전체적으로 더 정확해집니다. (<span class="hl-g">오차의 상관관계를 줄이는 것이 핵심!</span>)</span>
+  </div>
+</section>
+
+<!-- ── S12 ── -->
+<section class="section" id="s12">
+  <div class="section-header">
+    <span class="section-num">12</span>
+    <h2>Random Forest</h2>
+    <span class="slide-ref">slide 14</span>
+  </div>
+
+  <div class="formula" style="font-size:14px;text-align:center;">Random Forest = Decision Tree + Bagging + <span style="color:#10b981;">Random Feature Selection</span></div>
+
+  <div class="card-grid" style="margin-top:16px;">
+    <div class="card">
+      <div class="card-title">🎲 랜덤 1: Bootstrap Sampling</div>
+      <p style="font-size:13px;color:var(--text-muted);">각 트리마다 다른 훈련 데이터 사용</p>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">• 원본 N개 데이터에서 복원추출로 N개 샘플<br>• 약 <span class="hl">63%</span>의 원본 데이터 포함 (나머지는 중복)<br>• → 트리마다 서로 다른 데이터를 봄</p>
+    </div>
+    <div class="card green">
+      <div class="card-title">🎲 랜덤 2: Random Feature Selection</div>
+      <p style="font-size:13px;color:var(--text-muted);">각 분기마다 다른 특성 후보군 사용</p>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">• 전체 d개 특성 중 <span class="hl-g">√d개</span>(분류) 또는 <span class="hl-g">d/3개</span>(회귀)만 고려<br>• 각 노드마다 매번 새로 뽑음<br>• → 특성 간 상관관계를 줄여 트리 다양성 극대화!</p>
+    </div>
+  </div>
+
+  <div class="card-grid" style="margin-top:0;">
+    <div class="card red">
+      <div class="card-title">단순 Bagging만 하면?</div>
+      <p style="font-size:13px;color:var(--text-muted);">강한 특성 하나가 모든 트리의 루트에 등장 → 트리들이 비슷해짐 → 다수결 효과 반감</p>
+    </div>
+    <div class="card green">
+      <div class="card-title">Random Feature까지 하면?</div>
+      <p style="font-size:13px;color:var(--text-muted);">각 트리가 완전히 다른 구조를 가짐 → 오차의 상관관계 최소화 → 다수결 효과 극대화!</p>
+    </div>
+  </div>
+
+  <div class="info-box success">
+    <span class="info-icon">⚡</span>
+    <span>두 가지 랜덤성이 합쳐져서 단일 Decision Tree보다 훨씬 <strong>강력하고 안정적인</strong> 모델이 완성됩니다.</span>
+  </div>
+</section>
+
+<!-- ── S13 ── -->
+<section class="section" id="s13">
+  <div class="section-header">
+    <span class="section-num">13</span>
+    <h2>Random Forest 알고리즘: 단계별 절차</h2>
+    <span class="slide-ref">slide 15</span>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;background:var(--surface2);">
+    <div class="card-title" style="color:var(--accent3);">🔧 훈련 단계 (n_estimators개 트리 반복)</div>
+  </div>
+  <div class="step-list" style="margin-bottom:16px;">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Bootstrap 샘플 생성</div>
+        <div class="step-desc">원본 훈련 데이터(N개)에서 복원 추출로 N개 샘플 생성</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Decision Tree 성장</div>
+        <div class="step-desc">샘플로 트리를 키우되, 각 분기마다 전체 d개 특성 중 m개(=√d)만 랜덤 선택하여 최선 분기 탐색</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">완전히 성장 (가지치기 없음)</div>
+        <div class="step-desc">Random Forest는 일부러 트리를 끝까지 키웁니다. 개별 트리는 과적합해도 다수결로 상쇄!</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;background:var(--surface2);">
+    <div class="card-title" style="color:var(--accent2);">🔍 예측 단계</div>
+  </div>
+  <div class="step-list">
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">각 트리에 새 데이터 통과</div>
+        <div class="step-desc">n_estimators개의 트리 각각이 독립적으로 예측값을 냄</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <div class="step-title">결과 집계 (Aggregation)</div>
+        <div class="step-desc">분류: 다수결 (가장 많은 표를 받은 클래스) / 회귀: 평균값</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box success" style="margin-top:16px;">
+    <span class="info-icon">💡</span>
+    <span><strong>OOB(Out-of-Bag) 검증:</strong> Bootstrap에서 제외된 약 <span class="hl-g">37%</span> 데이터로 별도 검증 가능 → 추가 검증 세트 없이 성능 평가!</span>
+  </div>
+</section>
+
+<!-- ── S14 ── -->
+<section class="section" id="s14">
+  <div class="section-header">
+    <span class="section-num">14</span>
+    <h2>Feature Importance: 어떤 특성이 중요한가?</h2>
+    <span class="slide-ref">slide 16</span>
+  </div>
+  <div class="info-box">
+    <span class="info-icon">📊</span>
+    <span>Random Forest는 학습 과정에서 각 특성이 <strong>Gini 감소에 얼마나 기여했는지</strong> 자동으로 집계함. 이를 통해 별도의 Feature Selection 과정 없이 중요한 특성을 파악할 수 있음.</span>
+  </div>
+
+  <div class="graph-card">
+    <div class="graph-desc">
+      <div class="card-title" style="color:var(--text);font-size:13px;margin-bottom:10px;">계산 방법</div>
+      <p>① 각 트리에서, 특성 j를 사용한 모든 분기에서 <span class="hl">Gini 감소량을 합산</span></p>
+      <p style="margin-top:6px;">② 전체 n_estimators개 트리에서 <span class="hl">평균</span></p>
+      <p style="margin-top:6px;">③ 모든 특성의 중요도 합 = <span class="hl">1</span>이 되도록 정규화</p>
+      <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">→ 값이 클수록 그 특성이 분류에 더 많이 기여</p>
+    </div>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 260 140" xmlns="http://www.w3.org/2000/svg">
+        <text x="130" y="16" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700">특성 중요도 예시</text>
+        <!-- Y axis -->
+        <line x1="90" y1="24" x2="90" y2="115" stroke="#2a3a55" stroke-width="1.5"/>
+        <!-- X axis -->
+        <line x1="90" y1="115" x2="255" y2="115" stroke="#2a3a55" stroke-width="1.5"/>
+        <!-- X labels -->
+        <text x="90"  y="128" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Menlo','Courier New',monospace">0</text>
+        <text x="131" y="128" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Menlo','Courier New',monospace">0.1</text>
+        <text x="172" y="128" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Menlo','Courier New',monospace">0.2</text>
+        <text x="213" y="128" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Menlo','Courier New',monospace">0.3</text>
+        <text x="254" y="128" text-anchor="middle" fill="#64748b" font-size="9" font-family="'Menlo','Courier New',monospace">0.4</text>
+        <!-- Grid -->
+        <line x1="131" y1="24" x2="131" y2="115" stroke="#1e2d42" stroke-width="1"/>
+        <line x1="172" y1="24" x2="172" y2="115" stroke="#1e2d42" stroke-width="1"/>
+        <line x1="213" y1="24" x2="213" y2="115" stroke="#1e2d42" stroke-width="1"/>
+        <line x1="254" y1="24" x2="254" y2="115" stroke="#1e2d42" stroke-width="1"/>
+        <!-- Bars: 종양 크기=0.38, 혈액 마커=0.20, 혈액형=0.07 -->
+        <!-- bar height = 22, spacing = 24 -->
+        <!-- 종양 크기 -->
+        <text x="86" y="50" text-anchor="end" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">종양 크기</text>
+        <rect x="90" y="33" width="156" height="22" rx="3" fill="#3b82f6" opacity="0.85"/>
+        <text x="250" y="49" text-anchor="end" fill="#93c5fd" font-size="9" font-family="'Menlo','Courier New',monospace">0.38</text>
+        <!-- 혈액 마커 -->
+        <text x="86" y="80" text-anchor="end" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">혈액 마커</text>
+        <rect x="90" y="63" width="82" height="22" rx="3" fill="#3b82f6" opacity="0.5"/>
+        <text x="176" y="79" text-anchor="end" fill="#93c5fd" font-size="9" font-family="'Menlo','Courier New',monospace">0.20</text>
+        <!-- 혈액형 -->
+        <text x="86" y="109" text-anchor="end" fill="#94a3b8" font-size="10" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">혈액형</text>
+        <rect x="90" y="93" width="29" height="22" rx="3" fill="#64748b" opacity="0.6"/>
+        <text x="123" y="109" text-anchor="start" fill="#94a3b8" font-size="9" font-family="'Menlo','Courier New',monospace">0.07</text>
+      </svg>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>활용</th><th>설명</th></tr></thead>
+    <tbody>
+      <tr><td><strong>중요하지 않은 특성 제거</strong></td><td>중요도가 낮은 특성(혈액형, 병원 요일)을 제거 → 모델 단순화·속도 향상</td></tr>
+      <tr><td><strong>도메인 지식 검증</strong></td><td>'종양 크기'가 가장 중요하다 → 의학적으로도 맞는 결과인지 확인 가능</td></tr>
+      <tr><td><strong>PCA와의 차이</strong></td><td>PCA Loading은 선형 조합 기여도, RF 중요도는 분류 기여도 → 목적에 따라 선택</td></tr>
+    </tbody>
+  </table>
+  <div class="info-box warn">
+    <span class="info-icon">⚠️</span>
+    <span>주의: 특성들이 서로 상관관계가 높으면 중요도가 <strong>분산</strong>될 수 있습니다.</span>
+  </div>
+</section>
+
+<!-- ── S15 ── -->
+<section class="section" id="s15">
+  <div class="section-header">
+    <span class="section-num">15</span>
+    <h2>Decision Tree vs Random Forest 비교</h2>
+    <span class="slide-ref">slide 17</span>
+  </div>
+  <table>
+    <thead><tr><th>구분</th><th>Decision Tree</th><th>Random Forest</th></tr></thead>
+    <tbody>
+      <tr><td><strong>예측 정확도</strong></td><td>보통 (과적합 위험)</td><td><span class="hl-g">높음 (과적합 강건)</span></td></tr>
+      <tr><td><strong>해석 가능성</strong></td><td><span class="hl-g">매우 높음</span></td><td>낮음 (설계된 모든 트리를 다 봐야함)</td></tr>
+      <tr><td><strong>학습 속도</strong></td><td><span class="hl-g">빠름</span></td><td>느림 (트리 수만큼)</td></tr>
+      <tr><td><strong>예측 속도</strong></td><td><span class="hl-g">빠름</span></td><td>느림 (모든 트리 통과)</td></tr>
+      <tr><td><strong>과적합 위험</strong></td><td><span class="hl-r">높음</span></td><td><span class="hl-g">낮음</span></td></tr>
+      <tr><td><strong>Feature Importance</strong></td><td>제공</td><td><span class="hl-g">제공 (더 안정적)</span></td></tr>
+      <tr><td><strong>Hyperparameter</strong></td><td>max_depth 등 몇 개</td><td>n_estimators 등 많음</td></tr>
+      <tr><td><strong>메모리 사용</strong></td><td><span class="hl-g">적음</span></td><td>많음</td></tr>
+      <tr><td><strong>권장 상황</strong></td><td>설명이 필요할 때, 프로토타이핑</td><td>높은 정확도가 필요할 때, 특성 중요도 분석</td></tr>
+    </tbody>
+  </table>
+  <div class="info-box">
+    <span class="info-icon">💡</span>
+    <span>Decision Tree는 데이터를 <strong>해석할 때</strong> 좋고, 성능이 필요하면 <strong>Random Forest로 전환</strong>하는 전략이 자주 사용됩니다.</span>
+  </div>
+</section>
+
+<!-- ── S16 ── -->
+<section class="section" id="s16">
+  <div class="section-header">
+    <span class="section-num">16</span>
+    <h2>주요 Hyperparameter 정리</h2>
+    <span class="slide-ref">slide 18</span>
+  </div>
+  <div class="card-grid">
+    <div>
+      <div class="card-title" style="margin-bottom:10px;color:var(--accent1);">🔧 Decision Tree 주요 Hyperparameter</div>
+      <table>
+        <thead><tr><th>파라미터</th><th>역할</th><th>기본값</th></tr></thead>
+        <tbody>
+          <tr><td><code>max_depth</code></td><td>최대 깊이. 클수록 복잡(과적합↑)</td><td>None</td></tr>
+          <tr><td><code>min_samples_split</code></td><td>분기에 필요한 최소 샘플 수</td><td>2</td></tr>
+          <tr><td><code>min_samples_leaf</code></td><td>리프의 최소 샘플 수</td><td>1</td></tr>
+          <tr><td><code>criterion</code></td><td>'gini' 또는 'entropy'</td><td>'gini'</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="card-title" style="margin-bottom:10px;color:var(--accent2);">🌲 Random Forest 주요 Hyperparameter</div>
+      <table>
+        <thead><tr><th>파라미터</th><th>역할</th><th>기본값</th></tr></thead>
+        <tbody>
+          <tr><td><code>n_estimators</code></td><td>생성할 트리의 수. 많을수록 안정적이나 느림</td><td>100</td></tr>
+          <tr><td><code>max_features</code></td><td>각 분기에서 고려할 특성 수 (√d 또는 d/3)</td><td>'sqrt'</td></tr>
+          <tr><td><code>max_depth</code></td><td>각 트리의 최대 깊이. RF는 보통 None</td><td>None</td></tr>
+          <tr><td><code>oob_score</code></td><td>OOB 샘플로 일반화 성능 자동 추정</td><td>False</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card" style="background:var(--surface2);margin-top:8px;">
+    <div class="card-title">🎯 Hyperparameter 튜닝 전략</div>
+    <p style="font-size:13.5px;color:var(--text-muted);margin-bottom:8px;">• <strong style="color:var(--text);">n_estimators 먼저:</strong> 성능이 필요할 시 늘리는 방향으로, 학습이 너무 오래 걸리면 줄이는 방향으로.</p>
+    <p style="font-size:13.5px;color:var(--text-muted);margin-bottom:8px;">• <strong style="color:var(--text);">max_features 조정:</strong> 분류: √d, d/2, d 시도. 특성 간 상관관계가 높으면 √d가 효과적.</p>
+    <p style="font-size:13.5px;color:var(--text-muted);">• <strong style="color:var(--text);">max_depth는 RF에선 보통 None:</strong> 개별 트리의 과적합은 앙상블이 상쇄하므로, 깊이 제한이 오히려 성능을 낮출 수 있음.</p>
+  </div>
+</section>
+
+<!-- ── S17 ── -->
+<section class="section" id="s17">
+  <div class="section-header">
+    <span class="section-num">17</span>
+    <h2>Python 코드 (scikit-learn)</h2>
+    <span class="slide-ref">slide 19</span>
+  </div>
+<pre><code><span class="kw">from</span> sklearn.tree <span class="kw">import</span> <span class="fn">DecisionTreeClassifier</span>
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> <span class="fn">RandomForestClassifier</span>
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> <span class="fn">train_test_split</span>
+
+<span class="cm"># 데이터 분리</span>
+X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(X, y, test_size=<span class="nm">0.2</span>)
+
+<span class="cm"># Decision Tree</span>
+dt = <span class="fn">DecisionTreeClassifier</span>(max_depth=<span class="nm">5</span>, min_samples_leaf=<span class="nm">5</span>)
+dt.<span class="fn">fit</span>(X_train, y_train)
+<span class="fn">print</span>(dt.<span class="fn">score</span>(X_test, y_test))          <span class="cm"># 테스트 정확도</span>
+<span class="fn">print</span>(dt.feature_importances_)           <span class="cm"># DT의 특성 중요도 (Gini 감소량 기반)</span>
+
+<span class="cm"># Random Forest</span>
+rf = <span class="fn">RandomForestClassifier</span>(n_estimators=<span class="nm">100</span>, max_features=<span class="st">'sqrt'</span>, oob_score=<span class="nm">True</span>)
+rf.<span class="fn">fit</span>(X_train, y_train)
+<span class="fn">print</span>(rf.oob_score_)                     <span class="cm"># OOB 검증 정확도 (별도 검증셋 불필요)</span>
+<span class="fn">print</span>(rf.feature_importances_)           <span class="cm"># RF의 특성 중요도 (더 안정적)</span>
+<span class="fn">print</span>(rf.<span class="fn">score</span>(X_test, y_test))          <span class="cm"># 테스트 정확도</span>
+</code></pre>
+
+  <div class="card-grid-3">
+    <div class="card">
+      <div class="card-title">dt.feature_importances_</div>
+      <p style="font-size:12.5px;color:var(--text-muted);">DT의 특성 중요도<br>(Gini 감소량 기반)</p>
+    </div>
+    <div class="card green">
+      <div class="card-title">rf.oob_score_</div>
+      <p style="font-size:12.5px;color:var(--text-muted);">OOB 검증 정확도<br>(별도 검증셋 불필요)</p>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">rf.feature_importances_</div>
+      <p style="font-size:12.5px;color:var(--text-muted);">RF의 특성 중요도<br>(더 안정적)</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── S18 ── -->
+<section class="section" id="s18">
+  <div class="section-header">
+    <span class="section-num">18</span>
+    <h2>응용 사례 &amp; Random Forest의 한계</h2>
+    <span class="slide-ref">slide 20–21</span>
+  </div>
+
+  <div class="card-grid" style="margin-bottom:16px;">
+    <div class="card">
+      <div class="card-title">🏥 의료 진단</div>
+      <p style="font-size:13px;color:var(--text-muted);">암 양성/악성 분류, 당뇨 위험도 예측<br>DT: 의사에게 판단 근거 설명 가능<br>RF: 더 높은 정확도로 진단 보조 시스템<br><span style="font-size:11px;color:var(--text-dim);">병원 EMR 시스템, IBM Watson Health</span></p>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">💳 금융 신용 평가</div>
+      <p style="font-size:13px;color:var(--text-muted);">대출 승인/거절, 신용카드 사기 탐지<br>DT: 규제 기관에 판단 근거 제출 필요<br>RF: 수천 개의 특성으로 사기 패턴 탐지<br><span style="font-size:11px;color:var(--text-dim);">은행 여신 시스템, PayPal 사기 탐지</span></p>
+    </div>
+    <div class="card green">
+      <div class="card-title">🌱 환경/농업</div>
+      <p style="font-size:13px;color:var(--text-muted);">토양 데이터로 작물 수확량 예측<br>날씨 데이터로 홍수/가뭄 위험 분류<br>RF: 다양한 센서 데이터 통합 처리<br><span style="font-size:11px;color:var(--text-dim);">스마트팜, 기상청 예측 모델</span></p>
+    </div>
+    <div class="card purple">
+      <div class="card-title">🛒 추천 시스템</div>
+      <p style="font-size:13px;color:var(--text-muted);">사용자 행동 데이터로 구매 예측<br>이탈 고객 예측 (Churn Prediction)<br>RF Feature Importance로 핵심 이탈 요인 파악<br><span style="font-size:11px;color:var(--text-dim);">이커머스, 통신사 고객 관리</span></p>
+    </div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:10px;">⚠ Random Forest의 한계와 주의사항</div>
+  <div class="card-grid">
+    <div class="card red">
+      <div class="card-title">예측 속도 느림</div>
+      <p style="font-size:13px;color:var(--text-muted);">100~500개의 트리를 모두 통과해야 예측. 실시간 서비스에서 응답 시간 문제.<br>→ 대안: 트리 수 줄이거나 <strong>LightGBM</strong> 사용</p>
+    </div>
+    <div class="card red">
+      <div class="card-title">메모리 사용 많음</div>
+      <p style="font-size:13px;color:var(--text-muted);">n_estimators개의 완전한 트리를 저장. 데이터가 크면 RAM 부족.<br>→ 모바일·임베디드 환경에서는 단일 DT가 더 적합</p>
+    </div>
+    <div class="card red">
+      <div class="card-title">해석 어려움</div>
+      <p style="font-size:13px;color:var(--text-muted);">100개 트리의 평균이라 "왜 이 예측이 나왔는가"를 설명하기 어려움. 규제 기관·의료 분야에서 문제.<br>→ 대안: <strong>SHAP</strong> 값으로 개별 예측 설명</p>
+    </div>
+    <div class="card red">
+      <div class="card-title">외삽(Extrapolation) 불가</div>
+      <p style="font-size:13px;color:var(--text-muted);">트리 기반 모델은 훈련 데이터 범위 밖의 값을 예측 못함. 주가·온도처럼 범위를 벗어난 값에 부적합.<br>→ 대안: 선형 회귀, 신경망</p>
+    </div>
+  </div>
+
+  <div class="info-box" style="margin-top:8px;">
+    <span class="info-icon">💡</span>
+    <span>Random Forest는 <strong>정형 데이터(tabular data)</strong>에서 가장 강력한 방법 중 하나입니다. 이미지·텍스트·시계열에서는 딥러닝이 더 적합합니다.</span>
+  </div>
+  <div class="info-box success" style="margin-top:8px;">
+    <span class="info-icon">🏆</span>
+    <span>Kaggle 대회에서도 Random Forest는 항상 상위권에 드는 강력한 기준 모델(Baseline)입니다.</span>
+  </div>
+</section>
+
+<!-- ── S19 — SUMMARY ── -->
+<section class="section" id="s19">
+  <div class="section-header">
+    <span class="section-num" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.3);color:var(--accent3);">★</span>
+    <h2>핵심 요약</h2>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-item">
+      <div class="summary-key">Decision Tree 핵심 공식</div>
+      <div class="summary-val">H(S) = −Σpₖ·log₂pₖ &nbsp;|&nbsp; Gini = 1−Σpₖ²</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-key">정보이득 (Information Gain)</div>
+      <div class="summary-val">IG = H(S) − Σ(|Sᵥ|/|S|)·H(Sᵥ)</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-key">분기 기준 선택</div>
+      <div class="summary-val">IG 또는 Gini 감소량이 가장 큰 특성·임계값 선택</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-key">종료 조건 (3가지)</div>
+      <div class="summary-val">① Gini=0 ② 최소 샘플 이하 ③ 최대 깊이 도달</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-key">Bagging</div>
+      <div class="summary-val">Bootstrap(복원추출) + Aggregating(다수결/평균)</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-key">Random Forest = DT + Bagging + ?</div>
+      <div class="summary-val">Random Feature Selection (각 분기마다 √d개 특성만 고려)</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-key">Bootstrap 포함 비율</div>
+      <div class="summary-val">약 63% 원본 포함, 약 37%는 OOB(검증 활용)</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-key">Feature Importance 계산</div>
+      <div class="summary-val">각 트리의 Gini 감소량 합산 → 전체 평균 → 정규화 (합=1)</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-key">DT 권장 상황</div>
+      <div class="summary-val">설명 가능성이 중요할 때, 빠른 프로토타이핑</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-key">RF 권장 상황</div>
+      <div class="summary-val">높은 정확도 필요, 정형 데이터, 특성 중요도 분석</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-key">RF의 한계 (4가지)</div>
+      <div class="summary-val">예측 속도 느림 / 메모리 많음 / 해석 어려움 / 외삽 불가</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-key">RF 주요 하이퍼파라미터</div>
+      <div class="summary-val">n_estimators, max_features ('sqrt'), oob_score</div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<!-- TOC Active Highlight Script -->
+<script>
+(function(){
+  var tocLinks = document.querySelectorAll('.toc a[href^="#"]');
+  var sections = [];
+  tocLinks.forEach(function(a){
+    var id = a.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if(el) sections.push({id:id, el:el, a:a});
+  });
+  function onScroll(){
+    var scrollY = window.scrollY + 80;
+    var current = sections[0];
+    for(var i=0;i<sections.length;i++){
+      if(sections[i].el.offsetTop <= scrollY) current = sections[i];
+    }
+    tocLinks.forEach(function(a){ a.classList.remove('active'); });
+    if(current) current.a.classList.add('active');
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+})();
+</script>
+</body>
+</html>
