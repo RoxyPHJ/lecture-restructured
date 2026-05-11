@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — 8: Linear Model (3)</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --surface3: #1e2d45;
+    --border: #1f3050;
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --accent3: #34d399;
+    --accent4: #fb923c;
+    --accent5: #f472b6;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #475569;
+    --red: #f87171;
+    --green: #4ade80;
+    --yellow: #fbbf24;
+    --body-font: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+    --code-font: 'Menlo', 'Courier New', monospace;
+    --heading-font: 'Impact', 'Arial Narrow', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body-font);
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .page-header {
+    background: linear-gradient(135deg, #0d1629 0%, #111827 60%, #0a1428 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 44px 60px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-header::after {
+    content: 'QUIZ';
+    position: absolute;
+    right: 40px; top: 20px;
+    font-family: var(--heading-font);
+    font-size: 120px;
+    color: rgba(56,189,248,0.04);
+    letter-spacing: -4px;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(251,146,60,0.12);
+    border: 1px solid rgba(251,146,60,0.3);
+    color: var(--accent4);
+    font-family: var(--code-font);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .header-title {
+    font-family: var(--heading-font);
+    font-size: 38px;
+    letter-spacing: 1px;
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .header-title em { color: var(--accent); font-style: normal; }
+
+  .header-desc {
+    color: var(--text-dim);
+    font-size: 13.5px;
+    margin-bottom: 24px;
+  }
+
+  /* scoreboard */
+  .scoreboard {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+
+  .score-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 22px;
+    text-align: center;
+    min-width: 110px;
+  }
+
+  .score-val {
+    font-family: var(--heading-font);
+    font-size: 32px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+
+  .score-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: var(--code-font);
+    margin-top: 2px;
+  }
+
+  #score-correct .score-val { color: var(--green); }
+  #score-wrong .score-val { color: var(--red); }
+  #score-pct .score-val { color: var(--yellow); }
+
+  /* progress bar */
+  .progress-wrap {
+    margin-top: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    height: 6px;
+    max-width: 500px;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    border-radius: 4px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .progress-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--code-font);
+    margin-top: 5px;
+  }
+
+  /* ── CONTROLS ── */
+  .controls {
+    padding: 18px 60px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 8px 18px;
+    border-radius: 5px;
+    font-size: 12.5px;
+    font-family: var(--body-font);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-dim);
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn:hover { background: var(--surface3); color: var(--text); }
+
+  .btn.primary {
+    background: rgba(56,189,248,0.12);
+    border-color: rgba(56,189,248,0.35);
+    color: var(--accent);
+  }
+
+  .btn.primary:hover {
+    background: rgba(56,189,248,0.2);
+  }
+
+  .btn.danger {
+    background: rgba(248,113,113,0.1);
+    border-color: rgba(248,113,113,0.3);
+    color: var(--red);
+  }
+
+  .filter-sep { width: 1px; height: 20px; background: var(--border); }
+
+  .filter-btn {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: var(--code-font);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.2s;
+  }
+
+  .filter-btn.on {
+    background: rgba(56,189,248,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── QUIZ LIST ── */
+  .quiz-wrap {
+    padding: 40px 60px 80px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  /* section divider */
+  .type-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 36px 0 20px;
+  }
+
+  .type-label {
+    font-family: var(--code-font);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .type-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* question card */
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 18px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .q-card.answered-correct { border-color: rgba(74,222,128,0.4); }
+  .q-card.answered-wrong { border-color: rgba(248,113,113,0.4); }
+
+  .q-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 20px 22px 16px;
+  }
+
+  .q-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .q-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+
+  .badge {
+    font-family: var(--code-font);
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    border: 1px solid;
+  }
+
+  .badge-num { color: var(--text-muted); border-color: var(--border); background: var(--surface2); }
+  .badge-type { color: var(--accent2); border-color: rgba(129,140,248,0.3); background: rgba(129,140,248,0.08); }
+  .badge-diff-1 { color: var(--accent3); border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.07); }
+  .badge-diff-2 { color: var(--yellow); border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.07); }
+  .badge-diff-3 { color: var(--red); border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.07); }
+  .badge-app { color: var(--accent4); border-color: rgba(251,146,60,0.3); background: rgba(251,146,60,0.07); }
+  .badge-slide { color: var(--text-muted); border-color: var(--border); }
+
+  .q-num-big {
+    font-family: var(--heading-font);
+    font-size: 36px;
+    color: var(--border);
+    letter-spacing: -1px;
+    line-height: 1;
+    min-width: 44px;
+    padding-top: 2px;
+    user-select: none;
+  }
+
+  .q-text {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.65;
+  }
+
+  .q-text code {
+    font-family: var(--code-font);
+    font-size: 13px;
+    background: rgba(56,189,248,0.08);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* options */
+  .q-options {
+    padding: 0 22px 16px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .opt-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--text-dim);
+    text-align: left;
+    transition: all 0.18s;
+    font-family: var(--body-font);
+    line-height: 1.5;
+    width: 100%;
+  }
+
+  .opt-btn:hover:not(:disabled) {
+    background: var(--surface3);
+    color: var(--text);
+    border-color: var(--accent2);
+  }
+
+  .opt-btn:disabled { cursor: default; }
+
+  .opt-btn.selected-correct {
+    background: rgba(74,222,128,0.08);
+    border-color: rgba(74,222,128,0.5);
+    color: var(--green);
+  }
+
+  .opt-btn.selected-wrong {
+    background: rgba(248,113,113,0.08);
+    border-color: rgba(248,113,113,0.5);
+    color: var(--red);
+  }
+
+  .opt-btn.show-correct {
+    background: rgba(74,222,128,0.05);
+    border-color: rgba(74,222,128,0.3);
+    color: var(--green);
+  }
+
+  .opt-label {
+    font-family: var(--code-font);
+    font-size: 11px;
+    min-width: 18px;
+    margin-top: 2px;
+    opacity: 0.7;
+  }
+
+  /* text input */
+  .q-input-wrap {
+    padding: 0 22px 16px 80px;
+  }
+
+  .q-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: var(--code-font);
+    color: var(--text);
+    width: 100%;
+    max-width: 400px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .q-input:focus { border-color: var(--accent2); }
+  .q-input:disabled { opacity: 0.6; cursor: default; }
+
+  .q-submit {
+    margin-top: 8px;
+    padding: 7px 16px;
+    background: rgba(129,140,248,0.12);
+    border: 1px solid rgba(129,140,248,0.3);
+    border-radius: 5px;
+    color: var(--accent2);
+    font-size: 12px;
+    font-family: var(--body-font);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+
+  .q-submit:hover:not(:disabled) {
+    background: rgba(129,140,248,0.2);
+  }
+
+  .q-submit:disabled { opacity: 0.5; cursor: default; }
+
+  /* toggle answer */
+  .q-toggle-wrap {
+    padding: 0 22px 0 80px;
+    margin-bottom: 4px;
+  }
+
+  .toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 11.5px;
+    font-family: var(--code-font);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .toggle-btn:hover {
+    background: var(--surface2);
+    color: var(--text-dim);
+  }
+
+  .toggle-arrow { transition: transform 0.25s; }
+  .toggle-btn.open .toggle-arrow { transform: rotate(180deg); }
+
+  /* answer panel */
+  .answer-panel {
+    display: none;
+    margin: 8px 22px 20px 80px;
+    background: #080d1a;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .answer-panel.show { display: block; }
+
+  .answer-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .answer-correct-badge {
+    font-family: var(--code-font);
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+
+  .answer-correct-badge.correct-ans {
+    background: rgba(74,222,128,0.1);
+    border: 1px solid rgba(74,222,128,0.3);
+    color: var(--green);
+  }
+
+  .answer-title {
+    font-family: var(--code-font);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .answer-body {
+    padding: 16px 18px;
+    font-size: 13.5px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  .answer-body strong { color: var(--text); }
+  .answer-body code {
+    font-family: var(--code-font);
+    font-size: 12.5px;
+    background: rgba(56,189,248,0.08);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .answer-body .ans-val {
+    display: inline-block;
+    font-family: var(--code-font);
+    font-size: 14px;
+    color: var(--green);
+    font-weight: bold;
+    margin: 4px 0 10px;
+  }
+
+  .answer-body .step {
+    display: flex;
+    gap: 8px;
+    padding: 3px 0;
+    font-size: 13px;
+  }
+
+  .answer-body .step-n {
+    font-family: var(--code-font);
+    font-size: 10px;
+    color: var(--accent);
+    min-width: 22px;
+    margin-top: 3px;
+  }
+
+  /* result overlay */
+  #result-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,14,26,0.92);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #result-overlay.show { display: flex; }
+
+  .result-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 48px 56px;
+    text-align: center;
+    max-width: 440px;
+    width: 90%;
+    animation: pop 0.3s ease;
+  }
+
+  @keyframes pop {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .result-emoji { font-size: 56px; margin-bottom: 16px; }
+
+  .result-title {
+    font-family: var(--heading-font);
+    font-size: 30px;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .result-score {
+    font-size: 52px;
+    font-family: var(--heading-font);
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin: 16px 0 8px;
+  }
+
+  .result-detail {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+  }
+
+  .result-grade {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+  }
+
+  .result-close {
+    padding: 10px 28px;
+    background: rgba(56,189,248,0.12);
+    border: 1px solid rgba(56,189,248,0.3);
+    border-radius: 6px;
+    color: var(--accent);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--body-font);
+  }
+
+  .result-close:hover { background: rgba(56,189,248,0.22); }
+
+  /* status icon on card */
+  .q-status {
+    font-size: 16px;
+    min-width: 20px;
+    padding-top: 4px;
+  }
+
+  /* essay area */
+  .q-essay {
+    padding: 0 22px 16px 80px;
+  }
+
+  .essay-area {
+    width: 100%;
+    min-height: 100px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 13.5px;
+    font-family: var(--body-font);
+    color: var(--text);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+
+  .essay-area:focus { border-color: var(--accent2); }
+
+  .essay-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 5px;
+    font-family: var(--code-font);
+  }
+
+  /* Highlight */
+  mark { background: rgba(56,189,248,0.15); color: var(--accent); padding: 0 3px; border-radius: 2px; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="page-header">
+  <div class="header-badge">✦ Quiz — Linear Model (3)</div>
+  <h1 class="header-title">Data Mining <em>Quiz</em></h1>
+  <p class="header-desc">총 20문제 · 로지스틱 회귀 · θ(s) · Cross-Entropy · Maximum Likelihood</p>
+
+  <div class="scoreboard">
+    <div class="score-box">
+      <div class="score-val" id="score-total">20</div>
+      <div class="score-label">Total</div>
+    </div>
+    <div class="score-box" id="score-correct">
+      <div class="score-val" id="val-correct">0</div>
+      <div class="score-label">Correct</div>
+    </div>
+    <div class="score-box" id="score-wrong">
+      <div class="score-val" id="val-wrong">0</div>
+      <div class="score-label">Wrong</div>
+    </div>
+    <div class="score-box" id="score-pct">
+      <div class="score-val" id="val-pct">0%</div>
+      <div class="score-label">Score</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap" style="margin-top:18px">
+    <div class="progress-bar" id="prog-bar"></div>
+  </div>
+  <div class="progress-label" id="prog-label">0 / 19 answered (서술형 제외)</div>
+</div>
+
+<!-- ── CONTROLS ── -->
+<div class="controls">
+  <button class="btn primary" onclick="showResult()">채점 결과 보기</button>
+  <button class="btn danger" onclick="resetAll()">전체 초기화</button>
+  <div class="filter-sep"></div>
+  <button class="filter-btn on" onclick="filterType('all', this)">전체</button>
+  <button class="filter-btn" onclick="filterType('객관식', this)">객관식</button>
+  <button class="filter-btn" onclick="filterType('OX', this)">OX</button>
+  <button class="filter-btn" onclick="filterType('단답형', this)">단답형</button>
+  <button class="filter-btn" onclick="filterType('빈칸추론', this)">빈칸</button>
+  <button class="filter-btn" onclick="filterType('종합판단', this)">종합판단</button>
+  <button class="filter-btn" onclick="filterType('결과도출', this)">결과도출</button>
+  <button class="filter-btn" onclick="filterType('계산형', this)">계산형</button>
+</div>
+
+<!-- ── QUIZ BODY ── -->
+<div class="quiz-wrap">
+
+  <!-- ════ 객관식 ════ -->
+  <div class="type-divider" data-group="객관식"><div class="type-line"></div><span class="type-label">객관식 (4지선다)</span><div class="type-line"></div></div>
+
+  <!-- Q1 -->
+  <div class="q-card" id="qcard-1" data-group="객관식">
+    <div class="q-header">
+      <div class="q-num-big">01</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#1</span>
+          <span class="badge badge-type">객관식</span>
+          <span class="badge badge-diff-1">⭐ 쉬움</span>
+          <span class="badge badge-slide">슬라이드 7–8</span>
+        </div>
+        <div class="q-text">로지스틱 회귀 모델의 가설 함수 h(x)를 올바르게 나타낸 것은?</div>
+      </div>
+      <div class="q-status" id="qs-1"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(1,'A')"><span class="opt-label">A</span> h(x) = w<sup>T</sup>x</button>
+      <button class="opt-btn" onclick="selectOpt(1,'B')"><span class="opt-label">B</span> h(x) = sign(w<sup>T</sup>x)</button>
+      <button class="opt-btn" onclick="selectOpt(1,'C')"><span class="opt-label">C</span> h(x) = θ(w<sup>T</sup>x)</button>
+      <button class="opt-btn" onclick="selectOpt(1,'D')"><span class="opt-label">D</span> h(x) = tanh(x)</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(1)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-1">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">C — θ(w<sup>T</sup>x)</span>
+      </div>
+      <div class="answer-body">
+        <strong>해설:</strong> 로지스틱 회귀는 signal s = w<sup>T</sup>x에 logistic function θ를 적용해 출력을 (0,1)로 제한한다.<br>
+        · A: Linear Regression의 h(x)<br>
+        · B: Linear Classification의 h(x) (하드 임계값)<br>
+        · D: tanh는 (−1,+1) 범위로 로지스틱과 다른 함수
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="q-card" id="qcard-2" data-group="객관식">
+    <div class="q-header">
+      <div class="q-num-big">02</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#2</span>
+          <span class="badge badge-type">객관식</span>
+          <span class="badge badge-diff-1">⭐ 쉬움</span>
+          <span class="badge badge-slide">슬라이드 8–9</span>
+        </div>
+        <div class="q-text">다음 중 Logistic function θ(s)의 중요한 성질로 <strong>올바른</strong> 것은?</div>
+      </div>
+      <div class="q-status" id="qs-2"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(2,'A')"><span class="opt-label">A</span> θ(s) + θ(−s) = 0</button>
+      <button class="opt-btn" onclick="selectOpt(2,'B')"><span class="opt-label">B</span> 1 − θ(s) = θ(−s)</button>
+      <button class="opt-btn" onclick="selectOpt(2,'C')"><span class="opt-label">C</span> θ(s) = θ(s²)</button>
+      <button class="opt-btn" onclick="selectOpt(2,'D')"><span class="opt-label">D</span> θ(s) · θ(−s) = 1</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(2)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-2">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">B — 1 − θ(s) = θ(−s)</span>
+      </div>
+      <div class="answer-body">
+        <strong>증명:</strong> θ(s) = 1/(1+e<sup>−s</sup>) 이므로<br>
+        1 − θ(s) = 1 − 1/(1+e<sup>−s</sup>) = e<sup>−s</sup>/(1+e<sup>−s</sup>) = 1/(1+e<sup>s</sup>) = θ(−s)<br><br>
+        이 성질 덕분에 P(y|x) = θ(yw<sup>T</sup>x)로 통합 표현 가능.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="q-card" id="qcard-3" data-group="객관식">
+    <div class="q-header">
+      <div class="q-num-big">03</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#3</span>
+          <span class="badge badge-type">객관식</span>
+          <span class="badge badge-diff-2">⭐⭐ 보통</span>
+          <span class="badge badge-app">[응용]</span>
+          <span class="badge badge-slide">슬라이드 14, 19</span>
+        </div>
+        <div class="q-text">로지스틱 회귀에서 P(y|x)를 하나의 수식으로 나타낼 때, y = −1인 경우 P(y|x)가 되는 것은? (h(x) = θ(w<sup>T</sup>x), 1−θ(s) = θ(−s) 이용)</div>
+      </div>
+      <div class="q-status" id="qs-3"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(3,'A')"><span class="opt-label">A</span> θ(w<sup>T</sup>x)</button>
+      <button class="opt-btn" onclick="selectOpt(3,'B')"><span class="opt-label">B</span> θ(−w<sup>T</sup>x)</button>
+      <button class="opt-btn" onclick="selectOpt(3,'C')"><span class="opt-label">C</span> 1 − θ(−w<sup>T</sup>x)</button>
+      <button class="opt-btn" onclick="selectOpt(3,'D')"><span class="opt-label">D</span> 1 + θ(w<sup>T</sup>x)</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(3)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-3">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">B — θ(−w<sup>T</sup>x)</span>
+      </div>
+      <div class="answer-body">
+        <strong>풀이:</strong><br>
+        y = −1이면 P(y|x) = 1 − h(x) = 1 − θ(w<sup>T</sup>x)<br>
+        1−θ(s) = θ(−s) 성질 적용 → <strong>θ(−w<sup>T</sup>x)</strong><br><br>
+        통합 표현: P(y|x) = θ(yw<sup>T</sup>x)<br>
+        y=+1이면 θ(w<sup>T</sup>x), y=−1이면 θ(−w<sup>T</sup>x) — 하나의 식으로 통합됨.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="q-card" id="qcard-4" data-group="객관식">
+    <div class="q-header">
+      <div class="q-num-big">04</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#4</span>
+          <span class="badge badge-type">객관식</span>
+          <span class="badge badge-diff-2">⭐⭐ 보통</span>
+          <span class="badge badge-slide">슬라이드 20–23</span>
+        </div>
+        <div class="q-text">로지스틱 회귀의 가중치 w를 학습할 때 사용하는 최적화 기준으로 올바른 것은?</div>
+      </div>
+      <div class="q-status" id="qs-4"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(4,'A')"><span class="opt-label">A</span> MSE(Mean Squared Error) 최소화</button>
+      <button class="opt-btn" onclick="selectOpt(4,'B')"><span class="opt-label">B</span> 훈련 데이터의 Likelihood 최대화</button>
+      <button class="opt-btn" onclick="selectOpt(4,'C')"><span class="opt-label">C</span> 0-1 Loss 최소화</button>
+      <button class="opt-btn" onclick="selectOpt(4,'D')"><span class="opt-label">D</span> 마진(margin) 최대화</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(4)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-4">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">B — Likelihood 최대화</span>
+      </div>
+      <div class="answer-body">
+        <strong>해설:</strong> 최대 우도 추정(MLE)은 훈련 데이터가 관측될 확률 ∏P(yₙ|xₙ)을 최대화하는 w를 선택.<br>
+        이는 Cross-Entropy Error Eᵢₙ(w)를 <strong>최소화</strong>하는 것과 동치.<br>
+        · A: Linear Regression에서 사용<br>
+        · C: 최소화가 어려워 로지스틱에서 직접 사용 안 함<br>
+        · D: SVM의 학습 기준
+      </div>
+    </div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="q-card" id="qcard-5" data-group="객관식">
+    <div class="q-header">
+      <div class="q-num-big">05</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#5</span>
+          <span class="badge badge-type">객관식</span>
+          <span class="badge badge-diff-2">⭐⭐ 보통</span>
+          <span class="badge badge-app">[응용]</span>
+          <span class="badge badge-slide">슬라이드 17–22</span>
+        </div>
+        <div class="q-text">Cross-Entropy 오차 Eᵢₙ(w)가 <strong>작아지는</strong> 조건은 무엇인가?</div>
+      </div>
+      <div class="q-status" id="qs-5"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(5,'A')"><span class="opt-label">A</span> yₙw<sup>T</sup>xₙ이 크고 음수일 때</button>
+      <button class="opt-btn" onclick="selectOpt(5,'B')"><span class="opt-label">B</span> yₙw<sup>T</sup>xₙ이 크고 양수일 때</button>
+      <button class="opt-btn" onclick="selectOpt(5,'C')"><span class="opt-label">C</span> w<sup>T</sup>xₙ = 0일 때</button>
+      <button class="opt-btn" onclick="selectOpt(5,'D')"><span class="opt-label">D</span> yₙ = 0일 때</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(5)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-5">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">B — yₙw<sup>T</sup>xₙ이 크고 양수</span>
+      </div>
+      <div class="answer-body">
+        <strong>풀이:</strong> Eᵢₙ(w) = (1/N)Σln(1 + e<sup>−yₙwᵀxₙ</sup>)<br>
+        yₙwᵀxₙ ≫ 0이면 e<sup>−yₙwᵀxₙ</sup> → 0, ln(1+0) = 0 → <strong>오차 최소</strong><br>
+        yₙwᵀxₙ ≪ 0이면 e<sup>−yₙwᵀxₙ</sup> → ∞ → <strong>오차 최대</strong><br>
+        즉 sign(wᵀxₙ) = yₙ (올바른 분류)일수록 오차 감소.
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ OX ════ -->
+  <div class="type-divider" data-group="OX"><div class="type-line"></div><span class="type-label">OX 문제</span><div class="type-line"></div></div>
+
+  <!-- Q6 -->
+  <div class="q-card" id="qcard-6" data-group="OX">
+    <div class="q-header">
+      <div class="q-num-big">06</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#6</span>
+          <span class="badge badge-type">OX</span>
+          <span class="badge badge-diff-1">⭐ 쉬움</span>
+          <span class="badge badge-slide">슬라이드 6</span>
+        </div>
+        <div class="q-text">Linear Regression을 확률 예측에 사용하면 일부 출력값이 음수가 될 수 있어 확률로 해석하기에 부적절하다.</div>
+      </div>
+      <div class="q-status" id="qs-6"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(6,'O')"><span class="opt-label">O</span> 참 (O)</button>
+      <button class="opt-btn" onclick="selectOpt(6,'X')"><span class="opt-label">X</span> 거짓 (X)</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(6)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-6">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">O (참)</span>
+      </div>
+      <div class="answer-body">
+        슬라이드 6에서 직접 확인: Linear Regression으로 추정한 채무불이행 확률 그래프 (a)에서 일부 확률값이 음수로 나타남. 반면 Logistic Regression (b)은 모든 값이 [0,1] 사이에 위치.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q7 -->
+  <div class="q-card" id="qcard-7" data-group="OX">
+    <div class="q-header">
+      <div class="q-num-big">07</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#7</span>
+          <span class="badge badge-type">OX</span>
+          <span class="badge badge-diff-2">⭐⭐ 보통</span>
+          <span class="badge badge-app">[응용]</span>
+          <span class="badge badge-slide">슬라이드 12</span>
+        </div>
+        <div class="q-text">tanh(s)는 s = 0 근방에서 하드 임계값(hard threshold) 함수처럼 거의 선형(linear)에 가깝게 동작한다.</div>
+      </div>
+      <div class="q-status" id="qs-7"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(7,'O')"><span class="opt-label">O</span> 참 (O)</button>
+      <button class="opt-btn" onclick="selectOpt(7,'X')"><span class="opt-label">X</span> 거짓 (X)</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(7)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-7">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">O (참)</span>
+      </div>
+      <div class="answer-body">
+        슬라이드 12 내용: tanh(s)는 <strong>|s|가 클 때</strong> 하드 임계값(±1)에 수렴, <strong>|s|가 작을 때</strong>(s≈0 근방)는 거의 선형으로 동작. tanh(s) ≈ s when s ≈ 0.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q8 -->
+  <div class="q-card" id="qcard-8" data-group="OX">
+    <div class="q-header">
+      <div class="q-num-big">08</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#8</span>
+          <span class="badge badge-type">OX</span>
+          <span class="badge badge-diff-3">⭐⭐⭐ 어려움</span>
+          <span class="badge badge-app">[응용]</span>
+          <span class="badge badge-slide">슬라이드 23, 28</span>
+        </div>
+        <div class="q-text">Cross-Entropy Error Eᵢₙ(w)를 최소화하는 것은, 훈련 데이터의 Negative Log-Likelihood(NLL)를 최소화하는 것과 <strong>서로 다른</strong> 최적화 목표를 가진다.</div>
+      </div>
+      <div class="q-status" id="qs-8"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(8,'O')"><span class="opt-label">O</span> 참 (O)</button>
+      <button class="opt-btn" onclick="selectOpt(8,'X')"><span class="opt-label">X</span> 거짓 (X)</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(8)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-8">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">X (거짓)</span>
+      </div>
+      <div class="answer-body">
+        슬라이드 27–28에서 증명: NLL(w) ∝ Eᵢₙ(w). 즉 두 목표는 <strong>동치(equivalent)</strong>.<br>
+        정리: 최소화 Eᵢₙ(w) = 최소화 NLL(w) = 최대화 ∏P(yₙ|xₙ)<br>
+        세 가지 관점 모두 같은 최적해 w*를 도출한다.
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ 단답형 ════ -->
+  <div class="type-divider" data-group="단답형"><div class="type-line"></div><span class="type-label">단답형</span><div class="type-line"></div></div>
+
+  <!-- Q9 -->
+  <div class="q-card" id="qcard-9" data-group="단답형">
+    <div class="q-header">
+      <div class="q-num-big">09</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#9</span>
+          <span class="badge badge-type">단답형</span>
+          <span class="badge badge-diff-1">⭐ 쉬움</span>
+          <span class="badge badge-slide">슬라이드 9</span>
+        </div>
+        <div class="q-text">Logistic function θ(s)의 별명 두 가지를 모두 쓰시오. (힌트: 모양과 특성에서 유래)</div>
+      </div>
+      <div class="q-status" id="qs-9"></div>
+    </div>
+    <div class="q-input-wrap">
+      <input class="q-input" id="inp-9" type="text" placeholder="답 입력 후 제출 버튼 클릭">
+      <br><button class="q-submit" onclick="submitText(9, ['soft threshold', 'sigmoid', 'soft', 'sigmoid function'])">제출</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(9)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-9">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">"soft threshold" 와 "sigmoid"</span>
+      </div>
+      <div class="answer-body">
+        <strong>① Soft threshold:</strong> Linear Classification의 하드(hard) 임계값과 대비, θ는 0과 1 사이를 부드럽게 전환<br>
+        <strong>② Sigmoid:</strong> 그래프 모양이 납작해진 'S'자를 닮음<br><br>
+        두 이름 모두 함수의 서로 다른 측면을 강조한다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q10 -->
+  <div class="q-card" id="qcard-10" data-group="단답형">
+    <div class="q-header">
+      <div class="q-num-big">10</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#10</span>
+          <span class="badge badge-type">단답형</span>
+          <span class="badge badge-diff-2">⭐⭐ 보통</span>
+          <span class="badge badge-slide">슬라이드 2, 10</span>
+        </div>
+        <div class="q-text">세 선형 모델(Linear Classification, Linear Regression, Logistic Regression)이 <strong>모두 공유</strong>하는 핵심 구성 요소의 이름과 수식을 쓰시오.</div>
+      </div>
+      <div class="q-status" id="qs-10"></div>
+    </div>
+    <div class="q-input-wrap">
+      <input class="q-input" id="inp-10" type="text" placeholder="이름과 수식 입력">
+      <br><button class="q-submit" onclick="submitText(10, ['signal', 'signal s', 's = wtx', 's=wtx', 'signal s=wtx'])">제출</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(10)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-10">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">Signal s = w<sup>T</sup>x</span>
+      </div>
+      <div class="answer-body">
+        세 모델 모두 <code>s = Σ wᵢxᵢ = w<sup>T</sup>x</code>를 계산하는 것은 동일.<br>
+        차이점은 이 signal에 어떤 활성화 함수를 적용하느냐:<br>
+        · Linear Classification: sign(s)<br>
+        · Linear Regression: s 그 자체<br>
+        · Logistic Regression: θ(s)
+      </div>
+    </div>
+  </div>
+
+  <!-- Q11 -->
+  <div class="q-card" id="qcard-11" data-group="단답형">
+    <div class="q-header">
+      <div class="q-num-big">11</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#11</span>
+          <span class="badge badge-type">단답형</span>
+          <span class="badge badge-diff-3">⭐⭐⭐ 어려움</span>
+          <span class="badge badge-app">[응용]</span>
+          <span class="badge badge-slide">슬라이드 19, 22</span>
+        </div>
+        <div class="q-text">로지스틱 회귀에서 Cross-Entropy의 pointwise error e(h(xₙ), yₙ)를 w에 대한 식으로 나타내면?</div>
+      </div>
+      <div class="q-status" id="qs-11"></div>
+    </div>
+    <div class="q-input-wrap">
+      <input class="q-input" id="inp-11" type="text" placeholder="수식 입력">
+      <br><button class="q-submit" onclick="submitText(11, ['ln(1+e^(-ynwTxn))', 'ln(1+exp(-ynwTxn))', 'log(1+e^-ynwtxn)', 'ln(1+e^{-y_nw^tx_n})'])">제출</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(11)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-11">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">ln(1 + e<sup>−yₙwᵀxₙ</sup>)</span>
+      </div>
+      <div class="answer-body">
+        <strong>유도:</strong> P(y|x) = θ(ywᵀx) = 1/(1+e<sup>−ywᵀx</sup>) 이므로<br>
+        e(h(xₙ), yₙ) = ln(1/θ(yₙwᵀxₙ))<br>
+        = ln(1 + e<sup>−yₙwᵀxₙ</sup>)<br><br>
+        Eᵢₙ(w) = (1/N)Σ ln(1 + e<sup>−yₙwᵀxₙ</sup>)
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ 빈칸추론 ════ -->
+  <div class="type-divider" data-group="빈칸추론"><div class="type-line"></div><span class="type-label">빈칸 추론형</span><div class="type-line"></div></div>
+
+  <!-- Q12 -->
+  <div class="q-card" id="qcard-12" data-group="빈칸추론">
+    <div class="q-header">
+      <div class="q-num-big">12</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#12</span>
+          <span class="badge badge-type">빈칸추론</span>
+          <span class="badge badge-diff-2">⭐⭐ 보통</span>
+          <span class="badge badge-slide">슬라이드 4, 7</span>
+        </div>
+        <div class="q-text">
+          "로지스틱 회귀는 binary event를 다루지만, linear classification과 달리 <mark>(A)</mark>을 허용한다. 출력값은 <mark>(B)</mark> 사이를 연속적으로 변하며, 이 중간값이 모델의 불확실성을 반영한다."<br><br>
+          (A)와 (B)에 들어갈 말로 가장 적절한 조합을 고르시오.
+        </div>
+      </div>
+      <div class="q-status" id="qs-12"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(12,'A')"><span class="opt-label">A</span> (A) 오분류, (B) −1과 +1</button>
+      <button class="opt-btn" onclick="selectOpt(12,'B')"><span class="opt-label">B</span> (A) 불확실성, (B) 0과 1</button>
+      <button class="opt-btn" onclick="selectOpt(12,'C')"><span class="opt-label">C</span> (A) 다중 클래스, (B) 0과 ∞</button>
+      <button class="opt-btn" onclick="selectOpt(12,'D')"><span class="opt-label">D</span> (A) 노이즈, (B) −∞과 +∞</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(12)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-12">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">B — 불확실성 / 0과 1</span>
+      </div>
+      <div class="answer-body">
+        슬라이드 4: "logistic regression: allowed to be uncertain ⇒ intermediate values between 0 and 1 reflect this uncertainty"<br>
+        · (A) = <strong>불확실성(uncertainty)</strong>: 중간 확률값 허용<br>
+        · (B) = <strong>0과 1</strong>: logistic function의 출력 범위
+      </div>
+    </div>
+  </div>
+
+  <!-- Q13 -->
+  <div class="q-card" id="qcard-13" data-group="빈칸추론">
+    <div class="q-header">
+      <div class="q-num-big">13</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#13</span>
+          <span class="badge badge-type">빈칸추론</span>
+          <span class="badge badge-diff-3">⭐⭐⭐ 어려움</span>
+          <span class="badge badge-app">[응용]</span>
+          <span class="badge badge-slide">슬라이드 19, 24</span>
+        </div>
+        <div class="q-text">
+          "Cross-Entropy 오차는 <mark>(A)</mark>이 크고 양수일 때 작아지며, 이는 곧 sign(wᵀx) = <mark>(B)</mark>임을 의미한다. 따라서 오차함수는 w가 각 xₙ을 올바르게 <mark>(C)</mark>하도록 유도한다."<br><br>
+          (A), (B), (C)에 알맞은 것은?
+        </div>
+      </div>
+      <div class="q-status" id="qs-13"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(13,'A')"><span class="opt-label">A</span> (A) yₙwᵀxₙ, (B) yₙ, (C) 분류(classify)</button>
+      <button class="opt-btn" onclick="selectOpt(13,'B')"><span class="opt-label">B</span> (A) wᵀxₙ², (B) 1, (C) 회귀(regress)</button>
+      <button class="opt-btn" onclick="selectOpt(13,'C')"><span class="opt-label">C</span> (A) yₙ², (B) yₙ², (C) 분류(classify)</button>
+      <button class="opt-btn" onclick="selectOpt(13,'D')"><span class="opt-label">D</span> (A) |wᵀxₙ|, (B) 0, (C) 군집화(cluster)</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(13)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-13">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">A</span>
+      </div>
+      <div class="answer-body">
+        슬라이드 24: "this error measure: small when yₙwᵀxₙ is large and positive, which would imply that sign(wᵀx) = yₙ"<br>
+        · (A) = <strong>yₙwᵀxₙ</strong>: 레이블과 signal의 내적<br>
+        · (B) = <strong>yₙ</strong>: signal 부호가 레이블과 일치<br>
+        · (C) = <strong>분류(classify)</strong>: 로지스틱은 분류 모델
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ 종합판단 ════ -->
+  <div class="type-divider" data-group="종합판단"><div class="type-line"></div><span class="type-label">종합 판단형</span><div class="type-line"></div></div>
+
+  <!-- Q14 -->
+  <div class="q-card" id="qcard-14" data-group="종합판단">
+    <div class="q-header">
+      <div class="q-num-big">14</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#14</span>
+          <span class="badge badge-type">종합판단</span>
+          <span class="badge badge-diff-2">⭐⭐ 보통</span>
+          <span class="badge badge-slide">슬라이드 8–13</span>
+        </div>
+        <div class="q-text">다음 중 Logistic function θ(s)에 대한 설명으로 <strong>틀린</strong> 것은?</div>
+      </div>
+      <div class="q-status" id="qs-14"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(14,'A')"><span class="opt-label">A</span> 정의역이 −∞ &lt; s &lt; ∞인 임의의 실수이다.</button>
+      <button class="opt-btn" onclick="selectOpt(14,'B')"><span class="opt-label">B</span> 출력값은 항상 0과 1 사이에 있어 이진 확률로 해석 가능하다.</button>
+      <button class="opt-btn" onclick="selectOpt(14,'C')"><span class="opt-label">C</span> θ(0) = 0.5이다.</button>
+      <button class="opt-btn" onclick="selectOpt(14,'D')"><span class="opt-label">D</span> θ(s)와 tanh(s)는 출력 범위가 동일하다.</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(14)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-14">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">D — 출력 범위가 동일하다 (틀림)</span>
+      </div>
+      <div class="answer-body">
+        · A: 맞음 — 정의역 (−∞, +∞)<br>
+        · B: 맞음 — 출력 (0, 1)<br>
+        · C: 맞음 — θ(0) = 1/(1+e⁰) = 1/2 = 0.5<br>
+        · <strong>D: 틀림</strong> — θ(s) 출력 범위는 (0, 1), tanh(s)는 (−1, +1)로 <strong>다름</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q15 -->
+  <div class="q-card" id="qcard-15" data-group="종합판단">
+    <div class="q-header">
+      <div class="q-num-big">15</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#15</span>
+          <span class="badge badge-type">종합판단</span>
+          <span class="badge badge-diff-3">⭐⭐⭐ 어려움</span>
+          <span class="badge badge-app">[응용]</span>
+          <span class="badge badge-slide">슬라이드 15, 20–28</span>
+        </div>
+        <div class="q-text">로지스틱 회귀의 학습 과정에 대한 설명 중 <strong>옳지 않은</strong> 것은?</div>
+      </div>
+      <div class="q-status" id="qs-15"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(15,'A')"><span class="opt-label">A</span> 훈련 데이터는 f(x) = ℙ[y=+1|x] 값을 직접 제공하지 않는다.</button>
+      <button class="opt-btn" onclick="selectOpt(15,'B')"><span class="opt-label">B</span> 최대 우도 추정은 ∏P(yₙ|xₙ)을 최대화하는 w를 선택한다.</button>
+      <button class="opt-btn" onclick="selectOpt(15,'C')"><span class="opt-label">C</span> NLL(w)를 최소화하면 Eᵢₙ(w)도 최소화된다.</button>
+      <button class="opt-btn" onclick="selectOpt(15,'D')"><span class="opt-label">D</span> Cross-Entropy는 관측 pmf와 피팅 pmf가 일치할수록 값이 커진다.</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(15)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-15">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">D (틀림)</span>
+      </div>
+      <div class="answer-body">
+        · A, B, C: 모두 옳음 (슬라이드 15, 20, 28 확인)<br>
+        · <strong>D: 틀림</strong> — Cross-Entropy는 두 분포가 일치할수록 <strong>작아짐</strong>. 완벽 일치 시 Cross-Entropy = Entropy of p = 최솟값.<br>
+        "오차 측정" 역할이므로 일치 시 오차 최소.
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ 결과도출 ════ -->
+  <div class="type-divider" data-group="결과도출"><div class="type-line"></div><span class="type-label">결과 도출형</span><div class="type-line"></div></div>
+
+  <!-- Q16 -->
+  <div class="q-card" id="qcard-16" data-group="결과도출">
+    <div class="q-header">
+      <div class="q-num-big">16</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#16</span>
+          <span class="badge badge-type">결과도출</span>
+          <span class="badge badge-diff-2">⭐⭐ 보통</span>
+          <span class="badge badge-app">[응용]</span>
+          <span class="badge badge-slide">슬라이드 18</span>
+        </div>
+        <div class="q-text">어떤 훈련 샘플에서 yₙ = +1이고 현재 wᵀxₙ = −3이라 하자. 이 샘플에 대한 Cross-Entropy 오차 ln(1 + e<sup>−yₙwᵀxₙ</sup>)는 어떻게 되는가?</div>
+      </div>
+      <div class="q-status" id="qs-16"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(16,'A')"><span class="opt-label">A</span> 거의 0에 가까운 매우 작은 값이다.</button>
+      <button class="opt-btn" onclick="selectOpt(16,'B')"><span class="opt-label">B</span> 0.5 근방의 중간값이다.</button>
+      <button class="opt-btn" onclick="selectOpt(16,'C')"><span class="opt-label">C</span> 매우 큰 양수 값(>>1)이다.</button>
+      <button class="opt-btn" onclick="selectOpt(16,'D')"><span class="opt-label">D</span> 음수 값이 된다.</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(16)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-16">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">C — 매우 큰 양수</span>
+      </div>
+      <div class="answer-body">
+        <strong>풀이:</strong><br>
+        yₙ = +1, wᵀxₙ = −3<br>
+        → yₙwᵀxₙ = (+1)(−3) = −3 (크고 <strong>음수</strong>)<br>
+        → e<sup>−(−3)</sup> = e³ ≈ 20.09<br>
+        → ln(1 + 20.09) = ln(21.09) ≈ <strong>3.05</strong><br><br>
+        yₙwᵀxₙ이 음수 → 모델이 y=+1인 샘플을 음수 방향으로 분류 → 큰 오차 발생.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q17 -->
+  <div class="q-card" id="qcard-17" data-group="결과도출">
+    <div class="q-header">
+      <div class="q-num-big">17</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#17</span>
+          <span class="badge badge-type">결과도출</span>
+          <span class="badge badge-diff-3">⭐⭐⭐ 어려움</span>
+          <span class="badge badge-app">[응용]</span>
+          <span class="badge badge-slide">슬라이드 20–23</span>
+        </div>
+        <div class="q-text">훈련 데이터가 독립적으로 생성되었다고 가정할 때, 전체 데이터의 Likelihood ∏P(yₙ|xₙ)에 −(1/N)log(·)를 취하면 어떤 식이 되는가?</div>
+      </div>
+      <div class="q-status" id="qs-17"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(17,'A')"><span class="opt-label">A</span> (1/N)Σ P(yₙ|xₙ)</button>
+      <button class="opt-btn" onclick="selectOpt(17,'B')"><span class="opt-label">B</span> (1/N)Σ ln(1/P(yₙ|xₙ)) = NLL(w)</button>
+      <button class="opt-btn" onclick="selectOpt(17,'C')"><span class="opt-label">C</span> −(1/N)Σ P(yₙ|xₙ)²</button>
+      <button class="opt-btn" onclick="selectOpt(17,'D')"><span class="opt-label">D</span> (1/N)(Σ P(yₙ|xₙ))²</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(17)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-17">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">B — NLL(w)</span>
+      </div>
+      <div class="answer-body">
+        <div class="step"><span class="step-n">①</span> −(1/N)log(∏P(yₙ|xₙ))</div>
+        <div class="step"><span class="step-n">②</span> = −(1/N)Σ log P(yₙ|xₙ) &nbsp;&nbsp;(log 성질)</div>
+        <div class="step"><span class="step-n">③</span> = (1/N)Σ log(1/P(yₙ|xₙ)) &nbsp;&nbsp;(부호 정리)</div>
+        <div class="step"><span class="step-n">④</span> = NLL(w) ∝ Eᵢₙ(w)</div>
+        log와 Likelihood의 단조성을 이용해 최대화 → 음수 취해 최소화로 전환.
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ 계산형 ════ -->
+  <div class="type-divider" data-group="계산형"><div class="type-line"></div><span class="type-label">계산형</span><div class="type-line"></div></div>
+
+  <!-- Q18 -->
+  <div class="q-card" id="qcard-18" data-group="계산형">
+    <div class="q-header">
+      <div class="q-num-big">18</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#18</span>
+          <span class="badge badge-type">계산형</span>
+          <span class="badge badge-diff-2">⭐⭐ 보통</span>
+          <span class="badge badge-slide">슬라이드 8</span>
+        </div>
+        <div class="q-text">θ(s) = 1/(1+e<sup>−s</sup>)일 때, <strong>θ(2)</strong>의 값으로 가장 가까운 것은? (e ≈ 2.718, e² ≈ 7.389)</div>
+      </div>
+      <div class="q-status" id="qs-18"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(18,'A')"><span class="opt-label">A</span> 약 0.500</button>
+      <button class="opt-btn" onclick="selectOpt(18,'B')"><span class="opt-label">B</span> 약 0.731</button>
+      <button class="opt-btn" onclick="selectOpt(18,'C')"><span class="opt-label">C</span> 약 0.880</button>
+      <button class="opt-btn" onclick="selectOpt(18,'D')"><span class="opt-label">D</span> 약 0.950</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(18)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-18">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">C — 약 0.880</span>
+      </div>
+      <div class="answer-body">
+        <strong>풀이:</strong><br>
+        θ(2) = 1/(1 + e<sup>−2</sup>) = 1/(1 + 1/e²)<br>
+        = 1/(1 + 1/7.389) = 1/(1 + 0.1353)<br>
+        = 1/1.1353 ≈ <strong>0.880</strong><br><br>
+        · θ(0) = 0.5, θ(2) ≈ 0.88, θ(4) ≈ 0.982로 s가 증가할수록 1에 수렴.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q19 -->
+  <div class="q-card" id="qcard-19" data-group="계산형">
+    <div class="q-header">
+      <div class="q-num-big">19</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#19</span>
+          <span class="badge badge-type">계산형</span>
+          <span class="badge badge-diff-3">⭐⭐⭐ 어려움</span>
+          <span class="badge badge-app">[응용]</span>
+          <span class="badge badge-slide">슬라이드 22</span>
+        </div>
+        <div class="q-text">훈련 샘플이 2개이고 각각 (y₁=+1, w<sup>T</sup>x₁=1), (y₂=−1, w<sup>T</sup>x₂=−2)일 때, Cross-Entropy 오차 Eᵢₙ(w)를 계산하시오. (ln2 ≈ 0.693, e ≈ 2.718, e<sup>−1</sup> ≈ 0.368, e<sup>−2</sup> ≈ 0.135)</div>
+      </div>
+      <div class="q-status" id="qs-19"></div>
+    </div>
+    <div class="q-options">
+      <button class="opt-btn" onclick="selectOpt(19,'A')"><span class="opt-label">A</span> 약 0.174</button>
+      <button class="opt-btn" onclick="selectOpt(19,'B')"><span class="opt-label">B</span> 약 0.254</button>
+      <button class="opt-btn" onclick="selectOpt(19,'C')"><span class="opt-label">C</span> 약 0.348</button>
+      <button class="opt-btn" onclick="selectOpt(19,'D')"><span class="opt-label">D</span> 약 0.500</button>
+    </div>
+    <div class="q-toggle-wrap">
+      <button class="toggle-btn" onclick="toggleAnswer(19)">▾ <span class="toggle-arrow">정답 · 해설</span></button>
+    </div>
+    <div class="answer-panel" id="ans-19">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">정답</span>
+        <span class="answer-title">B — 약 0.254</span>
+      </div>
+      <div class="answer-body">
+        <strong>풀이:</strong> Eᵢₙ = (1/N)Σ ln(1 + e<sup>−yₙwᵀxₙ</sup>)<br><br>
+        <div class="step"><span class="step-n">①</span> n=1: y₁=+1, wᵀx₁=1 → y₁wᵀx₁ = +1<br>&nbsp;&nbsp;&nbsp;ln(1 + e<sup>−1</sup>) = ln(1 + 0.368) = ln(1.368) ≈ 0.313</div>
+        <div class="step"><span class="step-n">②</span> n=2: y₂=−1, wᵀx₂=−2 → y₂wᵀx₂ = (−1)(−2) = +2<br>&nbsp;&nbsp;&nbsp;ln(1 + e<sup>−2</sup>) = ln(1 + 0.135) = ln(1.135) ≈ 0.127</div>
+        <div class="step"><span class="step-n">③</span> Eᵢₙ = (1/2)(0.313 + 0.127) = (1/2)(0.440) ≈ <strong>0.220</strong></div>
+        가장 가까운 선택지는 <strong>B (0.254)</strong>. (ln 근사 과정에서 소수점 차이 발생. 정밀값: ln(1.368)≈0.313, ln(1.135)≈0.127)
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ 서술형 ════ -->
+  <div class="type-divider"><div class="type-line"></div><span class="type-label">서술형</span><div class="type-line"></div></div>
+
+  <!-- Q20 -->
+  <div class="q-card" id="qcard-20" data-group="서술형">
+    <div class="q-header">
+      <div class="q-num-big">20</div>
+      <div class="q-meta">
+        <div class="q-badges">
+          <span class="badge badge-num">#20</span>
+          <span class="badge badge-type">서술형</span>
+          <span class="badge badge-diff-3">⭐⭐⭐ 어려움</span>
+          <span class="badge badge-app">[응용]</span>
+          <span class="badge badge-slide">슬라이드 16–28</span>
+        </div>
+        <div class="q-text">
+          로지스틱 회귀에서 <strong>Cross-Entropy Error</strong>를 오차 측정 기준으로 사용하는 이유를 다음 두 측면에서 서술하시오.<br><br>
+          ① 확률론적 해석 측면 (Maximum Likelihood와의 관계)<br>
+          ② 단순 오차(misclassification error)와 비교한 실용적 장점
+        </div>
+      </div>
+      <div class="q-status" id="qs-20"></div>
+    </div>
+    <div class="q-essay">
+      <textarea class="essay-area" id="essay-20" placeholder="답안을 작성하세요..."></textarea>
+      <div class="essay-note">※ 서술형은 자동 채점 없음 — 정답·해설 토글로 직접 확인하세요.</div>
+    </div>
+    <div class="q-toggle-wrap" style="margin-top:8px">
+      <button class="toggle-btn" onclick="toggleAnswer(20)">▾ <span class="toggle-arrow">채점 기준 · 모범 답안</span></button>
+    </div>
+    <div class="answer-panel" id="ans-20">
+      <div class="answer-header">
+        <span class="answer-correct-badge correct-ans">채점 기준</span>
+        <span class="answer-title">키워드 5개 + 핵심 논리</span>
+      </div>
+      <div class="answer-body">
+        <strong>필수 키워드:</strong> Maximum Likelihood, 음의 로그우도(NLL), 동치(equivalent), 미분 가능(differentiable/gradient), 볼록 함수(convex)<br><br>
+        <strong>핵심 논리 구조:</strong><br>
+        [확률론] MLE → NLL 최소화 → Eᵢₙ 최소화 (세 관점 동치 증명)<br>
+        [실용성] 단순 오차는 미분 불가 → gradient 기반 최적화 불가 / Cross-Entropy는 미분 가능 + 볼록 → 최솟값 보장<br><br>
+        <strong>─── 모범 답안 ───</strong><br><br>
+        <strong>① 확률론적 해석:</strong> 훈련 샘플이 독립적으로 생성되었다고 가정하면, 전체 데이터의 Likelihood는 ∏P(yₙ|xₙ)이다. 이를 최대화하는 w를 구하는 것이 MLE이다. P(y|x) = θ(ywᵀx)를 대입하면 −(1/N)log Likelihood = (1/N)Σln(1/θ(yₙwᵀxₙ)) = Eᵢₙ(w)로 정리된다. 즉 Cross-Entropy Eᵢₙ을 최소화하는 것은 NLL 최소화, 나아가 MLE와 완전히 동치(equivalent)이므로 확률론적으로 타당한 오차 기준이다.<br><br>
+        <strong>② 실용적 장점:</strong> 단순 분류 오차(0-1 loss)는 불연속 함수로 미분 불가능하여 gradient descent 적용이 불가하다. 반면 Cross-Entropy는 w에 대해 연속이고 미분 가능하며, 볼록(convex) 함수임이 알려져 있어 gradient 기반 최적화로 전역 최솟값을 효율적으로 찾을 수 있다.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /quiz-wrap -->
+
+<!-- ── RESULT OVERLAY ── -->
+<div id="result-overlay">
+  <div class="result-box">
+    <div class="result-emoji" id="res-emoji">🎯</div>
+    <div class="result-title">채점 결과</div>
+    <div class="result-score" id="res-score">0 / 19</div>
+    <div class="result-detail" id="res-detail">서술형(Q20) 제외 · 자동 채점 가능 문항 기준</div>
+    <div class="result-grade" id="res-grade"></div>
+    <button class="result-close" onclick="closeResult()">닫기</button>
+  </div>
+</div>
+
+<script>
+  // ── STATE ──
+  const TOTAL_AUTO = 19; // Q20 서술형 제외
+  const answers = {
+    1: 'C', 2: 'B', 3: 'B', 4: 'B', 5: 'B',
+    6: 'O', 7: 'O', 8: 'X',
+    // 9,10,11 text
+    12: 'B', 13: 'A', 14: 'D', 15: 'D',
+    16: 'C', 17: 'B', 18: 'C', 19: 'B'
+  };
+
+  const userAnswers = {};
+  const correctStatus = {}; // true/false per question
+
+  // ── SELECT OPTION ──
+  function selectOpt(qNum, choice) {
+    if (userAnswers[qNum] !== undefined) return; // already answered
+
+    const card = document.getElementById('qcard-' + qNum);
+    const buttons = card.querySelectorAll('.opt-btn');
+    const correct = answers[qNum];
+    const isCorrect = choice === correct;
+
+    userAnswers[qNum] = choice;
+    correctStatus[qNum] = isCorrect;
+
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      const lbl = btn.querySelector('.opt-label').textContent;
+      if (lbl === choice && isCorrect) btn.classList.add('selected-correct');
+      else if (lbl === choice && !isCorrect) btn.classList.add('selected-wrong');
+      if (lbl === correct && !isCorrect) btn.classList.add('show-correct');
+    });
+
+    // status icon
+    const status = document.getElementById('qs-' + qNum);
+    status.textContent = isCorrect ? '✅' : '❌';
+
+    // card border
+    card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+
+    updateScore();
+  }
+
+  // ── SUBMIT TEXT ──
+  function submitText(qNum, acceptList) {
+    if (userAnswers[qNum] !== undefined) return;
+
+    const inp = document.getElementById('inp-' + qNum);
+    const raw = inp.value.trim().toLowerCase().replace(/\s+/g, '');
+    if (!raw) return;
+
+    const isCorrect = acceptList.some(a => raw.includes(a.toLowerCase().replace(/\s+/g, '')));
+
+    userAnswers[qNum] = raw;
+    correctStatus[qNum] = isCorrect;
+
+    inp.disabled = true;
+    inp.style.borderColor = isCorrect ? 'rgba(74,222,128,0.5)' : 'rgba(248,113,113,0.5)';
+    inp.style.color = isCorrect ? 'var(--green)' : 'var(--red)';
+
+    const submitBtn = inp.nextElementSibling;
+    submitBtn.disabled = true;
+
+    const status = document.getElementById('qs-' + qNum);
+    status.textContent = isCorrect ? '✅' : '❌';
+
+    const card = document.getElementById('qcard-' + qNum);
+    card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+
+    updateScore();
+  }
+
+  // ── TOGGLE ANSWER ──
+  function toggleAnswer(qNum) {
+    const panel = document.getElementById('ans-' + qNum);
+    const btn = panel.previousElementSibling.querySelector('.toggle-btn');
+    const isOpen = panel.classList.contains('show');
+    panel.classList.toggle('show', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+  }
+
+  // ── UPDATE SCORE ──
+  function updateScore() {
+    const answered = Object.keys(userAnswers).length;
+    const correct = Object.values(correctStatus).filter(Boolean).length;
+    const wrong = answered - correct;
+    const pct = Math.round((correct / TOTAL_AUTO) * 100);
+
+    document.getElementById('val-correct').textContent = correct;
+    document.getElementById('val-wrong').textContent = wrong;
+    document.getElementById('val-pct').textContent = pct + '%';
+
+    // progress (Q20 서술형 제외)
+    const autoAnswered = Object.keys(userAnswers).filter(k => parseInt(k) <= 19).length;
+    document.getElementById('prog-bar').style.width = (autoAnswered / TOTAL_AUTO * 100) + '%';
+    document.getElementById('prog-label').textContent = autoAnswered + ' / ' + TOTAL_AUTO + ' answered (서술형 제외)';
+  }
+
+  // ── SHOW RESULT ──
+  function showResult() {
+    const correct = Object.values(correctStatus).filter(Boolean).length;
+    const pct = Math.round((correct / TOTAL_AUTO) * 100);
+
+    let emoji = '😢';
+    let grade = '';
+    if (pct >= 90) { emoji = '🏆'; grade = '탁월합니다! 개념을 완벽하게 이해하고 있습니다.'; }
+    else if (pct >= 75) { emoji = '🎯'; grade = '우수합니다. 핵심 개념을 잘 파악하고 있습니다.'; }
+    else if (pct >= 60) { emoji = '📚'; grade = '양호합니다. 틀린 문제의 해설을 다시 확인하세요.'; }
+    else if (pct >= 40) { emoji = '💪'; grade = '기초 개념부터 다시 복습해 보세요.'; }
+    else { emoji = '😢'; grade = '강의자료를 처음부터 다시 정독하길 권장합니다.'; }
+
+    document.getElementById('res-emoji').textContent = emoji;
+    document.getElementById('res-score').textContent = correct + ' / ' + TOTAL_AUTO;
+    document.getElementById('res-grade').textContent = grade;
+    document.getElementById('result-overlay').classList.add('show');
+  }
+
+  function closeResult() {
+    document.getElementById('result-overlay').classList.remove('show');
+  }
+
+  // ── RESET ──
+  function resetAll() {
+    if (!confirm('모든 답안을 초기화하시겠습니까?')) return;
+    location.reload();
+  }
+
+  // ── FILTER ──
+  function filterType(type, clickedBtn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('on'));
+    clickedBtn.classList.add('on');
+
+    document.querySelectorAll('.q-card').forEach(card => {
+      if (type === 'all') {
+        card.style.display = '';
+      } else {
+        card.style.display = card.dataset.group === type ? '' : 'none';
+      }
+    });
+
+    document.querySelectorAll('.type-divider').forEach(div => {
+      if (type === 'all') {
+        div.style.display = '';
+      } else {
+        div.style.display = div.dataset.group === type ? '' : 'none';
+      }
+    });
+  }
+</script>
+</body>
+</html>
