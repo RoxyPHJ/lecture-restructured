@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제 6장 퀴즈 — 다중화와 확산</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --surface3: #1e2d45;
+    --border: #2a3a55;
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --accent3: #34d399;
+    --accent4: #fb923c;
+    --accent5: #f472b6;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --code-bg: #0d1526;
+    --correct: #16a34a;
+    --correct-bg: rgba(22,163,74,0.12);
+    --wrong: #dc2626;
+    --wrong-bg: rgba(220,38,38,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Nanum Gothic', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .page-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .page-title {
+    font-family: 'Impact', 'Arial Narrow', sans-serif;
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .page-sub { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+  .score-board {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 24px;
+    text-align: center;
+    min-width: 160px;
+  }
+  .score-board .score-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+  .score-board .score-val { font-family: 'Impact', 'Arial Narrow', sans-serif; font-size: 32px; color: var(--accent); }
+
+  /* ── MAIN ── */
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .leg-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  /* ── QUESTION CARD ── */
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 30px;
+    margin-bottom: 24px;
+    transition: border-color 0.2s;
+  }
+  .q-card.answered-correct { border-color: var(--correct); }
+  .q-card.answered-wrong { border-color: var(--wrong); }
+
+  .q-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .q-num {
+    font-family: 'Impact', 'Arial Narrow', sans-serif;
+    font-size: 22px;
+    color: var(--accent);
+    min-width: 36px;
+  }
+  .tag {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .tag-type { background: var(--surface3); color: var(--accent2); }
+  .tag-app { background: rgba(251,146,60,0.15); color: var(--accent4); border: 1px solid rgba(251,146,60,0.3); }
+  .tag-topic { background: rgba(56,189,248,0.10); color: var(--accent); }
+  .stars { color: #fbbf24; font-size: 13px; }
+  .slide-ref { font-size: 11px; color: var(--text-dim); background: var(--surface2); border-radius: 4px; padding: 2px 7px; }
+
+  .q-text {
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 18px;
+    line-height: 1.8;
+  }
+  .q-text strong { color: var(--accent); }
+
+  /* ── OPTIONS (MC / OX) ── */
+  .options { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .options li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+  }
+  .options li:hover { border-color: var(--accent); background: rgba(56,189,248,0.06); }
+  .options li.selected { border-color: var(--accent2); background: rgba(129,140,248,0.10); }
+  .options li.correct-ans { border-color: var(--correct); background: var(--correct-bg); }
+  .options li.wrong-ans { border-color: var(--wrong); background: var(--wrong-bg); }
+  .opt-label {
+    font-family: 'Menlo', 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 700;
+    min-width: 22px;
+    padding-top: 1px;
+  }
+
+  /* ── SHORT ANSWER ── */
+  .short-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .short-input input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .short-input input:focus { border-color: var(--accent); }
+  .short-input input.correct-input { border-color: var(--correct); background: var(--correct-bg); }
+  .short-input input.wrong-input { border-color: var(--wrong); background: var(--wrong-bg); }
+  .btn-check {
+    background: var(--accent);
+    color: #0a0e1a;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  }
+  .btn-check:hover { opacity: 0.85; }
+  .btn-check:disabled { opacity: 0.4; cursor: default; }
+
+  /* ── ESSAY ── */
+  .essay-area textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+    transition: border-color 0.15s;
+    line-height: 1.7;
+  }
+  .essay-area textarea:focus { border-color: var(--accent2); }
+
+  /* ── ANSWER TOGGLE ── */
+  .toggle-btn {
+    margin-top: 14px;
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 18px;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toggle-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .toggle-btn .arrow { transition: transform 0.2s; display: inline-block; }
+  .toggle-btn.open .arrow { transform: rotate(90deg); }
+
+  .answer-box {
+    display: none;
+    margin-top: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .answer-box.show { display: block; }
+  .answer-box .ans-label {
+    font-size: 11px;
+    color: var(--accent3);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .answer-box .ans-label::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 14px;
+    background: var(--accent3);
+    border-radius: 2px;
+  }
+  .answer-box .ans-text { font-size: 14px; color: var(--text); line-height: 1.8; }
+  .answer-box .formula {
+    font-family: 'Menlo', 'Courier New', monospace;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--accent3);
+    margin: 8px 0;
+    white-space: pre-wrap;
+  }
+  .answer-box .rubric {
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+  .answer-box .rubric-title {
+    font-size: 11px;
+    color: var(--accent4);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .kw {
+    display: inline-block;
+    background: rgba(56,189,248,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(56,189,248,0.3);
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 2px;
+  }
+
+  /* ── SECTION DIVIDER ── */
+  .sec-div {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 36px 0 20px;
+  }
+  .sec-div .sd-label {
+    font-family: 'Impact', 'Arial Narrow', sans-serif;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .sec-div .sd-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* ── RESULT PANEL ── */
+  #result-panel {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+    margin-top: 40px;
+    text-align: center;
+  }
+  #result-panel.show { display: block; }
+  .result-score {
+    font-family: 'Impact', 'Arial Narrow', sans-serif;
+    font-size: 72px;
+    color: var(--accent);
+    line-height: 1;
+    margin: 16px 0 8px;
+  }
+  .result-sub { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin: 20px 0 28px;
+  }
+  .result-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .result-item .ri-val { font-family: 'Impact', 'Arial Narrow', sans-serif; font-size: 28px; }
+  .result-item .ri-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .btn-submit {
+    background: var(--accent);
+    color: #0a0e1a;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 40px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    margin-top: 16px;
+  }
+  .btn-submit:hover { opacity: 0.85; }
+  .btn-reset {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 32px;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: 12px;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-reset:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap { background: var(--surface2); height: 4px; border-radius: 2px; margin-bottom: 32px; }
+  .progress-fill { height: 4px; background: var(--accent); border-radius: 2px; transition: width 0.3s; width: 0%; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div>
+    <div class="page-title">Chapter 6 Quiz</div>
+    <div class="page-sub">다중화와 확산 · 총 20문제 (객관식·OX·단답·계산·판단·빈칸·서술)</div>
+  </div>
+  <div class="score-board">
+    <div class="score-label">진행률</div>
+    <div class="score-val" id="progress-count">0 / 20</div>
+  </div>
+</header>
+
+<main>
+  <div class="progress-wrap"><div class="progress-fill" id="prog-fill"></div></div>
+
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:#38bdf8"></div>객관식 5문항</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#34d399"></div>OX 3문항</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#818cf8"></div>단답형 3문항</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#fb923c"></div>계산형 3문항</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#f472b6"></div>판단·빈칸·서술 6문항</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#fbbf24"></div>[응용] 10문항</div>
+  </div>
+
+  <!-- ════════════════ FDM 섹션 ════════════════ -->
+  <div class="sec-div"><div class="sd-line"></div><div class="sd-label">📡 FDM — 주파수 분할 다중화</div><div class="sd-line"></div></div>
+
+  <!-- Q1 객관식 기본 -->
+  <div class="q-card" id="qc1">
+    <div class="q-meta">
+      <span class="q-num">Q1</span>
+      <span class="tag tag-type">객관식</span>
+      <span class="tag tag-topic">FDM</span>
+      <span class="stars">⭐</span>
+      <span class="slide-ref">Slide 5</span>
+    </div>
+    <div class="q-text">
+      FDM(주파수 분할 다중화)에 대한 설명으로 <strong>옳은 것</strong>은?
+    </div>
+    <ul class="options" id="q1-opts">
+      <li onclick="selectMC(this,'q1','A')"><span class="opt-label">A</span>디지털 신호를 시간 슬롯으로 나누어 전송하는 기술이다.</li>
+      <li onclick="selectMC(this,'q1','B')"><span class="opt-label">B</span>링크의 대역폭이 전송되는 조합 신호의 대역폭보다 클 때 적용 가능한 아날로그 기술이다.</li>
+      <li onclick="selectMC(this,'q1','C')"><span class="opt-label">C</span>채널 간 간섭 방지를 위해 반드시 동일한 반송 주파수를 사용해야 한다.</li>
+      <li onclick="selectMC(this,'q1','D')"><span class="opt-label">D</span>전송 매체의 데이터 전송률이 채널 요구 전송률보다 낮을 때 사용한다.</li>
+    </ul>
+    <button class="toggle-btn" onclick="toggleAns('ans1',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans1">
+      <div class="ans-label">정답 — B</div>
+      <div class="ans-text">
+        FDM은 <strong>아날로그</strong> 기술로, 링크 대역폭 &gt; 조합 신호 대역폭일 때 적용합니다.<br>
+        각 채널은 <strong>서로 다른 반송 주파수(f₁, f₂, f₃)</strong>로 변조되며, 채널 간 보호대역(guard band)으로 간섭을 방지합니다.<br>
+        A·D는 TDM에 대한 설명이고, C는 틀린 설명입니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2 객관식 응용 -->
+  <div class="q-card" id="qc2">
+    <div class="q-meta">
+      <span class="q-num">Q2</span>
+      <span class="tag tag-type">객관식</span>
+      <span class="tag tag-app">[응용]</span>
+      <span class="tag tag-topic">FDM 응용</span>
+      <span class="stars">⭐⭐</span>
+      <span class="slide-ref">Slide 9</span>
+    </div>
+    <div class="q-text">
+      FM 라디오 방송은 87.5 MHz ~ 108 MHz 대역을 사용하고, 방송국당 대역폭은 200 kHz이다. 이 대역에서 이론상 최대 몇 개의 방송국이 동시에 운영 가능한가? (보호대역은 무시)
+    </div>
+    <ul class="options" id="q2-opts">
+      <li onclick="selectMC(this,'q2','A')"><span class="opt-label">A</span>약 87개</li>
+      <li onclick="selectMC(this,'q2','B')"><span class="opt-label">B</span>약 100개</li>
+      <li onclick="selectMC(this,'q2','C')"><span class="opt-label">C</span>약 104개</li>
+      <li onclick="selectMC(this,'q2','D')"><span class="opt-label">D</span>약 540개</li>
+    </ul>
+    <button class="toggle-btn" onclick="toggleAns('ans2',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans2">
+      <div class="ans-label">정답 — C</div>
+      <div class="ans-text">
+        <strong>[응용 풀이]</strong> FDM에서 채널 수 = 전체 대역폭 / 채널당 대역폭
+        <div class="formula">전체 대역폭 = 108 MHz - 87.5 MHz = 20.5 MHz = 20,500 kHz
+채널 수 = 20,500 kHz ÷ 200 kHz = 102.5 → 약 102~104개</div>
+        적용 개념: FDM은 대역폭을 주파수로 분할하며, 각 채널이 동일한 대역폭을 점유합니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q3 OX 기본 -->
+  <div class="q-card" id="qc3">
+    <div class="q-meta">
+      <span class="q-num">Q3</span>
+      <span class="tag tag-type">OX</span>
+      <span class="tag tag-topic">FDM</span>
+      <span class="stars">⭐</span>
+      <span class="slide-ref">Slide 5-7</span>
+    </div>
+    <div class="q-text">
+      FDM에서 보호대역(Guard Band)은 인접 채널 신호가 서로 겹치는 것을 방지하기 위해 채널 사이에 삽입되는 미사용 주파수 구간이다.
+    </div>
+    <ul class="options" id="q3-opts">
+      <li onclick="selectMC(this,'q3','O')"><span class="opt-label">O</span>옳다</li>
+      <li onclick="selectMC(this,'q3','X')"><span class="opt-label">X</span>틀리다</li>
+    </ul>
+    <button class="toggle-btn" onclick="toggleAns('ans3',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans3">
+      <div class="ans-label">정답 — O (옳다)</div>
+      <div class="ans-text">
+        보호대역은 FDM의 핵심 개념으로, 각 채널을 서로 다른 반송파로 변조할 때 인접 채널 간 간섭(interference)을 막기 위한 미사용 주파수 간격입니다.<br>
+        이로 인해 링크의 실제 사용 가능한 채널 수가 줄어드는 단점이 있습니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ TDM 섹션 ════════════════ -->
+  <div class="sec-div"><div class="sd-line"></div><div class="sd-label">⏱️ TDM — 시분할 다중화</div><div class="sd-line"></div></div>
+
+  <!-- Q4 객관식 기본 -->
+  <div class="q-card" id="qc4">
+    <div class="q-meta">
+      <span class="q-num">Q4</span>
+      <span class="tag tag-type">객관식</span>
+      <span class="tag tag-topic">TDM</span>
+      <span class="stars">⭐</span>
+      <span class="slide-ref">Slide 10-12</span>
+    </div>
+    <div class="q-text">
+      TDM(시분할 다중화)에서 <strong>끼워넣기(Interleaving)</strong>에 대한 설명으로 옳은 것은?
+    </div>
+    <ul class="options" id="q4-opts">
+      <li onclick="selectMC(this,'q4','A')"><span class="opt-label">A</span>각 채널에 전송할 데이터가 있을 때만 슬롯을 동적으로 할당한다.</li>
+      <li onclick="selectMC(this,'q4','B')"><span class="opt-label">B</span>스위치가 채널들을 일정한 비율로 정해진 순서대로 순환하며 각 채널에 슬롯을 할당한다.</li>
+      <li onclick="selectMC(this,'q4','C')"><span class="opt-label">C</span>주파수 대역을 나누어 각 채널에 고정 주파수를 할당하는 방식이다.</li>
+      <li onclick="selectMC(this,'q4','D')"><span class="opt-label">D</span>수신 측에서 의사난수 코드로 원래 신호를 복원하는 방식이다.</li>
+    </ul>
+    <button class="toggle-btn" onclick="toggleAns('ans4',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans4">
+      <div class="ans-label">정답 — B</div>
+      <div class="ans-text">
+        TDM의 끼워넣기는 MUX의 스위치가 채널들을 <strong>고정된 순서</strong>로 순환하며 각 채널에서 1 슬롯씩 가져와 프레임을 구성하는 방식입니다.<br>
+        A는 통계적 TDM, C는 FDM, D는 DSSS에 대한 설명입니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q5 계산형 기본 -->
+  <div class="q-card" id="qc5">
+    <div class="q-meta">
+      <span class="q-num">Q5</span>
+      <span class="tag tag-type">계산형</span>
+      <span class="tag tag-topic">TDM</span>
+      <span class="stars">⭐⭐</span>
+      <span class="slide-ref">Slide 13 — Example 6.8</span>
+    </div>
+    <div class="q-text">
+      4개 채널을 TDM으로 다중화한다. 각 채널은 <strong>100 bytes/s</strong>를 전송하고, <strong>1 byte</strong>씩 인터리빙할 때, 링크의 비트율(bps)을 구하시오.
+    </div>
+    <div class="short-input">
+      <input type="text" id="q5-in" placeholder="예: 3200 bps" />
+      <button class="btn-check" onclick="checkShort('q5','3200')">확인</button>
+    </div>
+    <button class="toggle-btn" onclick="toggleAns('ans5',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans5">
+      <div class="ans-label">정답 — 3200 bps</div>
+      <div class="formula">프레임 크기  = 4채널 × 1 byte = 4 bytes = 32 bits
+프레임 률   = 100 frames/s  (채널당 100 bytes/s, 1 byte/frame)
+링크 비트율  = 100 × 32 = 3,200 bps</div>
+      <div class="ans-text">강의 Example 6.8의 직접 계산 문제입니다.</div>
+    </div>
+  </div>
+
+  <!-- Q6 계산형 응용 -->
+  <div class="q-card" id="qc6">
+    <div class="q-meta">
+      <span class="q-num">Q6</span>
+      <span class="tag tag-type">계산형</span>
+      <span class="tag tag-app">[응용]</span>
+      <span class="tag tag-topic">TDM</span>
+      <span class="stars">⭐⭐⭐</span>
+      <span class="slide-ref">Slide 13 — 수치 변형</span>
+    </div>
+    <div class="q-text">
+      <strong>6개</strong> 채널을 TDM으로 다중화한다. 각 채널은 <strong>200 bytes/s</strong>를 전송하고, <strong>2 bytes</strong>씩 인터리빙할 때, 다음을 구하시오.<br><br>
+      ① 프레임 크기 (bytes) &nbsp; ② 프레임률 (frames/s) &nbsp; ③ 링크 비트율 (bps)
+    </div>
+    <div class="short-input">
+      <input type="text" id="q6-in" placeholder="예: 12 bytes / 100 f/s / 9600 bps" />
+      <button class="btn-check" onclick="checkShortFlex('q6',['9600','9,600'])">확인</button>
+    </div>
+    <button class="toggle-btn" onclick="toggleAns('ans6',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans6">
+      <div class="ans-label">정답</div>
+      <div class="formula">① 프레임 크기 = 6채널 × 2 bytes = 12 bytes = 96 bits
+② 프레임 률  = 200 bytes/s ÷ 2 bytes/frame = 100 frames/s
+③ 링크 비트율 = 100 × 96 = 9,600 bps</div>
+      <div class="ans-text">
+        <strong>[응용 적용 개념]</strong><br>
+        Example 6.8과 동일한 공식 구조이지만 채널 수(4→6), 전송률(100→200 bytes/s), 슬롯 크기(1→2 bytes)가 변형되었습니다.<br>
+        핵심: 프레임률 = 채널 전송률 ÷ 슬롯 크기 (단위 맞추기 주의)
+      </div>
+    </div>
+  </div>
+
+  <!-- Q7 OX 응용 -->
+  <div class="q-card" id="qc7">
+    <div class="q-meta">
+      <span class="q-num">Q7</span>
+      <span class="tag tag-type">OX</span>
+      <span class="tag tag-app">[응용]</span>
+      <span class="tag tag-topic">TDM — T회선</span>
+      <span class="stars">⭐⭐</span>
+      <span class="slide-ref">Slide 17-20</span>
+    </div>
+    <div class="q-text">
+      T-1 회선은 DS-1 신호를 전송하며, 하나의 T-1 프레임은 24개 채널 × 8 bits + 1 framing bit = 193 bits로 구성된다. 프레임률이 8,000 frames/s이므로 T-1의 데이터 전송률은 1.544 Mbps이다.
+    </div>
+    <ul class="options" id="q7-opts">
+      <li onclick="selectMC(this,'q7','O')"><span class="opt-label">O</span>옳다</li>
+      <li onclick="selectMC(this,'q7','X')"><span class="opt-label">X</span>틀리다</li>
+    </ul>
+    <button class="toggle-btn" onclick="toggleAns('ans7',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans7">
+      <div class="ans-label">정답 — O (옳다)</div>
+      <div class="formula">프레임 크기 = 24 × 8 + 1 = 193 bits
+전송률      = 8,000 × 193 = 1,544,000 bps = 1.544 Mbps</div>
+      <div class="ans-text">
+        <strong>[응용 포인트]</strong> 단순 암기가 아닌, 프레임 구조에서 전송률을 도출하는 과정을 이해해야 합니다.<br>
+        8,000 frames/s는 전화 음성의 Nyquist 샘플링 주파수(8 kHz)에서 기인합니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q8 단답형 기본 -->
+  <div class="q-card" id="qc8">
+    <div class="q-meta">
+      <span class="q-num">Q8</span>
+      <span class="tag tag-type">단답형</span>
+      <span class="tag tag-topic">TDM — DS계층</span>
+      <span class="stars">⭐</span>
+      <span class="slide-ref">Slide 17-18</span>
+    </div>
+    <div class="q-text">
+      DS-1 신호를 전송하는 회선명은 무엇이며, 그 전송 속도는 얼마인가? (형식: 회선명 / 전송속도)
+    </div>
+    <div class="short-input">
+      <input type="text" id="q8-in" placeholder="예: T-1 / 1.544 Mbps" />
+      <button class="btn-check" onclick="checkShortFlex('q8',['T-1','t-1','T1'])">확인</button>
+    </div>
+    <button class="toggle-btn" onclick="toggleAns('ans8',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans8">
+      <div class="ans-label">정답 — T-1 / 1.544 Mbps</div>
+      <div class="ans-text">
+        DS 계층 구조에서 DS-1 ↔ T-1 (1.544 Mbps, 24채널)이 대응됩니다.<br>
+        유럽·국내에서는 동등 수준으로 E-1 (2.048 Mbps, 30채널)을 사용합니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q9 종합 판단형 기본 -->
+  <div class="q-card" id="qc9">
+    <div class="q-meta">
+      <span class="q-num">Q9</span>
+      <span class="tag tag-type">종합판단형</span>
+      <span class="tag tag-topic">TDM</span>
+      <span class="stars">⭐⭐</span>
+      <span class="slide-ref">Slide 10-22</span>
+    </div>
+    <div class="q-text">
+      TDM에 관한 다음 설명 중 <strong>틀린 것</strong>은?
+    </div>
+    <ul class="options" id="q9-opts">
+      <li onclick="selectMC(this,'q9','A')"><span class="opt-label">A</span>TDM은 전송 매체의 데이터 전송률이 채널 요구 전송률보다 클 때 적용하는 디지털 기술이다.</li>
+      <li onclick="selectMC(this,'q9','B')"><span class="opt-label">B</span>동기식 TDM에서 발신자가 전송할 데이터가 없으면 해당 슬롯은 비어 있게 된다.</li>
+      <li onclick="selectMC(this,'q9','C')"><span class="opt-label">C</span>프레임 구성비트(Framing bits)는 수신 측에서 프레임 경계를 인식하는 데 사용된다.</li>
+      <li onclick="selectMC(this,'q9','D')"><span class="opt-label">D</span>T-4 회선은 T-1 회선 4개를 묶어 만들며, 전송속도는 약 6.312 Mbps이다.</li>
+    </ul>
+    <button class="toggle-btn" onclick="toggleAns('ans9',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans9">
+      <div class="ans-label">정답 — D</div>
+      <div class="ans-text">
+        T-4는 T-1 168개를 묶으며 전송속도는 <strong>274.176 Mbps</strong>입니다.<br>
+        T-1 4개를 묶은 것은 <strong>T-2 (6.312 Mbps)</strong>입니다.<br>
+        A·B·C는 모두 강의 내용에 부합하는 정확한 설명입니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ 통계적 TDM 섹션 ════════════════ -->
+  <div class="sec-div"><div class="sd-line"></div><div class="sd-label">📊 통계적 TDM</div><div class="sd-line"></div></div>
+
+  <!-- Q10 빈칸 추론형 기본 -->
+  <div class="q-card" id="qc10">
+    <div class="q-meta">
+      <span class="q-num">Q10</span>
+      <span class="tag tag-type">빈칸추론형</span>
+      <span class="tag tag-topic">통계적 TDM</span>
+      <span class="stars">⭐⭐</span>
+      <span class="slide-ref">Slide 22</span>
+    </div>
+    <div class="q-text">
+      다음 문장의 (A)와 (B)에 들어갈 올바른 단어 조합을 고르시오.<br><br>
+      <em>"동기식 TDM은 발신자에게 데이터가 없어도 고정 슬롯이 할당되므로 (A) 이/가 발생한다. 반면 통계적 TDM은 데이터가 있는 채널에만 슬롯을 (B) 으로/로 할당하므로 링크 효율이 높아진다."</em>
+    </div>
+    <ul class="options" id="q10-opts">
+      <li onclick="selectMC(this,'q10','A')"><span class="opt-label">A</span>(A) 보호대역 / (B) 정적</li>
+      <li onclick="selectMC(this,'q10','B')"><span class="opt-label">B</span>(A) 빈 슬롯 / (B) 동적</li>
+      <li onclick="selectMC(this,'q10','C')"><span class="opt-label">C</span>(A) 프레임 오류 / (B) 정적</li>
+      <li onclick="selectMC(this,'q10','D')"><span class="opt-label">D</span>(A) 빈 슬롯 / (B) 정적</li>
+    </ul>
+    <button class="toggle-btn" onclick="toggleAns('ans10',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans10">
+      <div class="ans-label">정답 — B</div>
+      <div class="ans-text">
+        동기식 TDM의 핵심 단점은 <strong>빈 슬롯(Empty Slot)</strong> 낭비입니다.<br>
+        통계적 TDM은 <strong>동적(Dynamic)</strong> 슬롯 할당으로 이를 해결하지만, 각 슬롯에 수신지 주소 정보를 포함해야 하는 오버헤드가 발생합니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q11 객관식 응용 -->
+  <div class="q-card" id="qc11">
+    <div class="q-meta">
+      <span class="q-num">Q11</span>
+      <span class="tag tag-type">객관식</span>
+      <span class="tag tag-app">[응용]</span>
+      <span class="tag tag-topic">통계적 TDM</span>
+      <span class="stars">⭐⭐⭐</span>
+      <span class="slide-ref">Slide 22</span>
+    </div>
+    <div class="q-text">
+      통계적 TDM에 대한 설명으로 <strong>옳지 않은 것</strong>은?
+    </div>
+    <ul class="options" id="q11-opts">
+      <li onclick="selectMC(this,'q11','A')"><span class="opt-label">A</span>동기식 TDM보다 링크 대역폭을 효율적으로 사용할 수 있다.</li>
+      <li onclick="selectMC(this,'q11','B')"><span class="opt-label">B</span>슬롯에 주소 정보를 포함해야 하므로 오버헤드가 발생한다.</li>
+      <li onclick="selectMC(this,'q11','C')"><span class="opt-label">C</span>연결 가능한 채널 수가 링크의 슬롯 수보다 많을 수 있다.</li>
+      <li onclick="selectMC(this,'q11','D')"><span class="opt-label">D</span>모든 채널이 동시에 최대 부하로 전송할 때 지연 없이 처리된다.</li>
+    </ul>
+    <button class="toggle-btn" onclick="toggleAns('ans11',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans11">
+      <div class="ans-label">정답 — D</div>
+      <div class="ans-text">
+        <strong>[응용 포인트]</strong> 통계적 TDM은 평균 부하를 기반으로 설계합니다.<br>
+        모든 채널이 동시에 최대 부하를 발생시키면 슬롯이 부족하여 <strong>지연(Delay) 또는 손실</strong>이 발생할 수 있습니다.<br>
+        이것이 통계적 TDM의 근본적인 한계입니다. A·B·C는 모두 올바른 설명입니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q12 OX 기본 -->
+  <div class="q-card" id="qc12">
+    <div class="q-meta">
+      <span class="q-num">Q12</span>
+      <span class="tag tag-type">OX</span>
+      <span class="tag tag-topic">통계적 TDM</span>
+      <span class="stars">⭐</span>
+      <span class="slide-ref">Slide 22</span>
+    </div>
+    <div class="q-text">
+      통계적 TDM에서 각 슬롯에는 데이터와 함께 수신지 주소 정보가 포함되어야 하므로, 동기식 TDM에 비해 슬롯당 오버헤드가 더 크다.
+    </div>
+    <ul class="options" id="q12-opts">
+      <li onclick="selectMC(this,'q12','O')"><span class="opt-label">O</span>옳다</li>
+      <li onclick="selectMC(this,'q12','X')"><span class="opt-label">X</span>틀리다</li>
+    </ul>
+    <button class="toggle-btn" onclick="toggleAns('ans12',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans12">
+      <div class="ans-label">정답 — O (옳다)</div>
+      <div class="ans-text">
+        동기식 TDM은 슬롯 위치 자체가 채널을 식별하므로 주소 정보가 불필요합니다.<br>
+        반면 통계적 TDM은 슬롯이 동적으로 할당되기 때문에 수신 측이 어느 채널의 데이터인지 알 수 있도록 <strong>주소(Address) 정보</strong>를 슬롯에 포함해야 합니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ 확산 대역 섹션 ════════════════ -->
+  <div class="sec-div"><div class="sd-line"></div><div class="sd-label">📡 확산 대역 방식 (FHSS / DSSS)</div><div class="sd-line"></div></div>
+
+  <!-- Q13 객관식 기본 -->
+  <div class="q-card" id="qc13">
+    <div class="q-meta">
+      <span class="q-num">Q13</span>
+      <span class="tag tag-type">객관식</span>
+      <span class="tag tag-topic">FHSS</span>
+      <span class="stars">⭐</span>
+      <span class="slide-ref">Slide 24-27</span>
+    </div>
+    <div class="q-text">
+      FHSS(주파수 뛰기 대역 확산)의 동작 방식으로 <strong>옳은 것</strong>은?
+    </div>
+    <ul class="options" id="q13-opts">
+      <li onclick="selectMC(this,'q13','A')"><span class="opt-label">A</span>데이터 비트를 n개의 칩(chip)으로 확산하여 대역폭을 넓힌다.</li>
+      <li onclick="selectMC(this,'q13','B')"><span class="opt-label">B</span>의사난수 코드에 의해 결정된 순서로 주파수를 이동하며 신호를 전송한다.</li>
+      <li onclick="selectMC(this,'q13','C')"><span class="opt-label">C</span>고정된 단일 주파수 채널에서 시간 슬롯을 나누어 전송한다.</li>
+      <li onclick="selectMC(this,'q13','D')"><span class="opt-label">D</span>보호대역을 사용하여 채널 간 간섭을 방지한다.</li>
+    </ul>
+    <button class="toggle-btn" onclick="toggleAns('ans13',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans13">
+      <div class="ans-label">정답 — B</div>
+      <div class="ans-text">
+        FHSS는 <strong>의사난수(Pseudorandom) 코드</strong>가 정한 순서에 따라 반송파 주파수를 주기적으로 바꾸며 전송합니다.<br>
+        A는 DSSS, C는 TDM, D는 FDM에 대한 설명입니다.<br>
+        송수신 양측이 동일한 의사난수 코드를 공유해야 동기화됩니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q14 단답형 기본 -->
+  <div class="q-card" id="qc14">
+    <div class="q-meta">
+      <span class="q-num">Q14</span>
+      <span class="tag tag-type">단답형</span>
+      <span class="tag tag-topic">DSSS</span>
+      <span class="stars">⭐⭐</span>
+      <span class="slide-ref">Slide 28</span>
+    </div>
+    <div class="q-text">
+      DSSS에서 각 데이터 비트를 n개의 비트로 대체하는 데 사용하는 코드의 명칭을 쓰시오.
+    </div>
+    <div class="short-input">
+      <input type="text" id="q14-in" placeholder="정답 입력" />
+      <button class="btn-check" onclick="checkShortFlex('q14',['확산코드','spreading code','확산 코드'])">확인</button>
+    </div>
+    <button class="toggle-btn" onclick="toggleAns('ans14',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans14">
+      <div class="ans-label">정답 — 확산 코드 (Spreading Code)</div>
+      <div class="ans-text">
+        DSSS에서 데이터 비트 "1"은 확산 코드 그대로, "0"은 확산 코드의 보수(complement)로 대체합니다.<br>
+        확산 코드의 길이 n에 비례하여 대역폭이 n배 증가하며, 이 비율을 <strong>처리 이득(Processing Gain)</strong>이라 합니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q15 종합 판단형 응용 -->
+  <div class="q-card" id="qc15">
+    <div class="q-meta">
+      <span class="q-num">Q15</span>
+      <span class="tag tag-type">종합판단형</span>
+      <span class="tag tag-app">[응용]</span>
+      <span class="tag tag-topic">FHSS vs DSSS</span>
+      <span class="stars">⭐⭐⭐</span>
+      <span class="slide-ref">Slide 23-29</span>
+    </div>
+    <div class="q-text">
+      FHSS와 DSSS를 비교한 설명 중 <strong>옳지 않은 것</strong>은?
+    </div>
+    <ul class="options" id="q15-opts">
+      <li onclick="selectMC(this,'q15','A')"><span class="opt-label">A</span>두 방식 모두 확산 대역 방식으로, 무선 통신에서 간섭 및 도청에 강인하다.</li>
+      <li onclick="selectMC(this,'q15','B')"><span class="opt-label">B</span>FHSS는 시간에 따라 반송 주파수를 바꾸며, DSSS는 각 비트를 코드로 확산하여 대역폭을 넓힌다.</li>
+      <li onclick="selectMC(this,'q15','C')"><span class="opt-label">C</span>DSSS에서 확산 코드의 길이 n이 클수록 사용 대역폭이 좁아져 채널 효율이 증가한다.</li>
+      <li onclick="selectMC(this,'q15','D')"><span class="opt-label">D</span>FHSS에서 여러 사용자는 서로 다른 의사난수 코드를 사용하여 동일 대역폭을 공유할 수 있다.</li>
+    </ul>
+    <button class="toggle-btn" onclick="toggleAns('ans15',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans15">
+      <div class="ans-label">정답 — C</div>
+      <div class="ans-text">
+        <strong>[응용 포인트]</strong> DSSS에서 확산 코드 길이 n이 클수록 사용 대역폭은 <strong>n배 증가</strong>합니다.<br>
+        "대역폭이 좁아진다"는 정반대의 설명입니다.<br>
+        대역폭이 넓어지면 채널 용량 측면에서 손실이 있지만, 보안성·잡음 내성이 향상됩니다.<br>
+        이것이 확산 대역 방식의 핵심 트레이드오프입니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q16 계산형 응용 -->
+  <div class="q-card" id="qc16">
+    <div class="q-meta">
+      <span class="q-num">Q16</span>
+      <span class="tag tag-type">계산형</span>
+      <span class="tag tag-app">[응용]</span>
+      <span class="tag tag-topic">DSSS</span>
+      <span class="stars">⭐⭐⭐</span>
+      <span class="slide-ref">Slide 28-29</span>
+    </div>
+    <div class="q-text">
+      DSSS 방식에서 원래 데이터 전송률이 <strong>1 Mbps</strong>이고, 확산 코드의 길이가 <strong>n = 11</strong>일 때, 전송에 필요한 대역폭(칩 전송률, chip rate)은 얼마인가?
+    </div>
+    <div class="short-input">
+      <input type="text" id="q16-in" placeholder="예: 11 Mbps" />
+      <button class="btn-check" onclick="checkShortFlex('q16',['11 mbps','11mbps','11 Mbps','11Mbps'])">확인</button>
+    </div>
+    <button class="toggle-btn" onclick="toggleAns('ans16',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans16">
+      <div class="ans-label">정답 — 11 Mbps</div>
+      <div class="formula">칩 전송률 (Chip Rate) = 데이터 전송률 × n
+                         = 1 Mbps × 11
+                         = 11 Mbps</div>
+      <div class="ans-text">
+        <strong>[응용 적용 개념]</strong><br>
+        DSSS는 1비트를 n칩으로 대체하므로 전송에 필요한 대역폭이 n배 증가합니다.<br>
+        참고: IEEE 802.11b Wi-Fi 표준이 11칩 Barker 코드를 사용하는 DSSS를 채택했습니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ 종합 심화 섹션 ════════════════ -->
+  <div class="sec-div"><div class="sd-line"></div><div class="sd-label">🧠 종합 심화</div><div class="sd-line"></div></div>
+
+  <!-- Q17 빈칸 추론형 응용 -->
+  <div class="q-card" id="qc17">
+    <div class="q-meta">
+      <span class="q-num">Q17</span>
+      <span class="tag tag-type">빈칸추론형</span>
+      <span class="tag tag-app">[응용]</span>
+      <span class="tag tag-topic">다중화 비교</span>
+      <span class="stars">⭐⭐⭐</span>
+      <span class="slide-ref">Slide 5, 10, 22</span>
+    </div>
+    <div class="q-text">
+      다음 문장에서 (A)와 (B)에 들어갈 알맞은 기술 명칭의 조합을 고르시오.<br><br>
+      <em>"(A) 은/는 링크 대역폭을 주파수 축으로 분할하여 아날로그 채널을 동시에 전송하며, (B) 은/는 링크 대역폭을 시간 축으로 분할하여 디지털 채널을 순차적으로 전송한다. 두 방식 모두 채널 수와 링크 용량 사이의 사전 계획된 고정 할당을 전제로 한다는 공통점이 있다."</em>
+    </div>
+    <ul class="options" id="q17-opts">
+      <li onclick="selectMC(this,'q17','A')"><span class="opt-label">A</span>(A) FHSS / (B) DSSS</li>
+      <li onclick="selectMC(this,'q17','B')"><span class="opt-label">B</span>(A) TDM / (B) FDM</li>
+      <li onclick="selectMC(this,'q17','C')"><span class="opt-label">C</span>(A) FDM / (B) TDM</li>
+      <li onclick="selectMC(this,'q17','D')"><span class="opt-label">D</span>(A) 통계적 TDM / (B) FDM</li>
+    </ul>
+    <button class="toggle-btn" onclick="toggleAns('ans17',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans17">
+      <div class="ans-label">정답 — C</div>
+      <div class="ans-text">
+        <strong>(A) FDM</strong>: 주파수 축 분할 / 아날로그 / 고정 할당<br>
+        <strong>(B) TDM</strong>: 시간 축 분할 / 디지털 / 고정 할당<br><br>
+        <strong>[응용 포인트]</strong> "고정 할당"이라는 공통점 때문에 둘 다 통계적 TDM과 달리 비효율적 슬롯/대역 낭비가 발생할 수 있습니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q18 단답형 응용 -->
+  <div class="q-card" id="qc18">
+    <div class="q-meta">
+      <span class="q-num">Q18</span>
+      <span class="tag tag-type">단답형</span>
+      <span class="tag tag-app">[응용]</span>
+      <span class="tag tag-topic">DS계층 역산</span>
+      <span class="stars">⭐⭐⭐</span>
+      <span class="slide-ref">Slide 17-18</span>
+    </div>
+    <div class="q-text">
+      DS 계층에서 T-3 회선은 DS-1 신호 몇 개를 묶은 것인가? (정수로 답할 것)
+    </div>
+    <div class="short-input">
+      <input type="text" id="q18-in" placeholder="예: 28" />
+      <button class="btn-check" onclick="checkShort('q18','28')">확인</button>
+    </div>
+    <button class="toggle-btn" onclick="toggleAns('ans18',this)"><span class="arrow">▶</span> 정답 및 해설</button>
+    <div class="answer-box" id="ans18">
+      <div class="ans-label">정답 — 28개</div>
+      <div class="formula">T-3 (DS-3) = 44.736 Mbps
+DS-1 (T-1) = 1.544 Mbps
+비율 = 44.736 / 1.544 ≈ 28.97 → 정확히 DS-1 × 28</div>
+      <div class="ans-text">
+        <strong>[응용 포인트]</strong> 단순 암기가 아닌 DS 계층 배수 관계를 이해해야 합니다.<br>
+        DS-1 × 4 = DS-2 (T-2), DS-1 × 28 = DS-3 (T-3), DS-1 × 168 = DS-4 (T-4)
+      </div>
+    </div>
+  </div>
+
+  <!-- Q19 서술형 기본 -->
+  <div class="q-card" id="qc19">
+    <div class="q-meta">
+      <span class="q-num">Q19</span>
+      <span class="tag tag-type">서술형</span>
+      <span class="tag tag-topic">FDM vs TDM</span>
+      <span class="stars">⭐⭐</span>
+      <span class="slide-ref">Slide 5, 10</span>
+    </div>
+    <div class="q-text">
+      FDM과 TDM의 <strong>적용 조건, 신호 유형, 분할 방식</strong>을 기준으로 두 기술을 비교하여 서술하시오.
+    </div>
+    <div class="essay-area">
+      <textarea id="q19-ta" placeholder="답안을 작성하세요..."></textarea>
+    </div>
+    <button class="toggle-btn" onclick="toggleAns('ans19',this)"><span class="arrow">▶</span> 채점 기준 및 모범 답안</button>
+    <div class="answer-box" id="ans19">
+      <div class="rubric">
+        <div class="rubric-title">📌 채점 기준 키워드</div>
+        <div style="margin-bottom:8px;">
+          <span class="kw">아날로그/디지털</span>
+          <span class="kw">주파수 축/시간 축</span>
+          <span class="kw">링크 대역폭 조건</span>
+          <span class="kw">전송률 조건</span>
+          <span class="kw">보호대역</span>
+        </div>
+      </div>
+      <div class="ans-label">모범 답안</div>
+      <div class="ans-text">
+        FDM은 <strong>아날로그</strong> 기술로, 링크의 대역폭이 전송되는 조합 신호의 대역폭보다 클 때 적용 가능하다. 각 채널을 서로 다른 반송 주파수로 변조하여 주파수 축으로 분할하며, 채널 간 간섭 방지를 위해 보호대역을 삽입한다.<br><br>
+        TDM은 <strong>디지털</strong> 기술로, 전송 매체의 데이터 전송률이 채널 요구 전송률보다 클 때 적용 가능하다. 링크 사용 시간을 슬롯으로 나누고, 각 채널에 순서대로 슬롯을 할당하는 시간 축 분할 방식이다.<br><br>
+        공통점은 두 방식 모두 단일 링크로 다수의 채널을 동시에 수용한다는 점이다.
+      </div>
+      <div class="rubric" style="margin-top:14px;">
+        <div class="rubric-title">⚠️ 주요 감점 요인</div>
+        <div style="font-size:13px; color:var(--text-muted);">
+          • "아날로그/디지털" 구분 미기재<br>
+          • 적용 조건(대역폭 vs 전송률)을 혼동하거나 생략<br>
+          • "주파수 분할" vs "시간 분할" 핵심어 누락<br>
+          • 보호대역 개념 미언급
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q20 서술형 응용 -->
+  <div class="q-card" id="qc20">
+    <div class="q-meta">
+      <span class="q-num">Q20</span>
+      <span class="tag tag-type">서술형</span>
+      <span class="tag tag-app">[응용]</span>
+      <span class="tag tag-topic">확산 대역 방식</span>
+      <span class="stars">⭐⭐⭐</span>
+      <span class="slide-ref">Slide 23-29</span>
+    </div>
+    <div class="q-text">
+      확산 대역 방식(Spread Spectrum)이 <strong>왜 무선 통신에서 사용되는지</strong>, FHSS와 DSSS 각각의 원리와 장점을 포함하여 서술하시오.
+    </div>
+    <div class="essay-area">
+      <textarea id="q20-ta" placeholder="답안을 작성하세요..."></textarea>
+    </div>
+    <button class="toggle-btn" onclick="toggleAns('ans20',this)"><span class="arrow">▶</span> 채점 기준 및 모범 답안</button>
+    <div class="answer-box" id="ans20">
+      <div class="rubric">
+        <div class="rubric-title">📌 채점 기준 키워드</div>
+        <div style="margin-bottom:8px;">
+          <span class="kw">간섭 내성</span>
+          <span class="kw">도청 방지</span>
+          <span class="kw">의사난수 코드</span>
+          <span class="kw">주파수 뛰기</span>
+          <span class="kw">코드 확산 / 칩</span>
+        </div>
+      </div>
+      <div class="ans-label">모범 답안</div>
+      <div class="ans-text">
+        무선 통신 환경은 간섭(Interference)과 도청(Eavesdropping)에 취약하다. 확산 대역 방식은 신호에 여분의 정보를 추가하여 대역폭을 넓힘으로써 이러한 문제에 강인하게 대응한다.<br><br>
+        <strong>FHSS</strong>는 의사난수 코드가 결정하는 순서에 따라 반송파 주파수를 주기적으로 이동시킨다. 특정 주파수가 방해를 받더라도 전체 통신은 계속되며, 동일 대역폭에서 서로 다른 코드를 사용하는 다수 사용자가 공존할 수 있다.<br><br>
+        <strong>DSSS</strong>는 각 데이터 비트를 확산 코드(길이 n)를 사용하여 n개의 칩으로 대체한다. 대역폭이 n배 넓어지고 신호 에너지가 분산되어 잡음 및 도청에 강인해진다. 수신 측은 동일한 확산 코드로 원래 비트를 복원한다.
+      </div>
+      <div class="rubric" style="margin-top:14px;">
+        <div class="rubric-title">⚠️ 주요 감점 요인</div>
+        <div style="font-size:13px; color:var(--text-muted);">
+          • 확산 대역 방식의 도입 목적(간섭·도청) 미기재<br>
+          • FHSS와 DSSS를 구분하지 않고 혼재하여 서술<br>
+          • "의사난수 코드"를 언급하지 않은 경우<br>
+          • DSSS에서 "칩(chip)"과 대역폭 n배 확산 관계 미언급
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ SUBMIT BUTTON ════════ -->
+  <div style="text-align:center; margin-top:40px;">
+    <button class="btn-submit" onclick="showResult()">🎯 채점하기</button>
+  </div>
+
+  <!-- ════════ RESULT PANEL ════════ -->
+  <div id="result-panel">
+    <div style="font-size:14px; color:var(--text-muted);">자동 채점 문제 기준 점수</div>
+    <div class="result-score" id="res-score">—</div>
+    <div class="result-sub" id="res-sub"></div>
+    <div class="result-grid">
+      <div class="result-item">
+        <div class="ri-val" id="res-correct" style="color:var(--accent3);">—</div>
+        <div class="ri-label">정답</div>
+      </div>
+      <div class="result-item">
+        <div class="ri-val" id="res-wrong" style="color:var(--accent5);">—</div>
+        <div class="ri-label">오답</div>
+      </div>
+      <div class="result-item">
+        <div class="ri-val" id="res-skip" style="color:var(--text-dim);">—</div>
+        <div class="ri-label">미응답</div>
+      </div>
+    </div>
+    <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
+      ※ 서술형 2문제(Q19, Q20)는 자동 채점 대상에서 제외됩니다. 정답 토글로 직접 채점하세요.
+    </div>
+    <button class="btn-reset" onclick="resetAll()">🔄 다시 풀기</button>
+  </div>
+
+</main>
+
+<script>
+  // ── 상태 관리 ──
+  const mcAnswers  = { q1:'B', q2:'C', q3:'O', q4:'B', q7:'O', q9:'D', q10:'B', q11:'D', q12:'O', q13:'B', q15:'C', q17:'C' };
+  const answered   = {};
+  let   autoTotal  = 0;  // 자동채점 대상 문제 수
+
+  // 자동채점 문제: MC(q1~q4,q7,q9~q13,q15,q17) + short(q5,q6,q8,q14,q16,q18)
+  const autoQs = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14','q15','q16','q17','q18'];
+
+  // ── 객관식 선택 ──
+  function selectMC(el, qid, choice) {
+    if (answered[qid]) return;
+    const correct = mcAnswers[qid];
+    const opts = document.getElementById(qid + '-opts').querySelectorAll('li');
+    opts.forEach(o => {
+      const lbl = o.querySelector('.opt-label').textContent;
+      if (lbl === correct) o.classList.add('correct-ans');
+      if (lbl === choice && choice !== correct) o.classList.add('wrong-ans');
+      if (lbl === choice) o.classList.add('selected');
+    });
+    answered[qid] = (choice === correct) ? 'correct' : 'wrong';
+    updateCard(qid, answered[qid] === 'correct');
+    updateProgress();
+  }
+
+  // ── 단답 확인 (엄격) ──
+  function checkShort(qid, correctVal) {
+    if (answered[qid]) return;
+    const inp = document.getElementById(qid + '-in');
+    const val = inp.value.trim().replace(/,/g,'').toLowerCase();
+    const cor = correctVal.toLowerCase();
+    const ok  = val === cor || val.replace(/\s/g,'') === cor.replace(/\s/g,'');
+    inp.classList.add(ok ? 'correct-input' : 'wrong-input');
+    inp.disabled = true;
+    answered[qid] = ok ? 'correct' : 'wrong';
+    updateCard(qid, ok);
+    updateProgress();
+  }
+
+  // ── 단답 확인 (유연) ──
+  function checkShortFlex(qid, correctVals) {
+    if (answered[qid]) return;
+    const inp = document.getElementById(qid + '-in');
+    const val = inp.value.trim().toLowerCase().replace(/,/g,'');
+    const ok  = correctVals.some(c => val.includes(c.toLowerCase().replace(/,/g,'')));
+    inp.classList.add(ok ? 'correct-input' : 'wrong-input');
+    inp.disabled = true;
+    answered[qid] = ok ? 'correct' : 'wrong';
+    updateCard(qid, ok);
+    updateProgress();
+  }
+
+  // ── 카드 테두리 업데이트 ──
+  function updateCard(qid, correct) {
+    // 카드 번호 찾기
+    const num = qid.replace('q','');
+    const card = document.getElementById('qc' + num);
+    if (card) {
+      card.classList.remove('answered-correct','answered-wrong');
+      card.classList.add(correct ? 'answered-correct' : 'answered-wrong');
+    }
+  }
+
+  // ── 진행률 ──
+  function updateProgress() {
+    const done = Object.keys(answered).length;
+    const total = 20;
+    document.getElementById('progress-count').textContent = done + ' / ' + total;
+    document.getElementById('prog-fill').style.width = (done / total * 100) + '%';
+  }
+
+  // ── 정답 토글 ──
+  function toggleAns(id, btn) {
+    const box = document.getElementById(id);
+    box.classList.toggle('show');
+    btn.classList.toggle('open');
+    btn.querySelector('.arrow').textContent = box.classList.contains('show') ? '▼' : '▶';
+  }
+
+  // ── 채점 ──
+  function showResult() {
+    let correct = 0, wrong = 0, skip = 0;
+    autoQs.forEach(qid => {
+      if (!answered[qid]) { skip++; }
+      else if (answered[qid] === 'correct') { correct++; }
+      else { wrong++; }
+    });
+    const total = autoQs.length;  // 18
+    const pct = Math.round(correct / total * 100);
+    document.getElementById('res-score').textContent = correct + ' / ' + total;
+    document.getElementById('res-sub').textContent = `정답률 ${pct}% · 서술형 2문항 별도 채점`;
+    document.getElementById('res-correct').textContent = correct;
+    document.getElementById('res-wrong').textContent = wrong;
+    document.getElementById('res-skip').textContent = skip;
+    const panel = document.getElementById('result-panel');
+    panel.classList.add('show');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // ── 리셋 ──
+  function resetAll() {
+    location.reload();
+  }
+
+  updateProgress();
+</script>
+</body>
+</html>
