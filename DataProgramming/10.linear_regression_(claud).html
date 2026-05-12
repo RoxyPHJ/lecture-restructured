@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10: Linear Regression — Data Programming</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --surface3: #1e2d42;
+    --border: #1f3050;
+    --accent: #3b82f6;
+    --accent2: #06b6d4;
+    --accent3: #8b5cf6;
+    --accent-red: #ef4444;
+    --accent-green: #10b981;
+    --accent-yellow: #f59e0b;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --heading: #f1f5f9;
+    --code-bg: #0d1b2e;
+    --tag-bg: #172038;
+    --highlight: #fbbf24;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── TOC sidebar ── */
+  #toc {
+    position: fixed;
+    top: 0; left: 0;
+    width: 260px;
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 24px 0;
+    z-index: 100;
+  }
+
+  #toc-header {
+    padding: 0 20px 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  #toc-header .course-tag {
+    font-size: 10px;
+    letter-spacing: .12em;
+    color: var(--accent2);
+    text-transform: uppercase;
+    font-family: 'Menlo','Courier New',monospace;
+  }
+  #toc-header h2 {
+    font-family: 'Impact','Arial Narrow',sans-serif;
+    font-size: 17px;
+    color: var(--heading);
+    letter-spacing: .04em;
+    margin-top: 4px;
+  }
+
+  #toc ul { list-style: none; }
+  #toc ul li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 20px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    transition: background .15s, color .15s;
+    border-left: 3px solid transparent;
+  }
+  #toc ul li a .sec-num {
+    font-family: 'Menlo','Courier New',monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    min-width: 24px;
+  }
+  #toc ul li a:hover { background: var(--surface2); color: var(--text); }
+  #toc ul li a.active {
+    background: var(--surface3);
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  #toc ul li a.active .sec-num { color: var(--accent); }
+
+  /* ── Main ── */
+  #main {
+    margin-left: 260px;
+    flex: 1;
+    padding: 48px 48px 100px;
+    max-width: calc(100% - 260px);
+  }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 56px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 56px;
+  }
+  .hero .badge {
+    display: inline-block;
+    background: var(--tag-bg);
+    color: var(--accent2);
+    font-family: 'Menlo','Courier New',monospace;
+    font-size: 11px;
+    letter-spacing: .1em;
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-family: 'Impact','Arial Narrow',sans-serif;
+    font-size: 52px;
+    color: var(--heading);
+    letter-spacing: .02em;
+    line-height: 1.1;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero .sub {
+    color: var(--text-muted);
+    margin-top: 12px;
+    font-size: 14px;
+  }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 64px;
+    scroll-margin-top: 32px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    font-family: 'Impact','Arial Narrow',sans-serif;
+    font-size: 32px;
+    color: var(--border);
+    letter-spacing: -.02em;
+    min-width: 52px;
+  }
+  .section h2 {
+    font-family: 'Impact','Arial Narrow',sans-serif;
+    font-size: 26px;
+    color: var(--heading);
+    letter-spacing: .03em;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card h3 {
+    font-family: 'Impact','Arial Narrow',sans-serif;
+    font-size: 17px;
+    letter-spacing: .05em;
+    color: var(--accent2);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+  .card p { color: var(--text); margin-bottom: 10px; }
+  .card ul { padding-left: 20px; }
+  .card ul li { margin-bottom: 6px; color: var(--text); }
+  .card ul li::marker { color: var(--accent); }
+
+  /* side-by-side layout */
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .split-3 {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: start;
+  }
+
+  /* ── Formula card ── */
+  .formula-card {
+    background: var(--code-bg);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    font-family: 'Menlo','Courier New',monospace;
+    font-size: 13.5px;
+    color: var(--accent2);
+    overflow-x: auto;
+  }
+  .formula-card .label {
+    font-family: 'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* ── Code block ── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 12px 0;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  code { font-family: 'Menlo','Courier New',monospace; }
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .cm { color: #546e7a; font-style: italic; }
+  .num { color: #f78c6c; }
+  .var { color: #ffcb6b; }
+
+  /* ── Highlight spans ── */
+  .hi { color: var(--accent); font-weight: 600; }
+  .hi2 { color: var(--accent2); font-weight: 600; }
+  .hi3 { color: var(--accent3); }
+  .hi-r { color: var(--accent-red); }
+  .hi-g { color: var(--accent-green); }
+  .hi-y { color: var(--highlight); }
+
+  /* ── Comparison table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 12px 0;
+  }
+  thead th {
+    background: var(--surface3);
+    color: var(--accent2);
+    font-family: 'Menlo','Courier New',monospace;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  tbody tr:hover td { background: var(--surface2); }
+
+  /* ── Tag pill ── */
+  .pill {
+    display: inline-block;
+    background: var(--tag-bg);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-family: 'Menlo','Courier New',monospace;
+    margin: 2px 2px 2px 0;
+  }
+  .pill.green { color: var(--accent-green); }
+  .pill.purple { color: var(--accent3); }
+  .pill.red { color: var(--accent-red); }
+  .pill.yellow { color: var(--highlight); }
+
+  /* ── Step box ── */
+  .step-box {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .step-num {
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Impact','Arial Narrow',sans-serif;
+    font-size: 15px;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ── SVG container ── */
+  .svg-wrap {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow: hidden;
+  }
+  .svg-wrap svg { width: 100%; display: block; }
+
+  /* ── Summary grid ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .summary-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .summary-item .icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .summary-item .label {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    font-family: 'Menlo','Courier New',monospace;
+    margin-bottom: 6px;
+  }
+  .summary-item .value {
+    font-family: 'Menlo','Courier New',monospace;
+    font-size: 13px;
+    color: var(--accent2);
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    #toc { display: none; }
+    #main { margin-left: 0; max-width: 100%; padding: 24px; }
+    .split, .split-3 { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════ TOC ══════════ -->
+<nav id="toc">
+  <div id="toc-header">
+    <div class="course-tag">Data Programming · 0011445001</div>
+    <h2>10: Linear Regression</h2>
+  </div>
+  <ul>
+    <li><a href="#sec01" class="toc-link"><span class="sec-num">01</span> Regression 개요</a></li>
+    <li><a href="#sec02" class="toc-link"><span class="sec-num">02</span> Linear Regression이란</a></li>
+    <li><a href="#sec03" class="toc-link"><span class="sec-num">03</span> 파라미터 추정 방법</a></li>
+    <li><a href="#sec04" class="toc-link"><span class="sec-num">04</span> 적용 예시: 신용 승인</a></li>
+    <li><a href="#sec05" class="toc-link"><span class="sec-num">05</span> Error 함수 정의</a></li>
+    <li><a href="#sec06" class="toc-link"><span class="sec-num">06</span> 행렬 표현</a></li>
+    <li><a href="#sec07" class="toc-link"><span class="sec-num">07</span> E_in 최소화</a></li>
+    <li><a href="#sec08" class="toc-link"><span class="sec-num">08</span> 풀이 & 알고리즘</a></li>
+    <li><a href="#sec09" class="toc-link"><span class="sec-num">09</span> 예제: O₂ & 탄화수소</a></li>
+    <li><a href="#sec10" class="toc-link"><span class="sec-num">10</span> 요약</a></li>
+  </ul>
+</nav>
+
+<!-- ══════════ MAIN ══════════ -->
+<main id="main">
+
+  <div class="hero">
+    <div class="badge">CSE · INU · Jangho Lee · Slides 1–33</div>
+    <h1>Linear <span>Regression</span></h1>
+    <div class="sub">Data Programming (0011445001) — Chapter 10</div>
+  </div>
+
+  <!-- ── 01 Regression 개요 ── -->
+  <section class="section" id="sec01">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2>Regression 개요</h2>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <h3>Regression이란?</h3>
+        <p><span class="hi">x</span>와 <span class="hi">y</span> 사이의 관계를 통계적으로 탐구하는 방법론</p>
+        <ul>
+          <li><strong>x</strong>: covariate / predictor variable / independent variable / <span class="pill">feature</span></li>
+          <li><strong>y</strong>: response / dependent variable</li>
+          <li>노이즈 포함: <span class="hi-y">yₙ = f(xₙ) + ε</span></li>
+          <li>목표: y ~ P(y|x) 분포에서 yₙ을 근사하는 모델 <span class="hi">g(x)</span> 찾기</li>
+        </ul>
+        <div class="formula-card">
+          <div class="label">Training Data</div>
+          (x₁, y₁), (x₂, y₂), …, (xₙ, yₙ)
+        </div>
+      </div>
+      <div class="card">
+        <h3>어원: Francis Galton (1822–1911)</h3>
+        <ul>
+          <li><strong>re</strong> (back) + <strong>gression</strong> (going)</li>
+          <li>데이터에서 공식으로 역추적하는 행위</li>
+          <li><span class="hi2">Regression towards the mean</span>
+            <br><em>"키 큰/작은 아버지의 아들은 평균에 가까워진다"</em></li>
+        </ul>
+        <div class="formula-card" style="font-family: 'Apple SD Gothic Neo','Malgun Gothic',sans-serif; font-size:13px; color: var(--text-muted);">
+          y = f(x) 결정론적 함수가 아니라<br>
+          <span style="color:var(--accent2)">y ~ P(y|x)</span> 확률적 타겟으로 접근
+        </div>
+      </div>
+    </div>
+
+    <!-- 시각화: Simple Linear Regression 다이어그램 -->
+    <div class="card">
+      <h3>Simple Linear Regression 시각화</h3>
+      <div class="svg-wrap">
+        <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg">
+          <!-- 축 -->
+          <line x1="60" y1="260" x2="620" y2="260" stroke="#334155" stroke-width="1.5"/>
+          <line x1="60" y1="260" x2="60" y2="30" stroke="#334155" stroke-width="1.5"/>
+          <!-- 화살표 -->
+          <polygon points="620,256 628,260 620,264" fill="#334155"/>
+          <polygon points="56,30 60,22 64,30" fill="#334155"/>
+          <!-- 축 레이블 -->
+          <text x="625" y="265" fill="#64748b" font-size="14" font-family="Menlo,monospace">x</text>
+          <text x="46" y="22" fill="#64748b" font-size="14" font-family="Menlo,monospace">y</text>
+          <!-- x 눈금 -->
+          <text x="115" y="278" fill="#64748b" font-size="11" font-family="Menlo,monospace">x₁</text>
+          <text x="225" y="278" fill="#64748b" font-size="11" font-family="Menlo,monospace">x₂</text>
+          <text x="440" y="278" fill="#64748b" font-size="11" font-family="Menlo,monospace">xₙ</text>
+          <!-- 회귀선 f (빨간선) -->
+          <line x1="70" y1="235" x2="590" y2="60" stroke="#ef4444" stroke-width="2.5"/>
+          <text x="72" y="248" fill="#ef4444" font-size="12" font-family="Menlo,monospace">f</text>
+          <!-- 데이터 포인트 y1, y2, yN -->
+          <circle cx="130" cy="185" r="5" fill="#3b82f6"/>
+          <text x="138" y="190" fill="#3b82f6" font-size="11" font-family="Menlo,monospace">y₁</text>
+          <circle cx="240" cy="175" r="5" fill="#3b82f6"/>
+          <text x="248" y="175" fill="#3b82f6" font-size="11" font-family="Menlo,monospace">y₂</text>
+          <circle cx="460" cy="102" r="5" fill="#3b82f6"/>
+          <text x="560" y="82" fill="#3b82f6" font-size="11" font-family="Menlo,monospace">yₙ</text>
+          <circle cx="555" cy="82" r="5" fill="#3b82f6"/>
+          <!-- f에서 y까지 잔차선 -->
+          <line x1="130" y1="185" x2="130" y2="215" stroke="#64748b" stroke-width="1" stroke-dasharray="4,3"/>
+          <line x1="240" y1="175" x2="240" y2="200" stroke="#64748b" stroke-width="1" stroke-dasharray="4,3"/>
+          <line x1="460" y1="102" x2="460" y2="122" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <!-- ε 레이블 -->
+          <text x="464" y="115" fill="#8b5cf6" font-size="11" font-family="Menlo,monospace">ε</text>
+          <!-- 분포 곡선 표시 (P(y|x=x1)) -->
+          <ellipse cx="130" cy="197" rx="8" ry="22" fill="none" stroke="#06b6d4" stroke-width="1.2" stroke-dasharray="3,2" transform="rotate(-15 130 197)"/>
+          <text x="68" y="155" fill="#06b6d4" font-size="10" font-family="Menlo,monospace">P(y|x=x₁)</text>
+          <ellipse cx="460" cy="112" rx="8" ry="22" fill="none" stroke="#06b6d4" stroke-width="1.2" stroke-dasharray="3,2" transform="rotate(-15 460 112)"/>
+        </svg>
+      </div>
+      <p style="margin-top:10px; font-size:12px; color:var(--text-dim);">
+        각 xₙ에서 y는 결정론적 값이 아니라 분포 P(y|x)에서 샘플링됨. 빨간 선 f가 참 함수, 파란 점이 관측값 yₙ = f(xₙ) + ε
+      </p>
+    </div>
+  </section>
+
+  <!-- ── 02 Linear Regression이란 ── -->
+  <section class="section" id="sec02">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2>Linear Regression이란</h2>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <h3>정의 & 특징</h3>
+        <ul>
+          <li>정량적 반응 예측을 위한 인기 있는 <span class="hi">선형 모델</span></li>
+          <li>실수값(real-valued) 타겟 함수에 적용</li>
+          <li>통계학, 사회과학 분야에서 오랜 역사</li>
+          <li><span class="hi2">"regression"</span> ⇒ y가 실수값임을 의미 (통계학에서 계승)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Simple vs Multiple</h3>
+        <table>
+          <thead><tr><th>구분</th><th>설명</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill">d = 1</span></td><td>Simple Linear Regression (예측변수 1개)</td></tr>
+            <tr><td><span class="pill purple">d ≥ 2</span></td><td>Multiple Linear Regression (예측변수 다수)</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:12px; color:var(--text-dim); margin-top:8px;">강의에서는 학습 관점에서 simple linear regression을 중심으로 논의</p>
+      </div>
+    </div>
+
+    <!-- 1D/2D 시각화 -->
+    <div class="card">
+      <h3>Linear Regression in 1D and 2D</h3>
+      <div class="split" style="margin-bottom:0;">
+        <div>
+          <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px; text-align:center;">(a) 1D — Line</p>
+          <div class="svg-wrap">
+            <svg viewBox="0 0 300 250" xmlns="http://www.w3.org/2000/svg">
+              <line x1="40" y1="220" x2="270" y2="220" stroke="#334155" stroke-width="1.5"/>
+              <line x1="40" y1="220" x2="40" y2="20" stroke="#334155" stroke-width="1.5"/>
+              <polygon points="270,216 278,220 270,224" fill="#334155"/>
+              <polygon points="36,20 40,12 44,20" fill="#334155"/>
+              <text x="282" y="225" fill="#64748b" font-size="12" font-family="Menlo,monospace">x</text>
+              <text x="28" y="16" fill="#64748b" font-size="12" font-family="Menlo,monospace">y</text>
+              <!-- y 눈금 -->
+              <text x="22" y="60" fill="#64748b" font-size="9" font-family="Menlo,monospace">10</text>
+              <text x="22" y="100" fill="#64748b" font-size="9" font-family="Menlo,monospace">7</text>
+              <text x="22" y="140" fill="#64748b" font-size="9" font-family="Menlo,monospace">4</text>
+              <text x="22" y="180" fill="#64748b" font-size="9" font-family="Menlo,monospace">1</text>
+              <!-- x 눈금 -->
+              <text x="78" y="234" fill="#64748b" font-size="9" font-family="Menlo,monospace">2</text>
+              <text x="128" y="234" fill="#64748b" font-size="9" font-family="Menlo,monospace">4</text>
+              <text x="178" y="234" fill="#64748b" font-size="9" font-family="Menlo,monospace">6</text>
+              <text x="228" y="234" fill="#64748b" font-size="9" font-family="Menlo,monospace">8</text>
+              <!-- 회귀선 (파란색) -->
+              <line x1="55" y1="195" x2="255" y2="55" stroke="#3b82f6" stroke-width="2.2"/>
+              <!-- 잔차 -->
+              <line x1="85" y1="145" x2="85" y2="178" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+              <line x1="130" y1="140" x2="130" y2="158" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+              <line x1="175" y1="95" x2="175" y2="120" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+              <line x1="215" y1="80" x2="215" y2="95" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+              <!-- 데이터 -->
+              <circle cx="85" cy="145" r="5" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="130" cy="140" r="5" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="175" cy="95" r="5" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="215" cy="80" r="5" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="95" cy="75" r="5" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="150" cy="170" r="5" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="240" cy="60" r="5" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="200" cy="120" r="5" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+            </svg>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px; text-align:center;">(b) 2D — Hyperplane</p>
+          <div class="svg-wrap">
+            <svg viewBox="0 0 300 250" xmlns="http://www.w3.org/2000/svg">
+              <!-- 3D 축 -->
+              <line x1="40" y1="200" x2="240" y2="200" stroke="#334155" stroke-width="1.5"/>
+              <line x1="40" y1="200" x2="140" y2="230" stroke="#334155" stroke-width="1.5"/>
+              <line x1="40" y1="200" x2="40" y2="30" stroke="#334155" stroke-width="1.5"/>
+              <polygon points="240,196 248,200 240,204" fill="#334155"/>
+              <polygon points="36,30 40,22 44,30" fill="#334155"/>
+              <text x="252" y="205" fill="#64748b" font-size="11" font-family="Menlo,monospace">x₁</text>
+              <text x="142" y="244" fill="#64748b" font-size="11" font-family="Menlo,monospace">x₂</text>
+              <text x="26" y="22" fill="#64748b" font-size="11" font-family="Menlo,monospace">y</text>
+              <!-- 평면 (파란색 반투명) -->
+              <polygon points="60,160 180,120 260,80 140,110" fill="#3b82f6" fill-opacity="0.22" stroke="#3b82f6" stroke-width="1.5"/>
+              <!-- 잔차 선 -->
+              <line x1="100" y1="145" x2="100" y2="128" stroke="#ef4444" stroke-width="1.5"/>
+              <line x1="155" y1="115" x2="155" y2="101" stroke="#ef4444" stroke-width="1.5"/>
+              <line x1="200" y1="98" x2="200" y2="88" stroke="#ef4444" stroke-width="1.5"/>
+              <!-- 데이터 포인트 -->
+              <circle cx="100" cy="145" r="4" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="155" cy="115" r="4" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="200" cy="98" r="4" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="80" cy="175" r="4" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="210" cy="145" r="4" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="170" cy="75" r="4" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+              <circle cx="230" cy="60" r="4" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:12px; color:var(--text-dim); margin-top:10px;">OLS에서는 <span class="hi-r">잔차(residual)</span>의 제곱합을 최소화하는 파란색 직선/평면을 찾는다.</p>
+    </div>
+  </section>
+
+  <!-- ── 03 파라미터 추정 방법 ── -->
+  <section class="section" id="sec03">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2>파라미터 추정 방법</h2>
+    </div>
+    <div class="card">
+      <h3>주요 기법 분류</h3>
+      <table>
+        <thead><tr><th>기법</th><th>설명</th><th>특징</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="hi">OLS</span> (Ordinary Least Squares)</td>
+            <td>잔차 제곱합 최소화</td>
+            <td><span class="pill green">Closed-form</span> 해 존재</td>
+          </tr>
+          <tr>
+            <td>Generalized / Iteratively Reweighted LS</td>
+            <td>OLS 변형 기법들</td>
+            <td>이분산성 등 처리</td>
+          </tr>
+          <tr>
+            <td>Maximum Likelihood</td>
+            <td>우도 최대화</td>
+            <td>확률론적 접근</td>
+          </tr>
+          <tr>
+            <td><span class="hi3">Ridge / Lasso</span></td>
+            <td>정규화 포함 회귀</td>
+            <td><span class="pill purple">Regularization</span></td>
+          </tr>
+          <tr>
+            <td>Least Absolute Deviation</td>
+            <td>절댓값 최소화</td>
+            <td>이상치에 강건</td>
+          </tr>
+          <tr>
+            <td>Bayesian LR, PCR, etc.</td>
+            <td>기타 기법</td>
+            <td>상황별 적용</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px;">강의 핵심: <span class="hi">OLS</span>는 closed-form 해를 가지며, <span class="hi2">Best Linear Unbiased Estimator (BLUE)</span>임이 증명됨</p>
+    </div>
+  </section>
+
+  <!-- ── 04 신용 승인 예시 ── -->
+  <section class="section" id="sec04">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2>적용 예시: 신용 승인 (Credit Approval)</h2>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <h3>학습 문제의 구성 요소</h3>
+        <table>
+          <thead><tr><th>컴포넌트</th><th>기호</th><th>신용 승인 의미</th></tr></thead>
+          <tbody>
+            <tr><td>Input</td><td><span class="pill">x</span></td><td>고객 신청 정보</td></tr>
+            <tr><td>Output</td><td><span class="pill">y</span></td><td>승인 여부 / 한도</td></tr>
+            <tr><td>Target function</td><td><span class="pill">f: X→Y</span></td><td>이상적인 신용 공식</td></tr>
+            <tr><td>Data</td><td><span class="pill">(x₁,y₁)…</span></td><td>과거 기록</td></tr>
+            <tr><td>Hypothesis</td><td><span class="pill green">g: X→Y</span></td><td>사용할 공식</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>분류 vs 회귀 관점</h3>
+        <p><span class="pill red">Classification</span> 이진 결정 (승인 or 거절)</p>
+        <p style="margin-top:8px;"><span class="pill green">Regression</span> 실수값 예측 (신용 한도 금액)</p>
+        <ul style="margin-top:10px;">
+          <li>Alice의 한도: <span class="hi-y">$123,000</span></li>
+          <li>Bob의 한도: <span class="hi-y">$57,000</span></li>
+        </ul>
+        <div class="formula-card" style="margin-top:12px; font-size:12px;">
+          <div class="label">비결정론적 타겟</div>
+          여러 전문가 → 일관성 없을 수 있음<br>
+          ∴ y ~ P(y|x), not y = f(x)
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>비결정론적 타겟 처리</h3>
+      <ul>
+        <li>각 전문가는 동일한 x에 대해 서로 다른 y를 줄 수 있음</li>
+        <li>목표: <span class="hi">알 수 없는 분포 P(x,y)</span>로부터 생성된 (xₙ, yₙ)로부터 g를 학습</li>
+        <li>g(x)와 y의 오차를 해당 분포 P에 대해 최소화</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── 05 Error 함수 ── -->
+  <section class="section" id="sec05">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2>Error 함수 정의</h2>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <h3>Out-of-sample Error (E_out)</h3>
+        <div class="formula-card">
+          <div class="label">정의 (슬라이드 15)</div>
+          E_out(h) = 𝔼[(h(x) − y)²]
+        </div>
+        <ul>
+          <li>h(x)와 y의 제곱 오차의 기댓값</li>
+          <li><span class="hi-r">문제점</span>: P(x,y)를 모르므로 계산 불가능</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>In-sample Error (E_in)</h3>
+        <div class="formula-card">
+          <div class="label">정의 (슬라이드 16)</div>
+          E_in(h) = (1/N) Σ(h(xₙ) − yₙ)²
+        </div>
+        <ul>
+          <li>훈련 데이터에 대한 평균 제곱 오차</li>
+          <li><span class="hi-g">계산 가능</span>: 실제 최적화 대상</li>
+          <li>h(x) = Σᵢ wᵢxᵢ = <span class="hi">wᵀx</span> (선형 조합)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>핵심 접근 전략</h3>
+      <p>P(x,y)를 모르므로 <span class="hi-r">E_out</span> 계산이 불가능 → 대신 <span class="hi-g">E_in</span>을 최소화하는 w를 찾고, 이 w가 E_out도 작기를 기대</p>
+      <div class="formula-card">
+        <div class="label">Hypothesis 형태 (Signal)</div>
+        h(x) = w₀x₀ + w₁x₁ + … + wdxd = wᵀx &nbsp;&nbsp; (x₀ = 1, bias term)
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 06 행렬 표현 ── -->
+  <section class="section" id="sec06">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2>행렬 표현 (Matrix Representation)</h2>
+    </div>
+
+    <div class="card">
+      <h3>데이터 행렬과 타겟 벡터</h3>
+      <div class="split" style="margin-bottom:0; align-items:start;">
+        <div>
+          <p><span class="hi">X ∈ ℝ^(N×(d+1))</span> — 데이터 행렬</p>
+          <ul>
+            <li>행: 입력 xₙ (행 벡터로)</li>
+            <li>첫 열: bias term (모두 1)</li>
+          </ul>
+          <div class="formula-card" style="margin-top:10px;">
+            <div class="label">d=1, N=4 예시</div>
+            X = [[1, x₁],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1, x₂],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1, x₃],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1, x₄]]
+          </div>
+        </div>
+        <div>
+          <p><span class="hi2">y ∈ ℝ^N</span> — 타겟 벡터</p>
+          <ul>
+            <li>성분: 타겟값 yₙ</li>
+          </ul>
+          <div class="formula-card" style="margin-top:10px;">
+            <div class="label">w, y 벡터</div>
+            w = [w₀, w₁]ᵀ<br><br>
+            y = [y₁, y₂, y₃, y₄]ᵀ
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>행렬 형태의 E_in</h3>
+      <div class="formula-card">
+        <div class="label">전개 과정 (슬라이드 18)</div>
+        E_in(w) = (1/N) ||Xw − y||²<br><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = (1/N)(wᵀXᵀXw − 2wᵀXᵀy + yᵀy)
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">
+        <span class="hi-y">주의</span>: scalar이므로 yᵀXw = wᵀXᵀy가 성립 (전치 트릭 사용)
+      </p>
+    </div>
+  </section>
+
+  <!-- ── 07 E_in 최소화 ── -->
+  <section class="section" id="sec07">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2>E_in 최소화 (Minimization)</h2>
+    </div>
+
+    <div class="split-3">
+      <div>
+        <div class="card">
+          <h3>E_in의 특성</h3>
+          <ul>
+            <li><span class="hi-g">연속 (Continuous)</span></li>
+            <li><span class="hi-g">미분 가능 (Differentiable)</span></li>
+            <li><span class="hi-g">볼록 (Convex)</span></li>
+          </ul>
+          <p style="margin-top:10px;">→ 기울기=0 조건으로 전역 최솟값 직접 도출 가능</p>
+        </div>
+
+        <div class="card" style="margin-top:0;">
+          <h3>Gradient Identity (행렬 미적분)</h3>
+          <div class="formula-card">
+            <div class="label">벡터 미분 공식 (슬라이드 22)</div>
+            ∇_w (wᵀAw) = (A + Aᵀ)w<br>
+            ∇_w (wᵀb) = b
+          </div>
+          <div class="formula-card" style="margin-top:8px;">
+            <div class="label">E_in 그래디언트</div>
+            ∇E_in(w) = (2/N)(XᵀXw − Xᵀy)
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:0;">
+          <h3>최적화 조건</h3>
+          <div class="formula-card">
+            ∇E_in(w) = 0<br>
+            ⇒ XᵀXw = Xᵀy
+          </div>
+          <p style="font-size:12px; margin-top:8px; color:var(--text-muted);">이것이 <strong>정규방정식 (Normal Equation)</strong></p>
+        </div>
+      </div>
+
+      <!-- Convex bowl SVG -->
+      <div>
+        <div class="card" style="height: fit-content;">
+          <h3>E_in 볼록 함수 (Convex Bowl)</h3>
+          <div class="svg-wrap">
+            <svg viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg">
+              <!-- 축 -->
+              <line x1="40" y1="240" x2="270" y2="240" stroke="#334155" stroke-width="1.5"/>
+              <line x1="40" y1="240" x2="40" y2="20" stroke="#334155" stroke-width="1.5"/>
+              <line x1="40" y1="240" x2="145" y2="270" stroke="#334155" stroke-width="1.5"/>
+              <polygon points="270,236 278,240 270,244" fill="#334155"/>
+              <polygon points="36,20 40,12 44,20" fill="#334155"/>
+              <!-- 레이블 -->
+              <text x="282" y="245" fill="#94a3b8" font-size="11" font-family="Menlo,monospace">w₁</text>
+              <text x="28" y="16" fill="#94a3b8" font-size="11" font-family="Menlo,monospace">E_in</text>
+              <text x="150" y="278" fill="#94a3b8" font-size="11" font-family="Menlo,monospace">w₀</text>
+              <!-- y축 눈금 -->
+              <text x="20" y="60" fill="#64748b" font-size="9" font-family="Menlo,monospace">5</text>
+              <text x="20" y="110" fill="#64748b" font-size="9" font-family="Menlo,monospace">3</text>
+              <text x="20" y="165" fill="#64748b" font-size="9" font-family="Menlo,monospace">1</text>
+              <!-- 포물면 등고선 타원형들 -->
+              <ellipse cx="155" cy="175" rx="100" ry="55" fill="none" stroke="#1e3a5f" stroke-width="1.2"/>
+              <ellipse cx="155" cy="175" rx="70" ry="38" fill="none" stroke="#1e4a7a" stroke-width="1.2"/>
+              <ellipse cx="155" cy="175" rx="42" ry="23" fill="none" stroke="#2563a8" stroke-width="1.2"/>
+              <ellipse cx="155" cy="175" rx="18" ry="10" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+              <!-- 최솟값 포인트 w_lin -->
+              <circle cx="155" cy="175" r="5" fill="#3b82f6"/>
+              <line x1="155" y1="175" x2="155" y2="240" stroke="#64748b" stroke-width="1" stroke-dasharray="4,3"/>
+              <!-- 파란 볼 형태 외곽선 (위에서 보이는 3D 표현) -->
+              <path d="M 60 200 Q 155 80 250 200" fill="none" stroke="#3b82f6" stroke-width="2"/>
+              <!-- 레이블 -->
+              <text x="162" y="172" fill="#3b82f6" font-size="10" font-family="Menlo,monospace">w_lin</text>
+            </svg>
+          </div>
+          <p style="font-size:12px; color:var(--text-dim); margin-top:8px;">볼록 함수이므로 local minima = global minimum. 등고선의 중심이 w_lin</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 08 풀이 & 알고리즘 ── -->
+  <section class="section" id="sec08">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <h2>풀이 & 선형 회귀 알고리즘</h2>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <h3>두 가지 시나리오</h3>
+        <p><span class="hi-g">Case 1</span>: XᵀX가 역행렬 존재 (가역)</p>
+        <div class="formula-card">
+          w = X†y = (XᵀX)⁻¹Xᵀy<br>
+          X† : X의 pseudo-inverse<br>
+          → 유일한 최적해 w_lin
+        </div>
+        <p style="margin-top:12px;"><span class="hi-r">Case 2</span>: XᵀX가 singular (비가역)</p>
+        <ul>
+          <li>pseudo-inverse 정의 가능하나 해 비유일</li>
+          <li>E_in을 최소화하는 w가 여럿 존재</li>
+        </ul>
+        <p style="margin-top:10px; font-size:12px; color:var(--text-muted);"><span class="hi-y">실제로는</span>: N ≫ d+1이면 대부분 가역 → Case 1이 일반적</p>
+      </div>
+      <div class="card">
+        <h3>Pseudo-inverse via SVD</h3>
+        <div class="formula-card">
+          <div class="label">SVD 분해: X = UΣVᵀ</div>
+          U ∈ ℝ^(N×ρ), UᵀU = I_ρ<br>
+          V ∈ ℝ^((d+1)×ρ), VᵀV = I_ρ<br>
+          Σ ∈ ℝ^(ρ×ρ) 양의 대각 행렬<br>
+          ρ = rank(X)<br><br>
+          w_lin = VΣ⁻¹Uᵀy
+        </div>
+        <ul style="margin-top:10px;">
+          <li>행렬 역산 없이 X†를 직접 계산</li>
+          <li><span class="hi-g">수치 안정성</span> 더 우수</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>선형 회귀 알고리즘 (3-Step)</h3>
+      <div class="step-box">
+        <div class="step-num">1</div>
+        <div>
+          <p>데이터셋 {(x₁,y₁), …, (xₙ,yₙ)}으로 <span class="hi">데이터 행렬 X</span>와 <span class="hi">타겟 벡터 y</span> 구성</p>
+          <p style="font-size:12px; color:var(--text-dim);">각 x에 bias 좌표 x₀ = 1 포함</p>
+        </div>
+      </div>
+      <div class="step-box">
+        <div class="step-num">2</div>
+        <div>
+          <p>X의 <span class="hi2">pseudo-inverse X†</span> 계산</p>
+          <div class="formula-card" style="margin:6px 0 0;">
+            XᵀX가 가역이면: X† = (XᵀX)⁻¹Xᵀ<br>
+            그렇지 않으면: 수치 안정적인 구현 사용
+          </div>
+        </div>
+      </div>
+      <div class="step-box">
+        <div class="step-num">3</div>
+        <div>
+          <p><span class="hi">w_lin = X†y</span> 반환</p>
+          <p style="font-size:12px; color:var(--text-dim);">→ "1-step learning": 반복 없이 분석 해 직접 계산</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>PLA와 비교: 선형 회귀는 학습인가?</h3>
+      <table>
+        <thead><tr><th>항목</th><th>PLA (분류)</th><th>Linear Regression</th></tr></thead>
+        <tbody>
+          <tr><td>학습 방식</td><td>반복적 업데이트</td><td><span class="hi-g">분석적 해 (1-step)</span></td></tr>
+          <tr><td>타겟</td><td>이진 {+1, -1}</td><td>실수 ℝ</td></tr>
+          <tr><td>오차 함수</td><td>오분류 개수</td><td>제곱 오차</td></tr>
+          <tr><td>해 형태</td><td>w = iterative</td><td>w = (XᵀX)⁻¹Xᵀy</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;">→ 1-step이지만 <span class="hi">학습</span>이 발생함. E_out이 작다면 일반화 성공</p>
+    </div>
+  </section>
+
+  <!-- ── 09 예제 ── -->
+  <section class="section" id="sec09">
+    <div class="section-header">
+      <span class="section-num">09</span>
+      <h2>예제: 산소 순도 & 탄화수소</h2>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <h3>문제 설정</h3>
+        <ul>
+          <li><span class="hi">y</span>: 화학 증류 과정에서 생산된 산소의 <strong>순도 (%)</strong></li>
+          <li><span class="hi2">x</span>: 증류 장치 주 응축기의 <strong>탄화수소 농도 (%)</strong></li>
+          <li>N = 20개 데이터 포인트</li>
+        </ul>
+        <div class="formula-card" style="margin-top:12px;">
+          <div class="label">계산 결과 (슬라이드 29)</div>
+          XᵀX = [[20.00, 23.92], [23.92, 29.29]]<br>
+          (XᵀX)⁻¹ = [[2.15, -1.76], [-1.76, 1.47]]<br><br>
+          w_lin = [74.28, 14.95]ᵀ<br><br>
+          g(x) = 74.28 + 14.95x<br><br>
+          E_in(g) = 1.06<br>
+          E_out(g) ≈ 1.45
+        </div>
+      </div>
+      <div class="card">
+        <h3>데이터 (슬라이드 27)</h3>
+        <table>
+          <thead><tr><th>No.</th><th>x (탄화수소 %)</th><th>y (산소 순도 %)</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>0.99</td><td>90.01</td></tr>
+            <tr><td>2</td><td>1.02</td><td>89.05</td></tr>
+            <tr><td>3</td><td>1.15</td><td>91.43</td></tr>
+            <tr><td>4</td><td>1.29</td><td>93.74</td></tr>
+            <tr><td>5</td><td>1.46</td><td>96.73</td></tr>
+            <tr><td>6</td><td>1.36</td><td>94.45</td></tr>
+            <tr><td>7</td><td>0.87</td><td>87.59</td></tr>
+            <tr><td>8</td><td>1.23</td><td>91.77</td></tr>
+            <tr><td>9</td><td>1.55</td><td>99.42</td></tr>
+            <tr><td>10</td><td>1.40</td><td>93.65</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:11px; color:var(--text-dim); margin-top:6px;">… (20개 중 10개 표시)</p>
+      </div>
+    </div>
+
+    <!-- 회귀 결과 시각화 -->
+    <div class="card">
+      <h3>g(x) = 74.28 + 14.95x 적합 결과</h3>
+      <div class="svg-wrap">
+        <svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg">
+          <!-- 축 -->
+          <line x1="70" y1="280" x2="630" y2="280" stroke="#334155" stroke-width="1.5"/>
+          <line x1="70" y1="280" x2="70" y2="30" stroke="#334155" stroke-width="1.5"/>
+          <polygon points="630,276 638,280 630,284" fill="#334155"/>
+          <polygon points="66,30 70,22 74,30" fill="#334155"/>
+          <!-- x축 레이블 -->
+          <text x="300" y="310" fill="#64748b" font-size="12" font-family="Apple SD Gothic Neo,sans-serif" text-anchor="middle">hydrocarbon level (%)</text>
+          <text x="20" y="160" fill="#64748b" font-size="12" font-family="Apple SD Gothic Neo,sans-serif" text-anchor="middle" transform="rotate(-90 20 160)">oxygen purity (%)</text>
+          <!-- x축 눈금: 0.8~1.6 → 70~630 px (1unit = 70px, 0.8 at 70) -->
+          <!-- scale: x_px = 70 + (x - 0.8) * 700 -->
+          <!-- y축 눈금: 86~100 → 280~30 px (14 range, 250px) -->
+          <!-- scale: y_px = 280 - (y - 86) * 250/14 -->
+          <text x="70" y="295" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="middle">0.8</text>
+          <text x="140" y="295" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="middle">0.9</text>
+          <text x="210" y="295" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="middle">1.0</text>
+          <text x="280" y="295" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="middle">1.1</text>
+          <text x="350" y="295" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="middle">1.2</text>
+          <text x="420" y="295" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="middle">1.3</text>
+          <text x="490" y="295" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="middle">1.4</text>
+          <text x="560" y="295" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="middle">1.5</text>
+          <text x="630" y="295" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="middle">1.6</text>
+          <!-- y축 눈금 -->
+          <text x="58" y="282" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">86</text>
+          <text x="58" y="264" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">87</text>
+          <text x="58" y="246" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">88</text>
+          <text x="58" y="228" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">89</text>
+          <text x="58" y="210" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">90</text>
+          <text x="58" y="192" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">91</text>
+          <text x="58" y="174" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">92</text>
+          <text x="58" y="156" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">93</text>
+          <text x="58" y="138" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">94</text>
+          <text x="58" y="120" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">95</text>
+          <text x="58" y="102" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">96</text>
+          <text x="58" y="84" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">97</text>
+          <text x="58" y="66" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">98</text>
+          <text x="58" y="48" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">99</text>
+          <text x="58" y="30" fill="#64748b" font-size="10" font-family="Menlo,monospace" text-anchor="end">100</text>
+          <!-- 격자선 -->
+          <line x1="70" y1="210" x2="630" y2="210" stroke="#1a2235" stroke-width="1"/>
+          <line x1="70" y1="156" x2="630" y2="156" stroke="#1a2235" stroke-width="1"/>
+          <line x1="70" y1="102" x2="630" y2="102" stroke="#1a2235" stroke-width="1"/>
+          <line x1="70" y1="48" x2="630" y2="48" stroke="#1a2235" stroke-width="1"/>
+          <!-- 회귀선: g(x) = 74.28 + 14.95x -->
+          <!-- at x=0.8: y=74.28+14.95*0.8=86.24 → x_px=70, y_px=280-(86.24-86)*250/14=280-4.3=275.7 -->
+          <!-- at x=1.6: y=74.28+14.95*1.6=98.2 → x_px=630, y_px=280-(98.2-86)*250/14=280-217.9=62.1 -->
+          <line x1="70" y1="275" x2="630" y2="62" stroke="#ef4444" stroke-width="2.2"/>
+          <!-- E_in 레이블 -->
+          <text x="200" y="60" fill="#fbbf24" font-size="12" font-family="Menlo,monospace">E_in(g) = 1.06</text>
+          <text x="350" y="200" fill="#ef4444" font-size="11" font-family="Menlo,monospace">g(x) = 74.28 + 14.95x</text>
+          <!-- 데이터 포인트 (x_px = 70 + (x-0.8)*700, y_px = 280 - (y-86)*250/14) -->
+          <!-- 1: x=0.99,y=90.01 → 203.0, 208.4 -->
+          <circle cx="203" cy="208" r="4" fill="#3b82f6"/>
+          <!-- 2: x=1.02,y=89.05 → 224.0, 225.6 -->
+          <circle cx="224" cy="226" r="4" fill="#3b82f6"/>
+          <!-- 3: x=1.15,y=91.43 → 315.0, 182.8 -->
+          <circle cx="315" cy="183" r="4" fill="#3b82f6"/>
+          <!-- 4: x=1.29,y=93.74 → 413.0, 141.4 -->
+          <circle cx="413" cy="141" r="4" fill="#3b82f6"/>
+          <!-- 5: x=1.46,y=96.73 → 532.0, 87.7 -->
+          <circle cx="532" cy="88" r="4" fill="#3b82f6"/>
+          <!-- 6: x=1.36,y=94.45 → 462.0, 128.8 -->
+          <circle cx="462" cy="129" r="4" fill="#3b82f6"/>
+          <!-- 7: x=0.87,y=87.59 → 119.0, 254.5 -->
+          <circle cx="119" cy="254" r="4" fill="#3b82f6"/>
+          <!-- 8: x=1.23,y=91.77 → 371.0, 176.6 -->
+          <circle cx="371" cy="177" r="4" fill="#3b82f6"/>
+          <!-- 9: x=1.55,y=99.42 → 595.0, 39.6 -->
+          <circle cx="595" cy="40" r="4" fill="#3b82f6"/>
+          <!-- 10: x=1.40,y=93.65 → 490.0, 143.0 -->
+          <circle cx="490" cy="143" r="4" fill="#3b82f6"/>
+          <!-- 11: x=1.19,y=93.54 → 343.0, 145.0 -->
+          <circle cx="343" cy="145" r="4" fill="#3b82f6"/>
+          <!-- 12: x=1.15,y=92.52 → 315.0, 163.2 -->
+          <circle cx="315" cy="163" r="4" fill="#3b82f6"/>
+          <!-- 13: x=0.98,y=90.56 → 196.0, 200.7 -->
+          <circle cx="196" cy="201" r="4" fill="#3b82f6"/>
+          <!-- 14: x=1.01,y=89.54 → 217.0, 218.2 -->
+          <circle cx="217" cy="218" r="4" fill="#3b82f6"/>
+          <!-- 15: x=1.11,y=89.85 → 287.0, 212.6 -->
+          <circle cx="287" cy="213" r="4" fill="#3b82f6"/>
+          <!-- 16: x=1.20,y=90.39 → 350.0, 203.0 -->
+          <circle cx="350" cy="203" r="4" fill="#3b82f6"/>
+          <!-- 17: x=1.26,y=93.25 → 392.0, 152.1 -->
+          <circle cx="392" cy="152" r="4" fill="#3b82f6"/>
+          <!-- 18: x=1.32,y=93.41 → 434.0, 149.3 -->
+          <circle cx="434" cy="149" r="4" fill="#3b82f6"/>
+          <!-- 19: x=1.43,y=94.98 → 511.0, 121.1 -->
+          <circle cx="511" cy="121" r="4" fill="#3b82f6"/>
+          <!-- 20: x=0.95,y=87.33 → 175.0, 259.2 -->
+          <circle cx="175" cy="259" r="4" fill="#3b82f6"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 10 요약 ── -->
+  <section class="section" id="sec10">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <h2>요약 (Summary)</h2>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="icon">🎯</div>
+        <div class="label">Output Space</div>
+        <div class="value">Y ∈ ℝ</div>
+      </div>
+      <div class="summary-item">
+        <div class="icon">📐</div>
+        <div class="label">Hypothesis</div>
+        <div class="value">h(x) = wᵀx</div>
+      </div>
+      <div class="summary-item">
+        <div class="icon">📉</div>
+        <div class="label">Error Measure</div>
+        <div class="value">e = (ŷ − y)²</div>
+      </div>
+      <div class="summary-item">
+        <div class="icon">⚡</div>
+        <div class="label">Algorithm</div>
+        <div class="value">1-step learning</div>
+      </div>
+      <div class="summary-item">
+        <div class="icon">🔑</div>
+        <div class="label">Solution</div>
+        <div class="value">w = (XᵀX)⁻¹Xᵀy</div>
+      </div>
+      <div class="summary-item">
+        <div class="icon">✅</div>
+        <div class="label">Estimator Type</div>
+        <div class="value">BLUE (OLS)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>선형 모델의 장점</h3>
+      <ul>
+        <li>분류, 회귀, 확률 추정 등 다양한 문제에 사용 가능</li>
+        <li>작은 VC 차원 <span class="hi">d_vc</span> → 좋은 일반화 성능 → <span class="hi-g">첫 번째 실용적 선택지</span></li>
+        <li>"신호" <span class="hi2">wᵀx = Σᵢ wᵢxᵢ</span> 사용</li>
+        <li>Closed-form 해: 드문 경우지만 분석 공식으로 쉽게 계산 가능 → 매우 인기</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-color: var(--accent3);">
+      <h3>핵심 흐름 정리</h3>
+      <div class="svg-wrap">
+        <svg viewBox="0 0 680 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- 노드들 -->
+          <rect x="10" y="30" width="110" height="40" rx="6" fill="#1a2235" stroke="#3b82f6" stroke-width="1.5"/>
+          <text x="65" y="46" fill="#e2e8f0" font-size="10" font-family="Apple SD Gothic Neo,sans-serif" text-anchor="middle">훈련 데이터</text>
+          <text x="65" y="62" fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="middle">(xₙ, yₙ)</text>
+
+          <rect x="155" y="30" width="110" height="40" rx="6" fill="#1a2235" stroke="#06b6d4" stroke-width="1.5"/>
+          <text x="210" y="46" fill="#e2e8f0" font-size="10" font-family="Apple SD Gothic Neo,sans-serif" text-anchor="middle">행렬 구성</text>
+          <text x="210" y="62" fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="middle">X, y</text>
+
+          <rect x="300" y="30" width="130" height="40" rx="6" fill="#1a2235" stroke="#8b5cf6" stroke-width="1.5"/>
+          <text x="365" y="46" fill="#e2e8f0" font-size="10" font-family="Apple SD Gothic Neo,sans-serif" text-anchor="middle">Pseudo-inverse</text>
+          <text x="365" y="62" fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="middle">X† = (XᵀX)⁻¹Xᵀ</text>
+
+          <rect x="465" y="30" width="100" height="40" rx="6" fill="#1a2235" stroke="#10b981" stroke-width="1.5"/>
+          <text x="515" y="46" fill="#e2e8f0" font-size="10" font-family="Apple SD Gothic Neo,sans-serif" text-anchor="middle">가중치 계산</text>
+          <text x="515" y="62" fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="middle">w = X†y</text>
+
+          <rect x="598" y="30" width="72" height="40" rx="6" fill="#10b981" fill-opacity="0.2" stroke="#10b981" stroke-width="1.5"/>
+          <text x="634" y="46" fill="#10b981" font-size="10" font-family="Apple SD Gothic Neo,sans-serif" text-anchor="middle">g(x) 완성</text>
+          <text x="634" y="62" fill="#94a3b8" font-size="9" font-family="Menlo,monospace" text-anchor="middle">w_lin</text>
+
+          <!-- 화살표 -->
+          <line x1="120" y1="50" x2="153" y2="50" stroke="#334155" stroke-width="1.5"/>
+          <polygon points="150,46 158,50 150,54" fill="#334155"/>
+          <line x1="265" y1="50" x2="298" y2="50" stroke="#334155" stroke-width="1.5"/>
+          <polygon points="295,46 303,50 295,54" fill="#334155"/>
+          <line x1="430" y1="50" x2="463" y2="50" stroke="#334155" stroke-width="1.5"/>
+          <polygon points="460,46 468,50 460,54" fill="#334155"/>
+          <line x1="565" y1="50" x2="596" y2="50" stroke="#334155" stroke-width="1.5"/>
+          <polygon points="593,46 601,50 593,54" fill="#334155"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // TOC active highlighting on scroll
+  const sections = document.querySelectorAll('.section');
+  const tocLinks = document.querySelectorAll('.toc-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        tocLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + id) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(sec => observer.observe(sec));
+</script>
+</body>
+</html>
