@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기계학습 연습문제 4 — 응용문제</title>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --surface: #111827;
+  --surface2: #1a2236;
+  --border: #1e2d45;
+  --accent: #3b82f6;
+  --accent2: #06b6d4;
+  --accent3: #a78bfa;
+  --accent4: #f59e0b;
+  --green: #10b981;
+  --red: #ef4444;
+  --text: #e2e8f0;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+  --tag-app: #f59e0b;
+  --pca: #3b82f6;
+  --dt: #10b981;
+  --svm: #a78bfa;
+  --rf: #f43f5e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* ── 헤더 ── */
+.header {
+  background: linear-gradient(135deg, #0a0e1a 0%, #0f172a 50%, #0a0e1a 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 40px 32px 32px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.header-inner { max-width: 1100px; margin: 0 auto; }
+.header-badge {
+  display: inline-block;
+  background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(59,130,246,0.3);
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 4px 12px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.header h1 {
+  font-family: 'Impact', 'Arial Narrow', sans-serif;
+  font-size: clamp(22px, 4vw, 36px);
+  letter-spacing: 1px;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.header-sub {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.header-sub span { color: var(--accent2); }
+
+/* ── 탭 네비 ── */
+.tab-nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 16px 20px;
+  white-space: nowrap;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: #fff; }
+.tab-btn[data-topic="pca"].active { border-color: var(--pca); }
+.tab-btn[data-topic="dt"].active  { border-color: var(--dt); }
+.tab-btn[data-topic="svm"].active { border-color: var(--svm); }
+.tab-btn[data-topic="rf"].active  { border-color: var(--rf); }
+.tab-btn[data-topic="all"].active { border-color: var(--accent2); }
+
+/* ── 레이아웃 ── */
+.main { max-width: 1100px; margin: 0 auto; padding: 32px; }
+
+.topic-section { display: none; }
+.topic-section.visible { display: block; }
+
+/* ── 원본/응용 레이아웃 ── */
+.problem-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 28px;
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .problem-pair { grid-template-columns: 1fr; }
+}
+
+/* ── 카드 ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  position: relative;
+}
+.card.original {
+  border-left: 3px solid var(--text-muted);
+}
+.card.applied-pca  { border-left: 3px solid var(--pca); }
+.card.applied-dt   { border-left: 3px solid var(--dt); }
+.card.applied-svm  { border-left: 3px solid var(--svm); }
+.card.applied-rf   { border-left: 3px solid var(--rf); }
+
+.card-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-label.orig-label { color: var(--text-muted); }
+.card-label.app-label  { color: var(--tag-app); }
+.app-tag {
+  background: rgba(245,158,11,0.15);
+  border: 1px solid rgba(245,158,11,0.3);
+  color: var(--tag-app);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+.problem-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.problem-body {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.8;
+}
+.problem-body strong { color: var(--text); }
+
+/* ── 표 ── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 12px;
+}
+.data-table th {
+  background: var(--surface2);
+  color: var(--accent2);
+  padding: 7px 10px;
+  text-align: center;
+  border: 1px solid var(--border);
+  font-weight: 600;
+}
+.data-table td {
+  padding: 6px 10px;
+  text-align: center;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.data-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+.pos { color: var(--green); font-weight: 700; }
+.neg { color: var(--red); font-weight: 700; }
+
+/* ── 난이도 ── */
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.difficulty {
+  font-size: 12px;
+  color: var(--accent4);
+}
+.type-badge {
+  font-size: 10px;
+  background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.25);
+  color: var(--accent3);
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+.variant-badge {
+  font-size: 10px;
+  background: rgba(6,182,212,0.1);
+  border: 1px solid rgba(6,182,212,0.25);
+  color: var(--accent2);
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+/* ── 정답 토글 ── */
+.toggle-btn {
+  background: rgba(59,130,246,0.08);
+  border: 1px solid rgba(59,130,246,0.2);
+  color: var(--accent);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin-top: 16px;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.toggle-btn:hover {
+  background: rgba(59,130,246,0.15);
+  border-color: rgba(59,130,246,0.4);
+}
+.toggle-arrow { transition: transform 0.2s; }
+.toggle-btn.open .toggle-arrow { transform: rotate(180deg); }
+
+.answer-box {
+  display: none;
+  margin-top: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  font-size: 12.5px;
+  line-height: 1.9;
+  color: var(--text-dim);
+}
+.answer-box.visible { display: block; }
+.answer-box .ans-title {
+  color: var(--green);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.answer-box .variant-note {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--accent4);
+  font-size: 11.5px;
+}
+.answer-box .variant-note strong { color: var(--accent4); }
+
+/* ── 수식 블록 ── */
+.math-block {
+  background: #0a0e1a;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin: 8px 0;
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--accent2);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+/* ── 섹션 헤더 ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.section-num {
+  font-family: 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 48px;
+  line-height: 1;
+  opacity: 0.15;
+  color: #fff;
+}
+.section-info {}
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.section-desc { font-size: 12px; color: var(--text-muted); }
+
+/* ── 채점판 ── */
+.score-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px 32px;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.score-text { font-size: 14px; color: var(--text-muted); }
+.score-value { font-size: 28px; font-weight: 700; color: var(--accent2); font-family: 'Menlo', monospace; }
+.score-btn {
+  background: var(--accent);
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 24px;
+  letter-spacing: 0.5px;
+  transition: background 0.2s;
+}
+.score-btn:hover { background: #2563eb; }
+
+/* ── sub-问 labels ── */
+.sub-q {
+  display: inline-block;
+  background: rgba(59,130,246,0.1);
+  border-left: 2px solid var(--accent);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  margin: 8px 0 4px;
+  border-radius: 0 2px 2px 0;
+}
+
+.highlight { color: var(--accent4); font-weight: 700; }
+.change { color: #f43f5e; font-weight: 700; }
+
+/* matrix display */
+.matrix {
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--accent2);
+  background: #0a0e1a;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px 16px;
+  margin: 8px 0;
+  display: inline-block;
+  white-space: pre;
+  line-height: 1.6;
+}
+
+.divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+.problem-num {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  font-family: 'Menlo', monospace;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-badge">Applied Problems · 응용문제</div>
+    <h1>기계학습 연습문제 4 — 응용 출제</h1>
+    <p class="header-sub">PCA · Decision Tree · SVM · Random Forest &nbsp;|&nbsp; <span>인천대학교 컴퓨터공학부 2026학년도 1학기</span></p>
+    <p class="header-sub" style="margin-top:6px; font-size:12px;">원본 문제 대비 수치·조건·방향을 변형한 응용문제 각 3문제 (총 12문제)</p>
+  </div>
+</div>
+
+<div class="tab-nav">
+  <button class="tab-btn active" data-topic="all" onclick="showTopic('all',this)">전체 보기</button>
+  <button class="tab-btn" data-topic="pca" onclick="showTopic('pca',this)">문제 1 · PCA</button>
+  <button class="tab-btn" data-topic="dt"  onclick="showTopic('dt',this)">문제 2 · Decision Tree</button>
+  <button class="tab-btn" data-topic="svm" onclick="showTopic('svm',this)">문제 3 · SVM</button>
+  <button class="tab-btn" data-topic="rf"  onclick="showTopic('rf',this)">문제 4 · 서술형</button>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!--  문제 1 — PCA                                         -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="topic-section visible" id="sec-pca">
+  <div class="section-header">
+    <div class="section-num">01</div>
+    <div class="section-info">
+      <div class="section-title">주성분 분석 (PCA)</div>
+      <div class="section-desc">선형 종속 구조 · 공분산 행렬 · 고유값 분해 · 차원 축소</div>
+    </div>
+  </div>
+
+  <!-- ── PCA 응용 1 ── -->
+  <div class="problem-pair">
+    <!-- 원본 요약 -->
+    <div class="card original">
+      <div class="card-label orig-label">원본 문제 요약</div>
+      <div class="problem-title">3×3 데이터 행렬, x₃ = x₁ + x₂</div>
+      <div class="problem-body">
+        X =<br>
+        <span class="matrix">[1 1 2]
+[2 0 2]
+[3 1 4]</span>
+        x₃ = x₁ + x₂ (완전 선형 종속)<br>
+        → 평균 제거 → 공분산 → 표준화 → 상관계수 행렬 → 고유값 분해 → 2D 투영
+      </div>
+    </div>
+
+    <!-- 응용 1-1 -->
+    <div class="card applied-pca">
+      <div class="card-label app-label"><span class="app-tag">[응용]</span> PCA — 1-A</div>
+      <div class="meta-row">
+        <span class="difficulty">⭐⭐ 보통</span>
+        <span class="variant-badge">수치 변형</span>
+        <span class="type-badge">계산형</span>
+      </div>
+      <div class="problem-num">P1-A</div>
+      <div class="problem-title">아래 데이터 행렬 X′로 동일 절차를 수행하시오.</div>
+      <div class="problem-body">
+        <span class="matrix">X′ =
+[2  1  3]
+[4  2  6]
+[0  3  3]</span>
+        단, <strong>x₃ = x₁ + x₂</strong> 관계가 여전히 성립함을 먼저 확인하시오.
+
+        <div class="sub-q">(가)</div>
+        각 특성의 표본 평균 μ = (μ₁, μ₂, μ₃)와 평균 제거 행렬 X̃를 구하시오.
+
+        <div class="sub-q">(나)</div>
+        공분산 행렬 Σ = (1/N)X̃ᵀX̃ 를 계산하고, Cov(x₁, x₂)의 값과 원본 문제와의 차이를 서술하시오.
+
+        <div class="sub-q">(다)</div>
+        정규화 행렬 Z와 상관계수 행렬 C를 구하시오.
+
+        <div class="sub-q">(라)</div>
+        det(C − λI) = 0을 풀어 고유값을 구하시오. <span class="highlight">0이 아닌 고유값이 몇 개인지</span>, 그 이유를 x₃와의 관계로 설명하시오.
+
+        <div class="sub-q">(마)</div>
+        2차원으로 축소할 때 정보 보존율을 계산하고, 투영 결과 Y = ZW를 구하시오.
+      </div>
+      <button class="toggle-btn" onclick="toggleAnswer(this)">
+        정답 및 해설 보기 <span class="toggle-arrow">▾</span>
+      </button>
+      <div class="answer-box">
+        <div class="ans-title">풀이</div>
+        <strong>(가) 평균 및 평균 제거</strong><br>
+        μ₁ = (2+4+0)/3 = 2, μ₂ = (1+2+3)/3 = 2, μ₃ = (3+6+3)/3 = 4
+        <div class="math-block">X̃ = [ 0 -1 -1 ]
+     [ 2  0  2 ]
+     [-2  1 -1 ]</div>
+
+        <strong>(나) 공분산 행렬</strong><br>
+        <div class="math-block">Σ = (1/3)X̃ᵀX̃
+Σ₁₁ = (0²+2²+(-2)²)/3 = 8/3
+Σ₂₂ = ((-1)²+0²+1²)/3 = 2/3
+Σ₃₃ = ((-1)²+2²+(-1)²)/3 = 2 = Σ₁₁+Σ₂₂ (선형종속 확인)
+Cov(x₁,x₂) = (0·(-1)+2·0+(-2)·1)/3 = -2/3 ≠ 0</div>
+        → 원본에서는 Cov(x₁,x₂) = 0 이었으나, 여기서는 <strong>−2/3</strong>으로 x₁, x₂ 사이에 음의 상관이 존재함.
+
+        <strong>(다) 표준화 행렬 Z, 상관계수 행렬 C</strong><br>
+        <div class="math-block">σ₁ = √(8/3), σ₂ = √(2/3), σ₃ = √2
+Z_ij = X̃_ij / σ_j (각 열을 표준편차로 나눔)
+C = (1/3)ZᵀZ  (3×3 상관계수 행렬)</div>
+
+        <strong>(라) 고유값</strong><br>
+        x₃ = x₁ + x₂ → 완전 선형 종속 → rank(C) ≤ 2 → <span class="highlight">λ₃ = 0</span> 반드시 존재.<br>
+        비영 고유값 개수: <strong>2개</strong><br>
+        (구체적 값은 C의 대각 원소와 Cov를 이용해 특성방정식 전개로 도출)
+
+        <strong>(마) 정보 보존율 및 투영</strong><br>
+        <div class="math-block">보존율 = (λ₁ + λ₂) / (λ₁ + λ₂ + 0) = 100%
+(λ₃ = 0 이므로 2D 투영 시 정보 손실 없음)</div>
+        W = [v₁ | v₂]로 Y = ZW 계산 (3×2 행렬)
+
+        <div class="variant-note">
+          <strong>변형 포인트:</strong> 원본 Cov(x₁,x₂) = 0이었으나, 이 문제는 Cov(x₁,x₂) ≠ 0으로 변경. x₁, x₂가 독립이 아니어도 x₃ 선형 종속이 유지되면 고유값 0은 동일하게 발생함을 학습.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PCA 응용 2 ── -->
+  <div class="problem-pair">
+    <div class="card original">
+      <div class="card-label orig-label">원본 문제 요약</div>
+      <div class="problem-title">2D 축소: 분산 설명률 계산 후 2D 투영</div>
+      <div class="problem-body">
+        3개의 고유값 중 상위 2개 선택 → 정보 보존율 제시 → Y = ZW (3×2)
+      </div>
+    </div>
+
+    <div class="card applied-pca">
+      <div class="card-label app-label"><span class="app-tag">[응용]</span> PCA — 1-B</div>
+      <div class="meta-row">
+        <span class="difficulty">⭐⭐ 보통</span>
+        <span class="variant-badge">역방향 문제</span>
+        <span class="type-badge">계산형</span>
+      </div>
+      <div class="problem-num">P1-B</div>
+      <div class="problem-title">고유값과 분산 설명률이 주어졌을 때, 원본 데이터의 특성을 역추론하시오.</div>
+      <div class="problem-body">
+        어떤 3차원 데이터에 대해 상관계수 행렬 C의 고유값이 다음과 같이 계산되었다:
+        <div class="math-block">λ₁ = 2.5,  λ₂ = 0.5,  λ₃ = 0</div>
+
+        <div class="sub-q">(가)</div>
+        각 고유값의 분산 설명률과, 2D로 축소할 때의 정보 보존율을 구하시오.
+
+        <div class="sub-q">(나)</div>
+        λ₃ = 0이 의미하는 바를 데이터의 특성 구조 측면에서 설명하시오. 이 데이터에 <strong>반드시 존재하는 특성 간 관계식</strong>의 형태를 서술하시오.
+
+        <div class="sub-q">(다)</div>
+        만약 λ₃ = 0.1 (≈ 0)으로 바뀐다면, 2D 축소 시 정보 보존율과 손실 정보량은 각각 몇 %인가? λ₃가 완전히 0이 아닐 때 발생하는 실용적 문제를 설명하시오.
+
+        <div class="sub-q">(라)</div>
+        <span class="highlight">1D로만 축소할 때</span> 분산 설명률은 얼마인가? 원본 문제(2D 축소)와 비교하여 차원 축소 깊이 선택 기준을 논하시오.
+      </div>
+      <button class="toggle-btn" onclick="toggleAnswer(this)">
+        정답 및 해설 보기 <span class="toggle-arrow">▾</span>
+      </button>
+      <div class="answer-box">
+        <div class="ans-title">풀이</div>
+        <strong>(가) 분산 설명률</strong>
+        <div class="math-block">총합 = 2.5 + 0.5 + 0 = 3.0
+λ₁ 설명률 = 2.5/3.0 = 83.3%
+λ₂ 설명률 = 0.5/3.0 = 16.7%
+λ₃ 설명률 = 0/3.0 = 0%
+2D 보존율 = (2.5+0.5)/3.0 = 100%</div>
+
+        <strong>(나) λ₃ = 0의 의미</strong><br>
+        상관계수 행렬의 rank &lt; 3 → 특성 간 <strong>완전 선형 종속</strong> 존재.<br>
+        어떤 특성 xₖ가 다른 특성들의 선형결합으로 표현됨:<br>
+        <div class="math-block">xₖ = a·xᵢ + b·xⱼ  (a, b는 상수)</div>
+        데이터가 실제로는 2차원 초평면(hyperplane) 위에 놓여 있음.
+
+        <strong>(다) λ₃ = 0.1일 때</strong>
+        <div class="math-block">총합 = 2.5 + 0.5 + 0.1 = 3.1
+2D 보존율 = (2.5+0.5)/3.1 ≈ 96.8%
+손실 = 0.1/3.1 ≈ 3.2%</div>
+        실용적 문제: 어떤 특성 조합이 선형 종속인지 불명확 → 주성분 수 결정 임계값(예: 95%) 기준 설정 필요.
+
+        <strong>(라) 1D 축소 시</strong>
+        <div class="math-block">1D 보존율 = 2.5/3.0 = 83.3%
+2D 대비 추가 설명량 = 0.5/3.0 = 16.7%p 손실</div>
+        기준: 보존율 ≥ 95%를 목표로 할 때 2D가 필요; 시각화가 목적이라면 2D가 표준.
+
+        <div class="variant-note">
+          <strong>변형 포인트:</strong> 고유값 → 투영 순서를 역전. 원본은 데이터→고유값 방향이나, 여기서는 고유값→데이터 구조 추론의 역방향 문제.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PCA 응용 3 ── -->
+  <div class="problem-pair">
+    <div class="card original">
+      <div class="card-label orig-label">원본 문제 요약</div>
+      <div class="problem-title">x₃ = x₁ + x₂ (계수 1:1) 선형 종속</div>
+      <div class="problem-body">
+        x₃는 x₁과 x₂의 단순 합. PCA 후 2D 보존율 = 100%.
+      </div>
+    </div>
+
+    <div class="card applied-pca">
+      <div class="card-label app-label"><span class="app-tag">[응용]</span> PCA — 1-C</div>
+      <div class="meta-row">
+        <span class="difficulty">⭐⭐⭐ 어려움</span>
+        <span class="variant-badge">개념 결합</span>
+        <span class="type-badge">계산형 + 종합판단형</span>
+      </div>
+      <div class="problem-num">P1-C</div>
+      <div class="problem-title">x₃ = 2x₁ − x₂인 데이터에 대해 PCA를 수행하고, 원본 문제와의 차이를 분석하시오.</div>
+      <div class="problem-body">
+        <span class="matrix">X″ =
+[1  2  0]
+[3  0  6]
+[2  4  0]</span>
+        단, x₃ = <span class="change">2x₁ − x₂</span> 관계를 먼저 검증하시오.
+
+        <div class="sub-q">(가)</div>
+        μ와 X̃를 계산하시오.
+
+        <div class="sub-q">(나)</div>
+        공분산 행렬 Σ를 계산하시오. <span class="highlight">Cov(x₁, x₂)의 부호</span>와 그 직관적 의미를 설명하시오.
+
+        <div class="sub-q">(다)</div>
+        다음 두 주장 중 옳은 것을 고르고, 이유를 고유값 관점에서 서술하시오.<br>
+        &nbsp;&nbsp;① 이 데이터도 2D 투영 시 100% 정보 보존된다.<br>
+        &nbsp;&nbsp;② x₃ = 2x₁ − x₂이므로 원본 문제보다 보존율이 낮다.
+
+        <div class="sub-q">(라)</div>
+        만약 이 데이터에 <span class="highlight">노이즈(noise)를 추가</span>하여 x₃ ≈ 2x₁ − x₂ + ε (ε: 소량 오차)로 만들면, λ₃는 어떻게 변하는가? 이것이 실제 머신러닝에서 PCA를 사용하는 이유와 어떻게 연결되는지 설명하시오.
+      </div>
+      <button class="toggle-btn" onclick="toggleAnswer(this)">
+        정답 및 해설 보기 <span class="toggle-arrow">▾</span>
+      </button>
+      <div class="answer-box">
+        <div class="ans-title">풀이</div>
+        <strong>(가) 평균 및 평균 제거</strong>
+        <div class="math-block">μ₁ = (1+3+2)/3 = 2, μ₂ = (2+0+4)/3 = 2, μ₃ = (0+6+0)/3 = 2
+검증: 2·1−2=0 ✓, 2·3−0=6 ✓, 2·2−4=0 ✓
+X̃ = [-1  0 -2]
+     [ 1 -2  4]
+     [ 0  2 -2]</div>
+
+        <strong>(나) 공분산 행렬</strong>
+        <div class="math-block">Σ₁₁ = (1+1+0)/3 = 2/3
+Σ₂₂ = (0+4+4)/3 = 8/3
+Cov(x₁,x₂) = (-1·0 + 1·(-2) + 0·2)/3 = -2/3 < 0</div>
+        → x₁이 커질 때 x₂는 작아지는 경향 (x₃=2x₁−x₂에서 x₁↑ → 2x₁↑ → x₂ 상대적으로 작아야 x₃ 일정 유지)
+
+        <strong>(다) 올바른 주장: ①</strong><br>
+        x₃ = 2x₁ − x₂도 완전 선형 종속 → rank(C) ≤ 2 → <span class="highlight">λ₃ = 0</span><br>
+        계수(1:1 vs 2:−1)는 선형 종속 여부에 영향 없음. 2D 보존율 = 100%.
+
+        <strong>(라) 노이즈 추가 시</strong>
+        <div class="math-block">ε ≠ 0 → x₃가 x₁, x₂의 완전 선형결합에서 벗어남
+→ λ₃ > 0 (매우 작은 양수로 변화)
+→ 2D 보존율 < 100% (예: 99.x%)</div>
+        실제 데이터는 항상 노이즈 포함 → λ₃ > 0가 일반적. PCA는 작은 λ를 가진 방향(노이즈 방향)을 제거하여 <strong>노이즈 제거 + 차원 축소</strong>를 동시에 달성. 이것이 실제 ML에서 PCA를 전처리로 사용하는 핵심 이유.
+
+        <div class="variant-note">
+          <strong>변형 포인트:</strong> 계수를 x₃=x₁+x₂ → x₃=2x₁−x₂로 변경. 계수 변형이 고유값 0 여부에 영향이 없음을 확인하고, 노이즈 개념까지 연결하는 개념 결합 문제.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!--  문제 2 — Decision Tree                               -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="topic-section" id="sec-dt">
+  <div class="section-header">
+    <div class="section-num">02</div>
+    <div class="section-info">
+      <div class="section-title">Decision Tree — Gini 불순도</div>
+      <div class="section-desc">분기 기준 선택 · 가중 Gini · Gini 감소량 · 트리 구조</div>
+    </div>
+  </div>
+
+  <!-- ── DT 응용 1 ── -->
+  <div class="problem-pair">
+    <div class="card original">
+      <div class="card-label orig-label">원본 문제 요약</div>
+      <div class="problem-title">10명 환자 (종양크기/흡연기간 → 양성/악성)</div>
+      <div class="problem-body">
+        양성 4명 / 악성 6명<br>
+        종양크기(소 5명, 대 5명) vs 흡연기간(단기 4명, 장기 6명)<br>
+        루트: 종양크기 선택 → max depth 2
+      </div>
+    </div>
+
+    <div class="card applied-dt">
+      <div class="card-label app-label"><span class="app-tag">[응용]</span> DT — 2-A</div>
+      <div class="meta-row">
+        <span class="difficulty">⭐⭐ 보통</span>
+        <span class="variant-badge">수치 변형</span>
+        <span class="type-badge">계산형</span>
+      </div>
+      <div class="problem-num">P2-A</div>
+      <div class="problem-title">아래 12명의 환자 데이터로 동일 절차를 수행하시오.</div>
+      <div class="problem-body">
+        <table class="data-table">
+          <tr><th>환자</th><th>종양크기</th><th>흡연기간</th><th>진단</th></tr>
+          <tr><td>1</td><td>소</td><td>단기</td><td class="pos">양성</td></tr>
+          <tr><td>2</td><td>소</td><td>단기</td><td class="pos">양성</td></tr>
+          <tr><td>3</td><td>소</td><td>단기</td><td class="pos">양성</td></tr>
+          <tr><td>4</td><td>소</td><td>단기</td><td class="pos">양성</td></tr>
+          <tr><td>5</td><td>소</td><td>장기</td><td class="neg">악성</td></tr>
+          <tr><td>6</td><td>소</td><td>장기</td><td class="neg">악성</td></tr>
+          <tr><td>7</td><td>대</td><td>단기</td><td class="neg">악성</td></tr>
+          <tr><td>8</td><td>대</td><td>장기</td><td class="neg">악성</td></tr>
+          <tr><td>9</td><td>대</td><td>장기</td><td class="neg">악성</td></tr>
+          <tr><td>10</td><td>대</td><td>장기</td><td class="neg">악성</td></tr>
+          <tr><td>11</td><td>대</td><td>장기</td><td class="neg">악성</td></tr>
+          <tr><td>12</td><td>대</td><td>장기</td><td class="neg">악성</td></tr>
+        </table>
+        조건: Gini 불순도 기준, max depth = 2
+
+        <div class="sub-q">(가)</div>
+        전체 데이터셋의 Gini(S)를 계산하시오.
+
+        <div class="sub-q">(나)</div>
+        종양크기와 흡연기간 각각으로 분기할 때의 <strong>가중 Gini 불순도</strong>와 <strong>Gini 감소량</strong>을 계산하고, 루트 노드 분기 기준을 결정하시오.
+
+        <div class="sub-q">(다)</div>
+        순수하지 않은 자식 노드에서 깊이 2 분기를 수행하고 Gini 감소량을 계산하시오.
+
+        <div class="sub-q">(라)</div>
+        최종 트리 구조를 텍스트로 나타내고, 새 환자 {종양크기=소, 흡연기간=장기} 의 예측 결과를 제시하시오.
+      </div>
+      <button class="toggle-btn" onclick="toggleAnswer(this)">
+        정답 및 해설 보기 <span class="toggle-arrow">▾</span>
+      </button>
+      <div class="answer-box">
+        <div class="ans-title">풀이</div>
+        <strong>(가) 전체 Gini</strong>
+        <div class="math-block">양성 4명, 악성 8명 (총 12명)
+Gini(S) = 1 − ((4/12)² + (8/12)²)
+        = 1 − (1/9 + 4/9)
+        = 1 − 5/9 = 4/9 ≈ 0.444</div>
+
+        <strong>(나) 분기 기준 비교</strong><br>
+        종양크기 기준:
+        <div class="math-block">소 (6명): 양성 4, 악성 2 → Gini = 1−((4/6)²+(2/6)²) = 1−(4/9+1/9) = 4/9
+대 (6명): 양성 0, 악성 6 → Gini = 0 (순수!)
+가중 Gini = (6/12)·(4/9) + (6/12)·0 = 2/9 ≈ 0.222
+Gini 감소량 = 4/9 − 2/9 = 2/9 ≈ 0.222</div>
+        흡연기간 기준:
+        <div class="math-block">단기 (5명): 양성 4, 악성 1 → Gini = 1−((4/5)²+(1/5)²) = 1−(16/25+1/25) = 8/25
+장기 (7명): 양성 0, 악성 7 → Gini = 0 (순수!)
+가중 Gini = (5/12)·(8/25) + (7/12)·0 = 40/300 = 2/15 ≈ 0.133
+Gini 감소량 = 4/9 − 2/15 = 20/45 − 6/45 = 14/45 ≈ 0.311</div>
+        → <strong>흡연기간 선택</strong> (Gini 감소량 더 큼)
+
+        <strong>(다) 깊이 2 분기</strong><br>
+        단기 노드 (양성 4, 악성 1) → 종양크기로 추가 분기:
+        <div class="math-block">소/단기: 양성 4, 악성 0 → Gini = 0 ✓
+대/단기: 양성 0, 악성 1 → Gini = 0 ✓
+Gini 감소량 = 8/25 − 0 = 0.320</div>
+
+        <strong>(라) 최종 트리 구조</strong>
+        <div class="math-block">[루트] 흡연기간?
+├─ 단기 (5명)
+│   └─ 종양크기?
+│       ├─ 소 → [양성] (4명)
+│       └─ 대 → [악성] (1명)
+└─ 장기 (7명) → [악성] (순수 노드)</div>
+        새 환자 {소, 장기}: 흡연기간=장기 → <strong>악성</strong>
+
+        <div class="variant-note">
+          <strong>변형 포인트:</strong> 샘플 수 10→12명, 종양크기 소 그룹에 양성 1명 추가(소·단기:4명). 루트 분기 기준이 원본(종양크기)에서 흡연기간으로 변경되어 분기 순서가 역전됨.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DT 응용 2 ── -->
+  <div class="problem-pair">
+    <div class="card original">
+      <div class="card-label orig-label">원본 문제 요약</div>
+      <div class="problem-title">max depth = 2, 두 특성 (종양크기, 흡연기간)</div>
+      <div class="problem-body">
+        루트: 종양크기 → 깊이 2: 흡연기간<br>
+        새 환자 예측: {소, 장기} → 악성
+      </div>
+    </div>
+
+    <div class="card applied-dt">
+      <div class="card-label app-label"><span class="app-tag">[응용]</span> DT — 2-B</div>
+      <div class="meta-row">
+        <span class="difficulty">⭐⭐ 보통</span>
+        <span class="variant-badge">조건 변형</span>
+        <span class="type-badge">결과 도출형</span>
+      </div>
+      <div class="problem-num">P2-B</div>
+      <div class="problem-title">원본 데이터에 세 번째 특성 "나이(40대 이하 / 50대 이상)"를 추가하시오.</div>
+      <div class="problem-body">
+        원본 10명 데이터에 아래 나이 정보를 추가한다:
+        <table class="data-table">
+          <tr><th>환자</th><th>종양크기</th><th>흡연기간</th><th>나이</th><th>진단</th></tr>
+          <tr><td>1~3</td><td>소</td><td>단기</td><td>40대↓</td><td class="pos">양성</td></tr>
+          <tr><td>4~5</td><td>소</td><td>장기</td><td>50대↑</td><td class="neg">악성</td></tr>
+          <tr><td>6</td><td>대</td><td>단기</td><td>50대↑</td><td class="neg">악성</td></tr>
+          <tr><td>7~10</td><td>대</td><td>장기</td><td>50대↑</td><td class="neg">악성</td></tr>
+        </table>
+        조건: max depth = 1 (루트 노드만 분기, 즉 Stump)
+
+        <div class="sub-q">(가)</div>
+        종양크기, 흡연기간, 나이 세 특성 각각의 Gini 감소량을 계산하시오.
+
+        <div class="sub-q">(나)</div>
+        가장 Gini 감소량이 큰 특성을 루트 분기로 선택하시오. 원본 문제(종양크기 선택)와 결과가 같은가, 다른가? 다르다면 왜인지 설명하시오.
+
+        <div class="sub-q">(다)</div>
+        max depth = 1로 제한되어 있으므로, 이 Decision Stump의 <strong>오분류율(error rate)</strong>을 계산하시오.
+
+        <div class="sub-q">(라)</div>
+        max depth를 1→2로 늘렸을 때 오분류율이 감소하는가? 이것이 Random Forest의 <strong>편향-분산 트레이드오프</strong>와 어떻게 연결되는지 설명하시오.
+      </div>
+      <button class="toggle-btn" onclick="toggleAnswer(this)">
+        정답 및 해설 보기 <span class="toggle-arrow">▾</span>
+      </button>
+      <div class="answer-box">
+        <div class="ans-title">풀이</div>
+        <strong>(가) 세 특성 Gini 감소량</strong><br>
+        전체: 양성 3, 악성 7 → Gini(S) = 1 − (9/100 + 49/100) = 42/100 = 0.42
+        <div class="math-block">종양크기:
+  소(5): 양성3, 악성2 → Gini=1−(9/25+4/25)=12/25=0.48
+  대(5): 양성0, 악성5 → Gini=0
+  가중Gini=(5/10)·0.48+(5/10)·0 = 0.24
+  감소량=0.42−0.24=0.18
+
+흡연기간:
+  단기(4): 양성3, 악성1 → Gini=1−(9/16+1/16)=6/16=0.375
+  장기(6): 양성0, 악성6 → Gini=0
+  가중Gini=(4/10)·0.375=0.15
+  감소량=0.42−0.15=0.27
+
+나이:
+  40대↓(3): 양성3, 악성0 → Gini=0
+  50대↑(7): 양성0, 악성7 → Gini=0
+  가중Gini=0
+  감소량=0.42−0=0.42</div>
+
+        <strong>(나) 나이 선택</strong> (감소량 0.42 최대)<br>
+        원본(종양크기, 0.18)과 다름. 나이가 양성/악성을 완벽 분리 → 이 데이터셋에서 가장 강력한 특성.
+
+        <strong>(다) 오분류율</strong>
+        <div class="math-block">나이로 분기 시:
+  40대↓ → 양성 예측: 3명 모두 양성 ✓
+  50대↑ → 악성 예측: 7명 모두 악성 ✓
+오분류율 = 0/10 = 0%</div>
+        (나이가 완벽 분리자이므로 depth=1만으로도 오분류 없음)
+
+        <strong>(라) depth 증가와 편향-분산 트레이드오프</strong><br>
+        depth 증가 → 훈련 오분류율 감소(편향↓) but 과적합 위험(분산↑).<br>
+        Random Forest: 여러 depth가 큰 트리를 <strong>각각 다른 부트스트랩 샘플</strong>로 학습 → 개별 트리의 고분산을 앙상블로 상쇄 → 낮은 편향 + 낮은 분산 동시 달성.
+
+        <div class="variant-note">
+          <strong>변형 포인트:</strong> 특성 2개 → 3개로 추가, max depth=2→1로 제한. 완벽 분리자(나이)가 도입되어 루트 선택이 완전히 바뀌는 상황을 학습.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DT 응용 3 ── -->
+  <div class="problem-pair">
+    <div class="card original">
+      <div class="card-label orig-label">원본 문제 요약</div>
+      <div class="problem-title">Gini 감소량으로 루트 선택 → 깊이 2까지 분기</div>
+      <div class="problem-body">
+        루트(종양크기) 분기 후 "소" 그룹이 불순 → 흡연기간으로 추가 분기
+      </div>
+    </div>
+
+    <div class="card applied-dt">
+      <div class="card-label app-label"><span class="app-tag">[응용]</span> DT — 2-C</div>
+      <div class="meta-row">
+        <span class="difficulty">⭐⭐⭐ 어려움</span>
+        <span class="variant-badge">역방향 문제</span>
+        <span class="type-badge">종합판단형</span>
+      </div>
+      <div class="problem-num">P2-C</div>
+      <div class="problem-title">아래 Decision Tree 구조가 주어졌을 때, 이 트리를 만든 원본 데이터를 역추론하시오.</div>
+      <div class="problem-body">
+        <div class="math-block">[루트] 흡연기간?
+├─ 단기
+│   └─ 종양크기?
+│       ├─ 소 → [양성] (n=a)
+│       └─ 대 → [악성] (n=b)
+└─ 장기 → [악성] (n=c, 순수 노드)</div>
+
+        조건:
+        <ul style="margin: 8px 0 0 16px; color: var(--text-dim); font-size:13px; line-height:2;">
+          <li>전체 샘플 N = 12명</li>
+          <li>양성 : 악성 = 1 : 2</li>
+          <li>루트 Gini(S) = 4/9</li>
+          <li>장기 그룹은 악성만 포함 (순수 노드)</li>
+        </ul>
+
+        <div class="sub-q">(가)</div>
+        a, b, c의 가능한 값을 조건을 이용해 결정하시오. (힌트: 양성 4명, 악성 8명)
+
+        <div class="sub-q">(나)</div>
+        루트에서 흡연기간으로 분기하는 것이 종양크기로 분기하는 것보다 Gini 감소량이 크려면, <strong>단기 그룹의 악성 비율</strong>이 어떤 조건을 만족해야 하는가? 부등식으로 표현하시오.
+
+        <div class="sub-q">(다)</div>
+        이 트리로 새 환자를 분류할 때의 예측 결과를 구하시오:<br>
+        ① {단기, 소} &nbsp;&nbsp; ② {단기, 대} &nbsp;&nbsp; ③ {장기, 소}
+
+        <div class="sub-q">(라)</div>
+        루트를 흡연기간이 아닌 종양크기로 바꿨을 때 트리 구조가 어떻게 달라지는지 텍스트로 나타내고, 두 트리의 예측 결과가 달라지는 샘플 조합을 모두 찾으시오.
+      </div>
+      <button class="toggle-btn" onclick="toggleAnswer(this)">
+        정답 및 해설 보기 <span class="toggle-arrow">▾</span>
+      </button>
+      <div class="answer-box">
+        <div class="ans-title">풀이</div>
+        <strong>(가) a, b, c 결정</strong>
+        <div class="math-block">N=12, 양성:악성=1:2 → 양성 4명, 악성 8명
+장기 그룹(c명): 악성만 → c명 모두 악성
+단기 그룹(12−c명): 양성 a + 악성 b = 12−c
+
+장기 그룹이 순수 악성이고 단기에 양성이 모두 있으므로:
+a = 4 (전체 양성이 단기에만 있음)
+가장 단순한 경우: c = 6, 단기 = 6명
+→ a = 4, b = 2, c = 6</div>
+
+        <strong>(나) 흡연기간이 종양크기보다 Gini 감소량이 크려면</strong>
+        <div class="math-block">설 단기 n₁명, 그 중 악성 비율 = p
+Gini(단기) = 1 − ((1−p)² + p²) = 2p(1−p)
+
+가중 Gini(흡연기간) = (n₁/12)·2p(1−p) + 0
+
+종양크기 기준 가중 Gini와 비교하여
+흡연기간 감소량 > 종양크기 감소량
+⟺ 단기 그룹의 불순도가 충분히 낮아야 함
+⟺ p < p* (임계값)
+
+구체적으로 종양크기 분기의 Gini 감소량과 비교:
+흡연기간이 유리하려면 단기 그룹 내 악성 비율 p가
+종양크기로 분기할 때보다 악성이 더 집중되어야 함</div>
+
+        <strong>(다) 예측 결과</strong>
+        <div class="math-block">① {단기, 소} → 단기 → 종양크기=소 → [양성]
+② {단기, 대} → 단기 → 종양크기=대 → [악성]
+③ {장기, 소} → 장기 → [악성] (종양크기 무관)</div>
+
+        <strong>(라) 루트를 종양크기로 변경 시</strong>
+        <div class="math-block">[루트] 종양크기?
+├─ 소 → [양성] (단순 다수결 또는 추가 분기)
+└─ 대 → [악성]</div>
+        예측 결과 달라지는 조합: <strong>{단기, 대}</strong><br>
+        → 흡연기간 루트 트리: 악성 / 종양크기 루트 트리: 악성 (같음)<br>
+        → <strong>{장기, 소}</strong>: 흡연기간 루트 → 악성 / 종양크기 루트 → 양성(소이므로) : <span class="highlight">결과 다름</span>
+
+        <div class="variant-note">
+          <strong>변형 포인트:</strong> 트리 구조를 주고 데이터 역추론 + 분기 순서의 의미 분석. 원본은 데이터→트리 방향이나, 여기서는 트리→데이터 역방향 문제.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!--  문제 3 — SVM                                         -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="topic-section" id="sec-svm">
+  <div class="section-header">
+    <div class="section-num">03</div>
+    <div class="section-info">
+      <div class="section-title">선형 SVM — Hard Margin</div>
+      <div class="section-desc">서포트 벡터 · 연립방정식 · 마진 최대화 · 분류</div>
+    </div>
+  </div>
+
+  <!-- ── SVM 응용 1 ── -->
+  <div class="problem-pair">
+    <div class="card original">
+      <div class="card-label orig-label">원본 문제 요약</div>
+      <div class="problem-title">4포인트 (A, B, C, D), A·C·D가 SV</div>
+      <div class="problem-body">
+        A(0,3,+1), B(2,2,+1), C(1,0,−1), D(0,1,−1)<br>
+        SV: A, C, D → 연립방정식 풀이 → w, b, 마진 계산
+      </div>
+    </div>
+
+    <div class="card applied-svm">
+      <div class="card-label app-label"><span class="app-tag">[응용]</span> SVM — 3-A</div>
+      <div class="meta-row">
+        <span class="difficulty">⭐⭐ 보통</span>
+        <span class="variant-badge">수치 변형</span>
+        <span class="type-badge">계산형</span>
+      </div>
+      <div class="problem-num">P3-A</div>
+      <div class="problem-title">좌표가 변경된 4개의 포인트로 Hard Margin SVM을 구하시오.</div>
+      <div class="problem-body">
+        <table class="data-table">
+          <tr><th>포인트</th><th>x₁</th><th>x₂</th><th>y</th></tr>
+          <tr><td>A</td><td>0</td><td>4</td><td class="pos">+1</td></tr>
+          <tr><td>B</td><td>3</td><td>3</td><td class="pos">+1</td></tr>
+          <tr><td>C</td><td>2</td><td>0</td><td class="neg">−1</td></tr>
+          <tr><td>D</td><td>0</td><td>2</td><td class="neg">−1</td></tr>
+        </table>
+        힌트: w₁, w₂가 양의 정수.
+
+        <div class="sub-q">(가)</div>
+        Support Vector가 될 수 없는 포인트를 예상하고, A, C, D가 SV임을 가정하여 연립방정식을 세우시오.
+
+        <div class="sub-q">(나)</div>
+        연립방정식을 풀어 w = (w₁, w₂)와 b를 구하시오. B가 SV가 아님을 검증하시오.
+
+        <div class="sub-q">(다)</div>
+        결정 경계 방정식과 마진 너비를 계산하시오.
+
+        <div class="sub-q">(라)</div>
+        새로운 포인트 (2, 3)을 분류하시오.
+      </div>
+      <button class="toggle-btn" onclick="toggleAnswer(this)">
+        정답 및 해설 보기 <span class="toggle-arrow">▾</span>
+      </button>
+      <div class="answer-box">
+        <div class="ans-title">풀이</div>
+        <strong>(가) SV 가정 및 연립방정식</strong><br>
+        A(0,4,+1), C(2,0,−1), D(0,2,−1) 가 SV라 가정:
+        <div class="math-block">A: w·(0,4) + b = 1  →  4w₂ + b = 1   ... ①
+C: w·(2,0) + b = −1 → 2w₁ + b = −1  ... ②
+D: w·(0,2) + b = −1 → 2w₂ + b = −1  ... ③</div>
+
+        <strong>(나) 풀이</strong>
+        <div class="math-block">①−③: 4w₂ − 2w₂ = 1−(−1) → 2w₂ = 2 → w₂ = 1
+③: 2·1 + b = −1 → b = −3
+②: 2w₁ − 3 = −1 → 2w₁ = 2 → w₁ = 1
+∴ w = (1, 1),  b = −3</div>
+        B 검증:
+        <div class="math-block">w·B + b = 1·3 + 1·3 − 3 = 3 > 1
+→ B는 양성 마진 경계 바깥 → SV 아님 ✓</div>
+
+        <strong>(다) 결정 경계 및 마진</strong>
+        <div class="math-block">결정 경계: x₁ + x₂ − 3 = 0
+||w|| = √(1²+1²) = √2
+마진 = 2/√2 = √2 ≈ 1.414</div>
+        (원본 문제와 동일한 w, b, 마진 — 포인트 배치가 유사하게 설계됨)
+
+        <strong>(라) (2, 3) 분류</strong>
+        <div class="math-block">w·(2,3) + b = 2 + 3 − 3 = 2 > 0 → [+1 클래스]</div>
+
+        <div class="variant-note">
+          <strong>변형 포인트:</strong> 포인트 좌표를 (0,3)→(0,4), (1,0)→(2,0) 등으로 이동. 풀이 구조(연립방정식 설정 → 가감법 풀이 → 검증)는 동일하나 중간 계산값이 달라짐.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SVM 응용 2 ── -->
+  <div class="problem-pair">
+    <div class="card original">
+      <div class="card-label orig-label">원본 문제 요약</div>
+      <div class="problem-title">A, C, D → SV, B는 SV 아님</div>
+      <div class="problem-body">
+        w = (w₁, w₂), b 계산 → 마진 = 2/||w||<br>
+        새 포인트 (1,2) 분류
+      </div>
+    </div>
+
+    <div class="card applied-svm">
+      <div class="card-label app-label"><span class="app-tag">[응용]</span> SVM — 3-B</div>
+      <div class="meta-row">
+        <span class="difficulty">⭐⭐⭐ 어려움</span>
+        <span class="variant-badge">역방향 문제</span>
+        <span class="type-badge">계산형</span>
+      </div>
+      <div class="problem-num">P3-B</div>
+      <div class="problem-title">결정 경계와 마진이 주어졌을 때, 서포트 벡터를 역산하시오.</div>
+      <div class="problem-body">
+        어떤 Hard Margin SVM의 결정 경계와 파라미터가 다음과 같다:
+        <div class="math-block">결정 경계: 2x₁ + x₂ − 5 = 0
+마진 너비: 2/√5</div>
+
+        다음 네 후보 포인트가 주어져 있다:
+        <table class="data-table">
+          <tr><th>포인트</th><th>x₁</th><th>x₂</th><th>y</th></tr>
+          <tr><td>P</td><td>1</td><td>3</td><td class="pos">+1</td></tr>
+          <tr><td>Q</td><td>3</td><td>1</td><td class="pos">+1</td></tr>
+          <tr><td>R</td><td>0</td><td>1</td><td class="neg">−1</td></tr>
+          <tr><td>S</td><td>2</td><td>−1</td><td class="neg">−1</td></tr>
+        </table>
+
+        <div class="sub-q">(가)</div>
+        w = (w₁, w₂)와 b를 주어진 결정 경계에서 읽어내고, ||w||를 계산하시오. 마진 = 2/||w||임을 확인하시오.
+
+        <div class="sub-q">(나)</div>
+        네 포인트에 대해 각각 <strong>함수 거리(functional margin)</strong> yᵢ(w·xᵢ + b)를 계산하고, SV 조건 = 1을 만족하는 포인트를 찾으시오.
+
+        <div class="sub-q">(다)</div>
+        SV가 아닌 포인트는 마진 내부/경계/외부 중 어디에 위치하는가? 그 기하학적 의미를 서술하시오.
+
+        <div class="sub-q">(라)</div>
+        만약 포인트 Q를 (4, 1)로 이동시킨다면, SVM의 결정 경계와 마진이 변하는가? 이유를 SV의 정의로 설명하시오.
+      </div>
+      <button class="toggle-btn" onclick="toggleAnswer(this)">
+        정답 및 해설 보기 <span class="toggle-arrow">▾</span>
+      </button>
+      <div class="answer-box">
+        <div class="ans-title">풀이</div>
+        <strong>(가) w, b, ||w|| 확인</strong>
+        <div class="math-block">결정 경계: 2x₁ + x₂ − 5 = 0
+w = (2, 1),  b = −5
+||w|| = √(4+1) = √5
+마진 = 2/√5 ✓</div>
+
+        <strong>(나) 함수 거리 계산</strong>
+        <div class="math-block">P(1,3,+1): (+1)·(2·1+3−5) = (+1)·0 = 0 → SV 조건 불만족
+Q(3,1,+1): (+1)·(2·3+1−5) = (+1)·2 = 2 → SV 조건 불만족
+R(0,1,−1): (−1)·(2·0+1−5) = (−1)·(−4) = 4 → SV 조건 불만족
+S(2,−1,−1): (−1)·(2·2−1−5) = (−1)·(−2) = 2 → SV 조건 불만족</div>
+
+        → 함수 거리가 정확히 1인 포인트가 없음. P의 함수 거리 = 0은 결정 경계 위에 위치.<br>
+        <span class="highlight">이 데이터셋에서 주어진 결정 경계와 완전히 일치하는 SV 포인트가 없으면, Hard Margin SVM의 해가 이 포인트 집합으로 구성되지 않았음을 의미함.</span><br>
+        → 실제로 SV는 함수 거리 = 1인 포인트여야 하므로, 위 네 포인트 중 SV 없음. (문제의 핵심: 주어진 결정 경계가 이 데이터로부터 나온 것이 아님을 역으로 확인)
+
+        <strong>(다) 마진 외부/경계/내부 위치</strong>
+        <div class="math-block">SV 조건: yᵢ(w·xᵢ + b) = 1 (마진 경계 위)
+> 1: 마진 외부 (안전 영역)
+= 1: 마진 경계 = SV
+< 1: 마진 내부 (Hard Margin SVM에서는 불가)</div>
+        P: 함수 거리=0 → 결정 경계 위에 위치 → Hard Margin 조건 위반.
+
+        <strong>(라) Q를 (4,1)로 이동</strong><br>
+        Q는 SV가 아니었으므로(함수 거리=2 > 1), Q를 이동해도 결정 경계·마진 불변.<br>
+        SVM은 오직 SV에만 의존하므로, 비-SV 포인트의 이동은 해에 영향 없음.
+
+        <div class="variant-note">
+          <strong>변형 포인트:</strong> w, b → 서포트 벡터 역산 방향. 원본은 포인트 → w, b이지만, 여기서는 결정 경계 → 함수 거리 계산으로 SV 여부를 역검증. SV가 없는 경우를 의도적으로 설계하여 SV의 정의를 깊이 이해하게 함.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SVM 응용 3 ── -->
+  <div class="problem-pair">
+    <div class="card original">
+      <div class="card-label orig-label">원본 문제 요약</div>
+      <div class="problem-title">Hard Margin 마진 = 2/||w||</div>
+      <div class="problem-body">
+        새 포인트 (1,2) 분류<br>
+        힌트: w₁, w₂ 양의 정수
+      </div>
+    </div>
+
+    <div class="card applied-svm">
+      <div class="card-label app-label"><span class="app-tag">[응용]</span> SVM — 3-C</div>
+      <div class="meta-row">
+        <span class="difficulty">⭐⭐⭐ 어려움</span>
+        <span class="variant-badge">개념 결합</span>
+        <span class="type-badge">계산형 + 종합판단형</span>
+      </div>
+      <div class="problem-num">P3-C</div>
+      <div class="problem-title">포인트 배치가 바뀌어 SV 조합이 변하는 경우를 분석하시오.</div>
+      <div class="problem-body">
+        <table class="data-table">
+          <tr><th>포인트</th><th>x₁</th><th>x₂</th><th>y</th></tr>
+          <tr><td>A</td><td>1</td><td>4</td><td class="pos">+1</td></tr>
+          <tr><td>B</td><td>0</td><td>2</td><td class="pos">+1</td></tr>
+          <tr><td>C</td><td>3</td><td>0</td><td class="neg">−1</td></tr>
+          <tr><td>D</td><td>1</td><td>1</td><td class="neg">−1</td></tr>
+        </table>
+        힌트: w₁, w₂가 양의 정수. <span class="change">B, C, D가 SV</span>라 가정하시오.
+
+        <div class="sub-q">(가)</div>
+        B, C, D가 SV임을 가정하여 연립방정식을 세우고 w, b를 구하시오.
+
+        <div class="sub-q">(나)</div>
+        A가 SV가 아님을 검증하시오. 또한 A가 SV 조건을 만족하려면 A의 x₂ 좌표가 어떤 값이어야 하는지 역산하시오.
+
+        <div class="sub-q">(다)</div>
+        원본 문제(SV: A, C, D)와 이 문제(SV: B, C, D)의 결정 경계가 다른가 같은가? 두 결정 경계를 각각 구하고 비교하시오.
+
+        <div class="sub-q">(라)</div>
+        다음 중 옳은 설명을 모두 고르고 각각의 이유를 서술하시오:<br>
+        &nbsp;&nbsp;① SVM의 결정 경계는 SV 포인트의 위치에만 의존한다.<br>
+        &nbsp;&nbsp;② SV가 아닌 포인트를 제거해도 결정 경계는 불변이다.<br>
+        &nbsp;&nbsp;③ 같은 데이터셋에서 SV 조합이 여러 개 존재할 수 있다.<br>
+        &nbsp;&nbsp;④ 마진이 최대일 때 SVM의 일반화 성능이 가장 낮다.
+      </div>
+      <button class="toggle-btn" onclick="toggleAnswer(this)">
+        정답 및 해설 보기 <span class="toggle-arrow">▾</span>
+      </button>
+      <div class="answer-box">
+        <div class="ans-title">풀이</div>
+        <strong>(가) B, C, D SV 가정</strong>
+        <div class="math-block">B(0,2,+1): w·(0,2)+b = 1 → 2w₂+b = 1   ... ①
+C(3,0,−1): w·(3,0)+b = −1 → 3w₁+b = −1  ... ②
+D(1,1,−1): w·(1,1)+b = −1 → w₁+w₂+b = −1 ... ③
+
+①−③: 2w₂ − w₁ − w₂ = 1−(−1) → w₂ − w₁ = 2  ... ④
+②−③: 3w₁ − w₁ − w₂ = −1−(−1) → 2w₁ − w₂ = 0 ... ⑤
+④+⑤: w₁ = 2,  w₂ = 4
+
+②: 3·2 + b = −1 → b = −7
+∴ w = (2, 4),  b = −7</div>
+
+        <strong>(나) A 검증 및 역산</strong>
+        <div class="math-block">A(1,4,+1): w·(1,4)+b = 2+16−7 = 11 > 1 → SV 아님 ✓
+
+A가 SV 조건 = 1이 되려면:
+2·1 + 4·x₂ − 7 = 1 → 4x₂ = 6 → x₂ = 1.5
+→ A = (1, 1.5)일 때 SV</div>
+
+        <strong>(다) 원본 vs 이 문제의 결정 경계 비교</strong>
+        <div class="math-block">원본 문제 (SV: A, C, D):
+  w = (1, 2) (원본 풀이에서 도출), b = -5 → x₁ + 2x₂ − 5 = 0
+
+이 문제 (SV: B, C, D):
+  2x₁ + 4x₂ − 7 = 0 (또는 정규화 후 다른 방정식)
+→ 두 결정 경계가 다름</div>
+        → SV 조합이 달라지면 결정 경계도 달라짐.
+
+        <strong>(라) 선택지 평가</strong><br>
+        ① <strong>옳음</strong>: SVM은 SV의 위치로만 결정 경계 결정.<br>
+        ② <strong>옳음</strong>: 비-SV 제거 → SV 동일 → 결정 경계 불변.<br>
+        ③ <strong>틀림</strong>: Hard Margin SVM 해는 볼록 최적화 → 유일해 → SV 조합도 유일.<br>
+        ④ <strong>틀림</strong>: 마진 최대 = 일반화 성능 최고 (SVM의 핵심 원리).
+
+        <div class="variant-note">
+          <strong>변형 포인트:</strong> SV 조합을 A,C,D→B,C,D로 변경. 어떤 포인트가 SV가 되는지에 따라 결정 경계가 달라짐을 확인. 선지 판별형 추가로 SVM 개념 심화.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!--  문제 4 — 서술형                                       -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="topic-section" id="sec-rf">
+  <div class="section-header">
+    <div class="section-num">04</div>
+    <div class="section-info">
+      <div class="section-title">서술형 — Random Forest & Kernel SVM</div>
+      <div class="section-desc">Bootstrap · 앙상블 · 분산 감소 · 커널 트릭</div>
+    </div>
+  </div>
+
+  <!-- ── RF 응용 1 ── -->
+  <div class="problem-pair">
+    <div class="card original">
+      <div class="card-label orig-label">원본 문제 요약</div>
+      <div class="problem-title">RF vs 단일 트리: Bootstrap / 랜덤 특성 / 앙상블 투표 (분산 관점)</div>
+      <div class="problem-body">
+        세 측면에서 RF가 단일 DT보다 일반화 성능이 우수한 이유 설명
+      </div>
+    </div>
+
+    <div class="card applied-rf">
+      <div class="card-label app-label"><span class="app-tag">[응용]</span> RF — 4-A</div>
+      <div class="meta-row">
+        <span class="difficulty">⭐⭐ 보통</span>
+        <span class="variant-badge">조건 변형</span>
+        <span class="type-badge">서술형 · 비교형</span>
+      </div>
+      <div class="problem-num">P4-A</div>
+      <div class="problem-title">Random Forest와 Bagging의 공통점과 차이점을 비교하고, RF가 Bagging보다 우수한 이유를 랜덤 특성 선택 관점에서 설명하시오.</div>
+      <div class="problem-body">
+        <div class="sub-q">(가)</div>
+        Bagging (Bootstrap Aggregating)의 작동 원리를 설명하고, RF와의 공통점을 구체적으로 서술하시오.
+
+        <div class="sub-q">(나)</div>
+        RF가 Bagging과 다른 핵심 요소인 <strong>랜덤 특성 선택(Random Feature Subspace)</strong>이 트리 간 상관관계(correlation)에 미치는 영향을 설명하시오. 특히 m = √p (특성 수의 제곱근) 설정 이유를 분산 감소 수식과 연결하여 서술하시오.
+
+        <div class="sub-q">(다)</div>
+        다음 시나리오에서 RF와 Bagging의 성능 차이가 어떻게 달라지는지 예측하시오:<br>
+        — 데이터에 매우 강한 예측력을 가진 특성 1개가 존재하는 경우<br>
+        — 모든 특성이 균등한 예측력을 가진 경우
+      </div>
+      <button class="toggle-btn" onclick="toggleAnswer(this)">
+        정답 및 해설 보기 <span class="toggle-arrow">▾</span>
+      </button>
+      <div class="answer-box">
+        <div class="ans-title">채점 기준 및 모범 답안</div>
+        <strong>채점 키워드:</strong> Bootstrap 샘플링, 트리 간 상관관계(ρ), 분산 감소 공식, m=√p, 강한 특성 지배
+        <br><br>
+        <strong>(가) Bagging vs RF 공통점</strong><br>
+        Bagging: 원본 데이터에서 복원 추출(Bootstrap)로 B개의 훈련셋 생성 → 각각에 완전한 트리 학습 → 다수결/평균으로 예측. RF와 공통점: Bootstrap 샘플링 사용, 앙상블 방식, 분산 감소 목적.
+
+        <strong>(나) 랜덤 특성 선택의 역할</strong>
+        <div class="math-block">앙상블 분산 공식:
+Var(ensemble) = ρσ² + (1−ρ)σ²/B
+
+ρ: 트리 간 상관계수, σ²: 개별 트리 분산, B: 트리 수
+
+Bagging: 모든 특성 사용 → 강한 특성이 항상 루트 선택 → 트리들이 유사 → ρ 높음
+RF: 분기마다 m=√p 특성만 사용 → 강한 특성이 매번 선택 안 됨 → 트리 다양성 ↑ → ρ 감소
+→ Var(ensemble) 추가 감소</div>
+        m=√p는 다양성과 예측력 사이의 경험적 최적값.
+
+        <strong>(다) 시나리오별 성능 차이</strong><br>
+        - 강한 특성 1개 존재: Bagging은 해당 특성이 모든 트리에서 루트 → ρ↑↑ → 분산 감소 효과 제한. RF는 해당 특성이 일부 트리에서 배제 → ρ 감소 → <span class="highlight">RF가 Bagging보다 우위</span>.<br>
+        - 균등 특성: 랜덤 선택의 이점 감소 → RF와 Bagging 성능 유사 (ρ 차이 작음).
+
+        <div class="variant-note">
+          <strong>변형 포인트:</strong> 원본은 RF vs 단일 DT 비교. 여기서는 RF vs Bagging 비교로 변경. 더 미세한 차이(랜덤 특성 선택)에 집중하는 심화 서술형.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RF 응용 2 ── -->
+  <div class="problem-pair">
+    <div class="card original">
+      <div class="card-label orig-label">원본 문제 요약</div>
+      <div class="problem-title">Soft Margin SVM의 한계 → 커널로 해결, K(x,z) = φ(x)·φ(z)</div>
+      <div class="problem-body">
+        비선형 분리 불가 데이터 예시 + 커널 트릭 핵심 직관 서술
+      </div>
+    </div>
+
+    <div class="card applied-rf">
+      <div class="card-label app-label"><span class="app-tag">[응용]</span> RF — 4-B</div>
+      <div class="meta-row">
+        <span class="difficulty">⭐⭐⭐ 어려움</span>
+        <span class="variant-badge">개념 결합</span>
+        <span class="type-badge">서술형 · 참/거짓 판별형</span>
+      </div>
+      <div class="problem-num">P4-B</div>
+      <div class="problem-title">RBF 커널과 다항식 커널의 특징을 비교하고, 아래 진술의 참/거짓을 판별하시오.</div>
+      <div class="problem-body">
+        <div class="sub-q">(가)</div>
+        RBF(Gaussian) 커널 <strong>K(x,z) = exp(−γ||x−z||²)</strong>이 커널 트릭을 통해 암묵적으로 사상하는 특성 공간의 차원은 몇 차원인가? 이것이 다항식 커널과 어떻게 다른지 서술하시오.
+
+        <div class="sub-q">(나)</div>
+        다음 각 진술이 참인지 거짓인지 판별하고, 배운 이론을 근거로 이유를 제시하시오:<br>
+        &nbsp;&nbsp;① γ 값이 클수록 RBF 커널 SVM의 결정 경계는 더 유연(복잡)해진다.<br>
+        &nbsp;&nbsp;② 커널 SVM은 고차원으로 명시적 변환 후 선형 SVM을 학습하는 것과 계산 비용이 동일하다.<br>
+        &nbsp;&nbsp;③ 원본 공간에서 선형 분리 가능한 데이터는 커널 SVM을 사용할 필요가 없다.
+
+        <div class="sub-q">(다)</div>
+        <strong>XOR 문제</strong> (4개 포인트: (0,0), (1,1)은 클래스 −1, (0,1), (1,0)은 클래스 +1)에 대해, 다항식 커널 K(x,z) = (x·z + 1)²를 적용하면 분리 가능해지는 이유를 φ(x)를 명시하여 설명하시오.
+      </div>
+      <button class="toggle-btn" onclick="toggleAnswer(this)">
+        정답 및 해설 보기 <span class="toggle-arrow">▾</span>
+      </button>
+      <div class="answer-box">
+        <div class="ans-title">채점 기준 및 모범 답안</div>
+        <strong>채점 키워드:</strong> 무한차원, 커널 트릭 계산 복잡도, γ와 과적합, XOR φ(x) 명시
+
+        <strong>(가) RBF 커널의 특성 공간</strong><br>
+        RBF 커널은 테일러 급수 전개 시 <strong>무한 차원</strong> 특성 공간으로 사상됨.<br>
+        다항식 커널 K(x,z)=(x·z+1)^d는 유한 차원(C(d+p, d)차원, p: 원본 특성 수).
+        <div class="math-block">RBF: φ: ℝᵖ → ℝ^∞ (무한차원)
+다항식(d=2): φ: ℝ² → ℝ⁶
+예: φ(x₁,x₂) = [1, √2x₁, √2x₂, x₁², x₂², √2x₁x₂]</div>
+
+        <strong>(나) 참/거짓 판별</strong><br>
+        ① <strong>참</strong>: γ↑ → 각 포인트의 영향 반경 ↓ → 결정 경계가 각 데이터에 촘촘히 적합 → 복잡도↑ → 과적합 위험.<br>
+        ② <strong>거짓</strong>: 명시적 변환 후 선형 SVM의 학습 비용 = O(n × d_high), 커널 SVM의 커널 행렬 계산 = O(n²) + SVM. 고차원일수록 커널 트릭이 훨씬 효율적.<br>
+        ③ <strong>참 (그러나 조건부)</strong>: 선형 분리 가능이면 선형 SVM으로 충분. 단, 테스트 데이터까지 고려하면 커널 SVM이 더 유연할 수 있음.
+
+        <strong>(다) XOR과 다항식 커널</strong>
+        <div class="math-block">K(x,z) = (x·z+1)² → φ(x) = [x₁², x₂², √2x₁x₂, √2x₁, √2x₂, 1]
+
+변환 후 포인트:
+(0,0) → [0,0,0,0,0,1] : 클래스 −1
+(1,1) → [1,1,√2,√2,√2,1] : 클래스 −1
+(0,1) → [0,1,0,0,√2,1] : 클래스 +1
+(1,0) → [1,0,0,√2,0,1] : 클래스 +1
+
+6차원 공간에서 선형 분리 가능
+(x₁² + x₂² − √2x₁x₂ 성분 조합으로 분리)</div>
+
+        <div class="variant-note">
+          <strong>변형 포인트:</strong> 원본은 "커널이 해결하는 데이터 유형 서술"이나, 여기서는 RBF vs 다항식 커널 비교 + 참/거짓 판별 + XOR 구체 사례로 변형. 커널 종류를 구체적으로 구분하는 심화 문제.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RF 응용 3 ── -->
+  <div class="problem-pair">
+    <div class="card original">
+      <div class="card-label orig-label">원본 문제 요약</div>
+      <div class="problem-title">RF 설명 (세 측면) + 커널 설명 (수식 포함)</div>
+      <div class="problem-body">
+        두 독립 서술형 문제
+      </div>
+    </div>
+
+    <div class="card applied-rf">
+      <div class="card-label app-label"><span class="app-tag">[응용]</span> RF — 4-C</div>
+      <div class="meta-row">
+        <span class="difficulty">⭐⭐⭐ 어려움</span>
+        <span class="variant-badge">개념 결합 + 논술형</span>
+        <span class="type-badge">논술형 · 자료해석형</span>
+      </div>
+      <div class="problem-num">P4-C</div>
+      <div class="problem-title">아래 실험 결과를 해석하고, RF의 앙상블 효과와 SVM 커널 선택 기준을 논술하시오.</div>
+      <div class="problem-body">
+        <strong>실험 설정:</strong> 동일한 이진 분류 데이터에 세 가지 모델을 적용한 결과이다.
+        <table class="data-table" style="margin:10px 0;">
+          <tr><th>모델</th><th>훈련 정확도</th><th>테스트 정확도</th><th>비고</th></tr>
+          <tr><td>단일 DT (depth=∞)</td><td>100%</td><td>72%</td><td>—</td></tr>
+          <tr><td>RF (100트리)</td><td>95%</td><td>88%</td><td>m=√p</td></tr>
+          <tr><td>RBF 커널 SVM</td><td>98%</td><td>85%</td><td>γ=0.1, C=1</td></tr>
+        </table>
+
+        <div class="sub-q">(가)</div>
+        단일 DT의 훈련 정확도 100% / 테스트 72%의 차이를 <strong>편향-분산 트레이드오프</strong> 관점에서 해석하시오.
+
+        <div class="sub-q">(나)</div>
+        RF가 단일 DT 대비 테스트 정확도를 16%p 향상시킨 이유를 Bootstrap Sampling과 Random Feature Selection 두 메커니즘이 각각 기여하는 방식으로 분리하여 서술하시오.
+
+        <div class="sub-q">(다)</div>
+        RBF 커널 SVM(85%)과 RF(88%)의 성능 차이에 대해, γ 값 조정 시 SVM 성능이 어떻게 변화할지 예측하시오. γ를 증가시킬 때와 감소시킬 때의 결과를 각각 서술하시오.
+
+        <div class="sub-q">(라)</div>
+        이 데이터셋에서 최종 모델로 RF를 선택한다면 어떤 한계점이 존재하는가? RF가 취약한 문제 유형을 최소 두 가지 제시하고, 그 대안 모델을 각각 제시하시오.
+      </div>
+      <button class="toggle-btn" onclick="toggleAnswer(this)">
+        정답 및 해설 보기 <span class="toggle-arrow">▾</span>
+      </button>
+      <div class="answer-box">
+        <div class="ans-title">채점 기준 및 모범 답안</div>
+        <strong>채점 키워드:</strong> 과적합, 편향, 분산, 앙상블 효과, γ와 결정경계, RF 한계
+
+        <strong>(가) 단일 DT 과적합 해석</strong><br>
+        depth=∞ → 모든 훈련 데이터를 암기(편향=0) → 훈련 100%. 그러나 노이즈까지 학습 → 새 데이터에 일반화 실패(분산↑) → 테스트 72%. 전형적인 <strong>고분산·저편향(High Variance, Low Bias)</strong> 문제.
+
+        <strong>(나) RF의 16%p 향상 메커니즘</strong>
+        <div class="math-block">Bootstrap Sampling의 기여:
+  - B개의 서로 다른 훈련셋 생성
+  - 각 트리가 데이터의 서로 다른 부분집합 학습
+  - Out-of-Bag 샘플로 자연스러운 검증 효과
+  - 개별 트리의 고분산을 평균화로 상쇄
+
+Random Feature Selection의 기여:
+  - 강한 특성 지배 방지 → 트리 간 상관관계(ρ) 감소
+  - Var(RF) = ρσ² + (1−ρ)σ²/B
+  - ρ 감소가 분산 감소에 추가 기여
+  - 약한 특성도 루트 역할 → 다양한 패턴 포착</div>
+
+        <strong>(다) γ 조정 효과 예측</strong><br>
+        γ 증가 → 각 SV의 영향 반경 ↓ → 결정 경계 더 구불구불 → 훈련 정확도↑ but 과적합 위험 → 테스트 정확도 85% → ?% (데이터에 따라 다름. 이미 98% 훈련 정확도이면 과적합 시작 임박 → 테스트 하락 예상).<br>
+        γ 감소 → 더 부드러운 결정 경계 → 훈련 정확도↓ → 과소적합 가능 → 테스트 정확도 하락 가능.
+        최적 γ는 Cross-Validation으로 탐색 필요.
+
+        <strong>(라) RF의 한계 및 대안</strong><br>
+        ① <strong>시계열/순차 데이터</strong>: RF는 순서 정보 무시 → LSTM, Transformer 적합.<br>
+        ② <strong>매우 고차원 희소 데이터</strong> (텍스트, 유전자): m=√p로도 과다 특성 → 선형 SVM, 로지스틱 회귀 적합.<br>
+        ③ <strong>외삽(Extrapolation)</strong>: RF는 훈련 범위 밖 예측 불가(앙상블 평균 = 훈련 데이터 범위 내 수렴) → Gradient Boosting, 선형 모델 적합.
+
+        <div class="variant-note">
+          <strong>변형 포인트:</strong> 원본 서술형을 자료(실험 결과 표) 해석형으로 변환. RF와 SVM을 직접 비교하고, RF의 한계까지 논술하는 심화 논술형. 여러 개념의 결합 적용 필요.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /sec-rf -->
+
+</div><!-- /main -->
+
+<script>
+// ── 탭 전환 ──
+function showTopic(topic, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const sections = { pca:'sec-pca', dt:'sec-dt', svm:'sec-svm', rf:'sec-rf' };
+  const all = Object.values(sections);
+
+  if (topic === 'all') {
+    all.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('visible');
+    });
+  } else {
+    all.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('visible');
+    });
+    const target = document.getElementById(sections[topic]);
+    if (target) target.classList.add('visible');
+  }
+}
+
+// ── 정답 토글 ──
+function toggleAnswer(btn) {
+  btn.classList.toggle('open');
+  const box = btn.nextElementSibling;
+  box.classList.toggle('visible');
+  btn.querySelector('.toggle-arrow').textContent = box.classList.contains('visible') ? '▴' : '▾';
+}
+</script>
+
+</body>
+</html>
